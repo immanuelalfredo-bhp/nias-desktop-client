@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    // 1. Point to your folders (MUST un-comment these)
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    // 2. Module resolution
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "esnext",
+    
+    // 3. Library/Type settings
+    "lib": ["esnext"],
+    "types": ["node"],
+    
+    // 4. Outputs for consumers (Keep these!)
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    // 5. Strict Typechecking
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+  }
+}

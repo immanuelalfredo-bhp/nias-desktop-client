@@ -1,0 +1,26 @@
+{
+  "name": "ni-auxiliary-system",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Auxiliary system to assist the running of daily tasks for the Berca Hardayaperkasa Network Integration team.",
+  "main": "index.js",
+  "workspaces": [
+    "apps/nias-desktop-client",
+    "apps/nias-sync-server",
+    "apps/nias-shared"
+  ],
+  "scripts": {
+    "dev:desktop": "npm run start --workspace=apps/nias-desktop-client",
+    "dev:server": "npm run start --workspace=apps/nias-sync-server"
+  },
+  "keywords": [],
+  "author": "Immanuel Alfredo",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.9.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  }
+}
