@@ -11,7 +11,7 @@ import {
   sharedSync, 
   type SyncChanges,
   type VersionRegistry 
-} from '@nias/shared/src/index.js';
+} from '@nias/shared';
 import type { Logger } from 'pino';
 
 /**

@@ -5,7 +5,7 @@ import {
 import { 
   sharedSync,
   type VersionRegistry 
-} from '@nias/shared/src/index.js';
+} from '@nias/shared';
 import { type PgTransaction } from 'drizzle-orm/pg-core';
 
 /** Database transaction type used by sync write operations. */

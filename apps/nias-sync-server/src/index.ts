@@ -3,7 +3,7 @@ import app, { registerErrorHandlers } from './app.js';
 import { closeDb } from './db.js';
 import { authenticate, validate } from './middleware.js';
 import { handlePush, handlePull } from './routes/sync.js';
-import { sharedSync } from '@nias/shared/src/index.js';
+import { sharedSync } from '@nias/shared';
 import { SHUTDOWN_TIMEOUT } from './config.js';
 import { logger } from './logger.js';
 
