@@ -17,3 +17,9 @@ out/
 # OS Generation Files
 .DS_Store
 Thumbs.db
+
+# env files
+apps/nias-desktop-client/.env
+apps/nias-sync-server/.env
+apps/nias-shared/.env
+.env
