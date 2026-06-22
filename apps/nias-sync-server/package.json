@@ -2,7 +2,7 @@
   "name": "@nias/sync-server",
   "version": "0.1.0",
   "type": "module",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
