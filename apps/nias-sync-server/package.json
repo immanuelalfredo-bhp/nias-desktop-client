@@ -6,7 +6,7 @@
   "scripts": {
     "build:shared": "npm --prefix ../nias-shared install && npm --prefix ../nias-shared run build",
     "build": "npm run build:shared && tsc -p tsconfig.json",
-    "start": "npm run build && node dist/index.js",
+    "start": "node dist/index.js",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push"
   },
