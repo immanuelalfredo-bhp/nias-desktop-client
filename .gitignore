@@ -7,7 +7,7 @@ node_modules/
 *.db-wal
 
 # Compiled Binary Output Envelopes
-apps/nias-desktop-client/dist/
+apps/nias-desktop-client/dist-electron/
 apps/nias-sync-server/dist/
 apps/nias-shared/dist/
 dist/

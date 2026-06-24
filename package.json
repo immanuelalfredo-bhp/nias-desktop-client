@@ -18,9 +18,20 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "@electron/rebuild": "^4.0.4",
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.3",
+    "@types/compression": "^1.8.1",
+    "@types/cors": "^2.8.19",
+    "@types/better-sqlite3": "^7.6.13",
+    "@vitejs/plugin-react": "^6.0.3",
+    "dotenv": "^17.4.2",
+    "drizzle-kit": "^0.31.10",
+    "pino-pretty": "^13.1.2",
+    "react": "^19.2.7",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vite": "^8.1.0",
+    "vite-plugin-electron": "^1.0.4"
   }
 }

@@ -19,20 +19,18 @@ export const UserSchema = z.object({
   id: z.uuid({ version: 'v7' }),
   username: z.string().min(3).max(20),
   passwordHash: z.string().regex(argon2Regex),
-  displayName: z.string().min(1).max(100),
-  email: z.string().email().toLowerCase(),
+  displayName: z.string().min(1).max(100).nullable(),
+  email: z.email().toLowerCase().nullable(),
   isManagedBy: z.uuid({ version: 'v7' }).nullable(), // Nullable for users not managed by anyone
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable(), // Nullable for non-deleted users
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+  deletedAt: z.iso.datetime().nullable(), // Nullable for non-deleted users
   isSynced: z.boolean(),
   syncVersion: z.number().int().nonnegative().nullable(), // Nullable for users not yet synced
 });
 
 // Define the Zod schema for creating a new User (without id, timestamps, and sync fields)
 export const CreateUserSchema = UserSchema.omit({
-  id: true,
-  isManagedBy: true,
   createdAt: true,
   updatedAt: true,
   deletedAt: true,
@@ -61,6 +59,7 @@ export type CreateUser = z.infer<typeof CreateUserSchema>;
 export type UpdateUser = z.infer<typeof UpdateUserSchema>;
 export type UpdateSelf = z.infer<typeof UpdateSelfSchema>;
 export type DeleteUser = z.infer<typeof EntityIdSchema>;
+export type RestoreUser = z.infer<typeof EntityIdSchema>;
 export type HardDeleteUser = z.infer<typeof EntityIdSchema>;
 
 // ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗

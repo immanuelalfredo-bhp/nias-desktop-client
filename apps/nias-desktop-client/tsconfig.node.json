@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["esnext"],
+    "composite": true,
+    "rootDir": "./electron",
+    "outDir": "./dist-electron",
+    "typeRoots": ["./node_modules/@types", "./types"]
+  },
+  "include": ["electron/main/**/*", "electron/preload/**/*"]
+}
