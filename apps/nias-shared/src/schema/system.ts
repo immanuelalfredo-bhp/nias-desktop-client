@@ -11,17 +11,17 @@ const argon2Regex = new RegExp(
 
 // Define the Zod schema for an entity ID (UUID v7)
 export const EntityIdSchema = z.object({
-  id: z.uuid({ version: 'v7' }),
+  id: z.uuid(),
 });
 
 // Define the Zod schema for a User
 export const UserSchema = z.object({
-  id: z.uuid({ version: 'v7' }),
+  id: z.uuid(),
   username: z.string().min(3).max(20),
   passwordHash: z.string().regex(argon2Regex),
   displayName: z.string().min(1).max(100).nullable(),
   email: z.email().toLowerCase().nullable(),
-  isManagedBy: z.uuid({ version: 'v7' }).nullable(), // Nullable for users not managed by anyone
+  isManagedBy: z.uuid().nullable(), // Nullable for users not managed by anyone
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
   deletedAt: z.iso.datetime().nullable(), // Nullable for non-deleted users
@@ -68,7 +68,7 @@ export type HardDeleteUser = z.infer<typeof EntityIdSchema>;
 
 // Define the Zod schema for a Role
 export const RoleSchema = z.object({
-  id: z.uuid({ version: 'v7' }),
+  id: z.uuid(),
   name: z.string().min(1).max(50),
   normalizedName: z.string().min(1).max(50),
   isSystemRole: z.boolean().default(false),
@@ -111,10 +111,10 @@ export type HardDeleteRole = z.infer<typeof EntityIdSchema>;
 // ║                                          AUDIT SCHEMAS                                        ║
 // ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
 
-// Define the Zod schema for an Audit Log entry
-export const AuditLogSchema = z.object({
-  id: z.uuid({ version: 'v7' }),
-  entityId: z.uuid({ version: 'v7' }),
+// Define the Zod schema for an Audit entry
+export const AuditSchema = z.object({
+  id: z.uuid(),
+  entityId: z.uuid(),
   entityType: z.enum(['user', 'role']),
   eventType: z.enum([
     'create_user',
@@ -126,14 +126,14 @@ export const AuditLogSchema = z.object({
     'delete_role',
     'hard_delete_role',
   ]),
-  performedBy: z.uuid({ version: 'v7' }),
+  performedBy: z.uuid(),
   description: z.string().min(1).max(255),
   timestamp: z.iso.datetime(),
   isSynced: z.boolean(),
   syncVersion: z.number().int().nonnegative().nullable(), // Nullable for logs not yet synced
 });
 
-export const CreateAuditLogSchema = AuditLogSchema.omit({
+export const CreateAuditSchema = AuditSchema.omit({
   id: true,
   timestamp: true,
   isSynced: true,
@@ -141,5 +141,5 @@ export const CreateAuditLogSchema = AuditLogSchema.omit({
 });
 
 // Infer the TypeScript type from the Zod schema
-export type AuditLog = z.infer<typeof AuditLogSchema>;
-export type CreateAuditLog = z.infer<typeof CreateAuditLogSchema>;
+export type Audit = z.infer<typeof AuditSchema>;
+export type CreateAudit = z.infer<typeof CreateAuditSchema>;

@@ -1,6 +1,6 @@
 import { 
   user, 
-  auditLog,
+  audit,
 } from './schema.js';
 import { 
   sharedSync,
@@ -28,9 +28,9 @@ export const TABLE_MAP: {
     responseKey: 'user' as const,
   },
   {
-    key: 'auditLog' as const,
-    table: auditLog,
-    responseKey: 'auditLog' as const,
+    key: 'audit' as const,
+    table: audit,
+    responseKey: 'audit' as const,
   },
 ];
 

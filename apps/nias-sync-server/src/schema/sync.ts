@@ -7,7 +7,7 @@ import { pgTable, uuid, text, integer, timestamp } from 'drizzle-orm/pg-core';
 // Define the sync table schema
 export const sync = pgTable('sync', {
   user: integer('user').notNull().default(0),
-  auditLog: integer('audit_log').notNull().default(0),
+  audit: integer('audit').notNull().default(0),
 });
 
 // Infer the TypeScript type for the sync table

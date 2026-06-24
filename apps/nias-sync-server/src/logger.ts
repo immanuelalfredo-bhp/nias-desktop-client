@@ -1,6 +1,6 @@
 import pino, { type LoggerOptions } from 'pino';
 import { pinoHttp } from 'pino-http';
-import { v7 as uuid } from 'uuid';
+import { randomUUID } from 'crypto';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -45,7 +45,7 @@ export const httpLogger = pinoHttp({
     const reqId =
       typeof requestId === 'string' && requestId.length > 0
         ? requestId
-        : uuid();
+        : randomUUID();
     res.setHeader('x-request-id', reqId);
     return reqId;
   },

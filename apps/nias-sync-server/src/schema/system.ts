@@ -27,8 +27,8 @@ export type NewUser = typeof user.$inferInsert;
 // ║                                          AUDIT SCHEMAS                                        ║
 // ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
 
-// Define the audit_log table schema
-export const auditLog = pgTable('audit_log', {
+// Define the audit table schema
+export const audit = pgTable('audit', {
   id: uuid('id').primaryKey().defaultRandom(),
   entityId: uuid('entity_id').notNull(),
   entityType: text('entity_type').notNull(),
@@ -40,6 +40,6 @@ export const auditLog = pgTable('audit_log', {
   syncVersion: integer('sync_version'),
 });
 
-// Infer the TypeScript types for the audit_log table
-export type AuditLog = typeof auditLog.$inferSelect;
-export type NewAuditLog = typeof auditLog.$inferInsert;
+// Infer the TypeScript types for the audit table
+export type Audit = typeof audit.$inferSelect;
+export type NewAudit = typeof audit.$inferInsert;

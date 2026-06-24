@@ -8,5 +8,5 @@ export {
 
 export { 
   user, 
-  auditLog 
+  audit 
 } from './schema/system.js';
