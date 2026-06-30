@@ -8,6 +8,8 @@ import { SHUTDOWN_TIMEOUT } from './config.js';
 import { logger } from './logger.js';
 import type { Request, Response, NextFunction } from 'express'; // 1. Import NextFunction
 
+require('dns').setDefaultResultOrder('ipv4first');
+
 console.log("--- STARTUP ENVIRONMENT CHECK ---");
 console.log("DATABASE_URL from process.env:", process.env.DATABASE_URL);
 // Check for any other common environment variable names
