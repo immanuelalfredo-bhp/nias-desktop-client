@@ -1,11 +1,12 @@
 import { type Request, type Response } from 'express';
 import { db } from '../db.js';
-import { asc, eq, gte } from 'drizzle-orm';
+import { asc, eq, gte, count } from 'drizzle-orm';
 import { SYNC_LIMIT } from '../config.js';
 import { TABLE_MAP, defaultRegistry, upsertSyncRecords } from '../utils.js';
-import { 
+import {
+  users,
   sync, 
-  proposedChanges
+  proposedChanges,
 } from '../schema.js';
 import { 
   sharedSync, 
@@ -161,5 +162,60 @@ export async function handlePush (
     );
 
     return { status: 'success', syncedItems: processedItems };
+  });
+}
+
+export async function getBootstrapStatus(_req: Request, res: Response) {
+
+  const result = await db
+    .select({ value: count() })
+    .from(users);
+  const userCount = result[0]?.value ?? 0;
+
+  res.json({ isEmpty: userCount === 0 });
+}
+
+export async function handleBootstrap(
+  payload: sharedSync.PushPayload,
+  context?: { log?: Logger; userId?: string }
+) {
+  
+  return await db.transaction(async (tx) => {
+
+    const [existingUser] = await tx.select().from(users).limit(1);
+    if (existingUser) {
+      throw new Error("System already bootstrapped");
+    }
+
+    const bootstrap = payload.changes.find(c => c.tableName === 'users');
+    if (!bootstrap) throw new Error("No user data provided");
+
+    const adminData: typeof users.$inferInsert = {
+      id: bootstrap.payload.id,
+      username: bootstrap.payload.username || 'admin',
+      passwordHash: bootstrap.payload.passwordHash || '',
+      displayName: bootstrap.payload.displayName || 'Admin',
+      email: bootstrap.payload.email || '',
+      isManagedBy: null,
+      isSynced: true,
+      syncVersion: 1 // Explicitly set the initial version
+    };
+
+    const adminUser = await tx.insert(users).values(adminData).returning();
+
+    if (!adminUser) {
+      throw new Error("Failed to create admin user");
+    }
+
+    const initialRegistry = { 
+      ...defaultRegistry, 
+      users: 1 
+    };
+
+    await tx.insert(sync).values(initialRegistry);
+
+    context?.log?.info({ adminId: bootstrap.payload.id }, 'System successfully bootstrapped');
+    
+    return { status: 'success', admin: adminUser };
   });
 }

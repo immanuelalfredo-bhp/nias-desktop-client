@@ -7,6 +7,6 @@ export {
 } from './schema/sync.js';
 
 export { 
-  user, 
+  users, 
   audit 
 } from './schema/system.js';

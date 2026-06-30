@@ -1,11 +1,14 @@
-import { pgTable, uuid, text, boolean, integer, timestamp } from 'drizzle-orm/pg-core';
+import { pgSchema, uuid, text, boolean, integer, timestamp } from 'drizzle-orm/pg-core';
+
+// Define the system schema
+export const systemSchema = pgSchema('system');
 
 // ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 // ║                                          USER SCHEMAS                                         ║
 // ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
 
 // Define the users table schema
-export const user = pgTable('user', {
+export const users = systemSchema.table('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   username: text('username').notNull(),
   passwordHash: text('password_hash').notNull(),
@@ -20,15 +23,15 @@ export const user = pgTable('user', {
 });
 
 // Infer the TypeScript types for the users table
-export type User = typeof user.$inferSelect;
-export type NewUser = typeof user.$inferInsert;
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
 
 // ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 // ║                                          AUDIT SCHEMAS                                        ║
 // ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
 
 // Define the audit table schema
-export const audit = pgTable('audit', {
+export const audit = systemSchema.table('audit', {
   id: uuid('id').primaryKey().defaultRandom(),
   entityId: uuid('entity_id').notNull(),
   entityType: text('entity_type').notNull(),

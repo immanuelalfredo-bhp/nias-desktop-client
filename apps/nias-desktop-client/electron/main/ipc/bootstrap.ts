@@ -1,0 +1,84 @@
+import crypto from 'node:crypto';
+import { ipcMain } from 'electron';
+import{ sharedSync } from '@nias/shared';
+import { SYNC_SERVER_URL } from '../config.js';
+import { hashPassword } from '../utils.js';
+import { AuthDatabase } from '../db/database.js';
+
+export function registerBootstrapIpcHandlers(authDb: AuthDatabase): void {
+  ipcMain.handle('bootstrap:status', async (event, bootstrapSecret: string) => {
+    try {
+      const response = await fetch(`${SYNC_SERVER_URL}/api/bootstrap/status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Bootstrap-Secret': bootstrapSecret,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) return { isValid: false }; // Token issue
+        throw new Error(`Server returned ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (err) {
+    console.error('Bootstrap IPC Error:', err);
+    throw err; 
+  }
+  });
+
+  ipcMain.handle('bootstrap:execute', async (event, bootstrapSecret: string, payload: any) => {
+    try {
+      const adminId = crypto.randomUUID();
+      const payloadId = crypto.randomUUID();
+      const passwordHash = await hashPassword(payload.password);
+
+      const payloadData: sharedSync.PushPayload = {
+        id: payloadId,
+        actorId: adminId,
+        changes: [
+          {
+            id: payloadId,
+            tableName: 'users',
+            payload: {
+              id: adminId,
+              username: payload.username,
+              passwordHash: passwordHash,
+              displayName: payload.displayName,
+              email: payload.email,
+            }
+          }
+        ]
+      };
+
+      const response = await fetch(`${SYNC_SERVER_URL}/api/bootstrap/execute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Bootstrap-Secret': bootstrapSecret,
+        },
+        body: JSON.stringify(payloadData),
+      });
+
+      const result = await response.json() as any;
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Bootstrap execution failed');
+      }
+
+      authDb.main.insertBootstrapUser({
+        adminId: adminId,
+        username: payload.username,
+        passwordHash: passwordHash,
+        displayName: payload.displayName,
+        email: payload.email,
+      });
+
+      return {status: 'success', adminId: adminId, result: result};
+    } catch (error) {
+      return { status: 'error', message: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  });
+}

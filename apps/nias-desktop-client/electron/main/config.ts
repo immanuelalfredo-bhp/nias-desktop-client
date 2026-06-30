@@ -1,0 +1,1 @@
+export const SYNC_SERVER_URL = process.env.SYNC_SERVER_URL || 'https://nias-server-sync.onrender.com';

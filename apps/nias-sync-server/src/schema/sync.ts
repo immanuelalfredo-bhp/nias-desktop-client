@@ -1,12 +1,15 @@
-import { pgTable, uuid, text, integer, timestamp } from 'drizzle-orm/pg-core';
+import { pgSchema, uuid, text, integer, timestamp } from 'drizzle-orm/pg-core';
+
+// Define the sync schema
+export const syncSchema = pgSchema('sync');
 
 // ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 // ║                                          SYNC SCHEMAS                                         ║
 // ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
 
 // Define the sync table schema
-export const sync = pgTable('sync', {
-  user: integer('user').notNull().default(0),
+export const sync = syncSchema.table('metadata', {
+  users: integer('users').notNull().default(0),
   audit: integer('audit').notNull().default(0),
 });
 
@@ -18,7 +21,7 @@ export type SyncVersion = typeof sync.$inferSelect;
 // ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
 
 // Define the proposed_changes table schema
-export const proposedChanges = pgTable('proposed_changes', {
+export const proposedChanges = syncSchema.table('proposed_changes', {
   id: uuid('id').primaryKey().defaultRandom(),
   tableName: text('table_name').notNull(),
   payload: text('payload').notNull(), // JSON string representing the proposed changes

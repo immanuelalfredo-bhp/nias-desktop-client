@@ -3,50 +3,100 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { app, safeStorage } from 'electron';
-import { UserQueries } from './system/users.js';
+import {
+  AuthQueries,
+} from '../db/auth.js';
+
+export class AuthDatabase {
+  private readonly db: Database.Database;
+  readonly main: AuthQueries
+
+  constructor(dbPath: string, key: string) {
+    this.db = new Database(dbPath);
+    this.db.pragma(`key = '${key}'`);
+    this.db.pragma('journal_mode = WAL');
+    this.db.pragma('foreign_keys = ON');
+    this.main = new AuthQueries(this.db)
+  }
+}
 
 const KEY_FILE = path.join(app.getPath('userData'), 'key.bin');
-const LOGIN_DB_PATH = path.join(app.getPath('userData'), 'login.db');
+const AUTH_DB_PATH = path.join(app.getPath('userData'), 'auth.db');
 
-export function initializeLoginDatabase(): Database.Database {
-  const key = getOrGenerateEncryptionKey();
+export function initializeAuthDatabase(): AuthDatabase {
+  let key = getOrGenerateEncryptionKey();
+  let db: Database.Database;
 
-  const dbExists = fs.existsSync(LOGIN_DB_PATH);
-  const db = new Database(LOGIN_DB_PATH);
-  if (!dbExists) {
-      db.pragma('journal_mode = WAL');
-      db.pragma(`rekey = '${key}'`);
-      db.prepare('CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT)').run();
-      console.log("Database file created and encrypted.");
-  } else {
+  try {
+    const dbExists = fs.existsSync(AUTH_DB_PATH);
+    db = new Database(AUTH_DB_PATH);
+
+    if (dbExists) {
       db.pragma(`key = '${key}'`);
       db.prepare('SELECT count(*) FROM sqlite_master').get();
+      ensureAuthDbSchema(db);
+    } else {
+      setupNewAuthDb(db, key);
+    }
+  } catch (error) {
+    console.error("Key incorrect or DB corrupted, resetting...", error);
+    if (fs.existsSync(AUTH_DB_PATH)) fs.unlinkSync(AUTH_DB_PATH);
+
+    // Generate new key and DB
+    key = rotateEncryptionKey();
+    db = new Database(AUTH_DB_PATH);
+    setupNewAuthDb(db, key);
   }
-  return db;
+  return new AuthDatabase(AUTH_DB_PATH, key);
+}
+
+function setupNewAuthDb(db: Database.Database, key: string) {
+  db.pragma(`rekey = '${key}'`);
+  db.pragma('journal_mode = WAL');
+
+  ensureAuthDbSchema(db);
+}
+
+function ensureAuthDbSchema(db: Database.Database) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      sync_version INTEGER NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS sync (
+      sync_version INTEGER NOT NULL
+    );
+  `);
+
+  const syncRow = db.prepare('SELECT COUNT(*) AS count FROM sync').get() as { count: number };
+
+  if (syncRow.count === 0) {
+    db.prepare('INSERT INTO sync (sync_version) VALUES (?)').run(0);
+  }
 }
 
 function getOrGenerateEncryptionKey(): string {
   if (fs.existsSync(KEY_FILE)) {
     const encryptedKey = fs.readFileSync(KEY_FILE);
     return safeStorage.decryptString(encryptedKey);
-  } else {
-    const newKey = crypto.randomBytes(32).toString('hex');
-    const encryptedKey = safeStorage.encryptString(newKey);
-    fs.writeFileSync(KEY_FILE, encryptedKey);
-    return newKey;
   }
+  return rotateEncryptionKey();
 }
 
-export class AppDatabase {
-  private readonly db: Database.Database;
-  readonly users: UserQueries;
+function rotateEncryptionKey(): string {
+  const newKey = crypto.randomBytes(32).toString('hex');
+  const encryptedKey = safeStorage.encryptString(newKey);
+  fs.writeFileSync(KEY_FILE, encryptedKey);
+  return newKey;
+}
 
-  // Change constructor to accept the database instance, not the path
-  constructor(db: Database.Database) {
-    this.db = db;
-    // These pragmas should have already been set, but it's safe to keep them
-    this.db.pragma('journal_mode = WAL');
-    this.db.pragma('foreign_keys = ON');
-    this.users = new UserQueries(this.db);
-  }
+// Skeleton for per-user DBs (to be initialized upon login)
+export function initializeUserDatabase(uuid: string): Database.Database {
+  const userDbPath = path.join(app.getPath('userData'), `${uuid}.db`);
+  const db = new Database(userDbPath);
+  // db.pragma(`rekey = '${key}'`); // Use same or different logic here
+  // Add skeleton tables
+  return db;
 }

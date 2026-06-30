@@ -12,7 +12,7 @@ import {
  * Tracks per-table version state sent by clients when requesting sync deltas.
  */
 export const SyncMetadataSchema = z.object({
-  user: z.number().default(0),
+  users: z.number().default(0),
   audit: z.number().default(0),
 });
 
@@ -48,7 +48,7 @@ export const PushPayloadSchema = z.object({
     z.discriminatedUnion('tableName', [
       z.object({
         id: z.uuid(),
-        tableName: z.literal('user'),
+        tableName: z.literal('users'),
         payload: UserSchema.partial()
       }),
       z.object({

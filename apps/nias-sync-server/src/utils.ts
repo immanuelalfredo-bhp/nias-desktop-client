@@ -1,5 +1,5 @@
 import { 
-  user, 
+  users, 
   audit,
 } from './schema.js';
 import { 
@@ -23,9 +23,9 @@ export const TABLE_MAP: {
   responseKey: keyof sharedSync.SyncMetadata;
 }[] = [
   {
-    key: 'user' as const,
-    table: user,
-    responseKey: 'user' as const,
+    key: 'users' as const,
+    table: users,
+    responseKey: 'users' as const,
   },
   {
     key: 'audit' as const,

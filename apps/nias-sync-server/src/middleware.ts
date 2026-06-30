@@ -40,10 +40,23 @@ export const authenticate: RequestHandler = async (req, res, next) => {
   }
 };
 
-/**
- * Returns request middleware that validates `req.body` using a Zod schema
- * and stores the parsed payload in `req.validatedBody`.
- */
+export const bootstrapAuthenticate: RequestHandler = async (req, res, next) => {
+  try {
+    const authHeader = req.headers['Bootstrap-Secret'];
+
+    if (!authHeader || authHeader !== process.env.BOOTSTRAP_SECRET) {
+      req.log.warn('Bootstrap authentication failed: invalid token');
+      return res
+        .status(401)
+        .json({ error: 'Unauthorized: Invalid token' });
+    }
+    next();
+  } catch (err) {
+    req.log.error({ err }, 'Unexpected bootstrap authentication error');
+    next(err);
+  }
+}
+
 export const validate = <T>(schema: ZodType<T>): RequestHandler => {
   return (req, res, next) => {
     const result = schema.safeParse(req.body);

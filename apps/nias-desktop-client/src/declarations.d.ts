@@ -1,9 +1,14 @@
-declare module "*.css" {
-  const content: { [className: string]: string };
-  export default content;
+export interface ElectronAPI {
+  authStatus: () => Promise<{ isEmpty: boolean }>;
+  bootstrapStatus: (bootstrapSecret: string) => Promise<{ isEmpty: boolean, isValid: boolean }>;
+  bootstrapExecute: (bootstrapSecret: string, payload: any) => Promise<any>;
 }
 
-declare module "*.css?inline" {
-  const content: string;
-  export default content;
+declare global {
+  interface Window {
+    electronAPI: ElectronAPI;
+  }
 }
+
+declare module "*.css";
+declare module "*.css?inline";
