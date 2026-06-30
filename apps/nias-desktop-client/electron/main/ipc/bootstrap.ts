@@ -11,8 +11,8 @@ export function registerBootstrapIpcHandlers(authDb: AuthDatabase): void {
       const response = await fetch(`${SYNC_SERVER_URL}/api/bootstrap/status`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Bootstrap-Secret': bootstrapSecret,
+          'content-type': 'application/json',
+          'bootstrap-secret': bootstrapSecret,
         },
       });
 
@@ -56,8 +56,8 @@ export function registerBootstrapIpcHandlers(authDb: AuthDatabase): void {
       const response = await fetch(`${SYNC_SERVER_URL}/api/bootstrap/execute`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Bootstrap-Secret': bootstrapSecret,
+          'content-type': 'application/json',
+          'bootstrap-secret': bootstrapSecret,
         },
         body: JSON.stringify(payloadData),
       });

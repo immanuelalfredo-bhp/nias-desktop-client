@@ -42,7 +42,7 @@ export const authenticate: RequestHandler = async (req, res, next) => {
 
 export const bootstrapAuthenticate: RequestHandler = async (req, res, next) => {
   try {
-    const authHeader = req.headers['Bootstrap-Secret'];
+    const authHeader = req.headers['bootstrap-secret'];
 
     if (!authHeader || authHeader !== process.env.BOOTSTRAP_SECRET) {
       req.log.warn('Bootstrap authentication failed: invalid token');
