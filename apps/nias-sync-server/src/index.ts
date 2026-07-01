@@ -8,18 +8,6 @@ import { SHUTDOWN_TIMEOUT } from './config.js';
 import { logger } from './logger.js';
 import type { Request, Response, NextFunction } from 'express'; // 1. Import NextFunction
 
-require('dns').setDefaultResultOrder('ipv4first');
-
-console.log("--- STARTUP ENVIRONMENT CHECK ---");
-console.log("DATABASE_URL from process.env:", process.env.DATABASE_URL);
-// Check for any other common environment variable names
-console.log("PGDATABASE:", process.env.PGDATABASE); 
-console.log("DB_URL:", process.env.DB_URL);
-
-console.log("--- DEBUGGING CONNECTION ---");
-console.log("NODE_ENV:", process.env.NODE_ENV);
-console.log("Full DB URL from process.env:", process.env.DATABASE_URL);
-
 const shutdownTimeout = SHUTDOWN_TIMEOUT;
 const PORT = Number(process.env.PORT || 3000);
 
