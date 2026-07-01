@@ -6,7 +6,6 @@ import { handlePush, handlePull, getBootstrapStatus, handleBootstrap } from './r
 import { sharedSync } from '@nias/shared';
 import { SHUTDOWN_TIMEOUT } from './config.js';
 import { logger } from './logger.js';
-import type { Request, Response, NextFunction } from 'express'; // 1. Import NextFunction
 
 const shutdownTimeout = SHUTDOWN_TIMEOUT;
 const PORT = Number(process.env.PORT || 3000);
@@ -58,14 +57,6 @@ app.post(
       .catch(next);
   }
 );
-
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('--- CAUGHT ERROR IN MIDDLEWARE ---');
-  console.error('Error Name:', err.name);
-  console.error('Error Message:', err.message);
-  console.error('Stack:', err.stack);
-  next(err); // Pass it on to your standard error handler
-});
 
 registerErrorHandlers(app);
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import BootstrapModal from '../components/modals/BootstrapModal';
 
 export default function Login() {
@@ -24,7 +25,7 @@ export default function Login() {
   }, []);
 
   const handleLogin = () => { /* ... */ };
-  const handleBootstrap = async (bootstrapSecret: string) => {
+  const handleBootstrap = () => {
     navigate('/bootstrap');
   };
 
@@ -62,8 +63,8 @@ export default function Login() {
       {showModal && (
         <BootstrapModal
           onClose={() => setShowModal(false)}
-          onExecute={async (bootstrapSecret) => {
-            handleBootstrap(bootstrapSecret);
+          onExecute={() => {
+            handleBootstrap();
             setShowModal(false);
           }}
         />

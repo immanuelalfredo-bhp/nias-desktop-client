@@ -14,6 +14,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@nias/sync-server": "file:../nias-sync-server",
     "zod": "^4.4.3"
   }
 }

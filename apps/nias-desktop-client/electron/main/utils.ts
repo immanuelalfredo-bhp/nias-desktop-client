@@ -11,3 +11,11 @@ export async function hashPassword(plainPassword: string): Promise<string> {
 export async function verifyPassword(hash: string, plainPassword: string): Promise<boolean> {
   return argon2.verify(hash, plainPassword);
 }
+
+export function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric characters with hyphens
+    .replace(/^-+|-+$/g, ''); // Remove leading and trailing hyphens
+}

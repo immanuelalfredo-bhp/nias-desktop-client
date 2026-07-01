@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { ipcMain } from 'electron';
 import{ sharedSync } from '@nias/shared';
 import { SYNC_SERVER_URL } from '../config.js';
-import { hashPassword } from '../utils.js';
+import { hashPassword, slugify } from '../utils.js';
 import { AuthDatabase } from '../db/database.js';
 
 export function registerBootstrapIpcHandlers(authDb: AuthDatabase): void {
@@ -46,7 +46,7 @@ export function registerBootstrapIpcHandlers(authDb: AuthDatabase): void {
               id: adminId,
               username: payload.username,
               passwordHash: passwordHash,
-              displayName: payload.displayName,
+              displayName: slugify(payload.displayName),
               email: payload.email,
             }
           }
@@ -72,8 +72,7 @@ export function registerBootstrapIpcHandlers(authDb: AuthDatabase): void {
         adminId: adminId,
         username: payload.username,
         passwordHash: passwordHash,
-        displayName: payload.displayName,
-        email: payload.email,
+        syncVersion: 1
       });
 
       return {status: 'success', adminId: adminId, result: result};

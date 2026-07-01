@@ -11,25 +11,23 @@ export class AuthQueries {
   insertBootstrapUser(params: {
     adminId: string, 
     username: string, 
-    passwordHash: string, 
-    displayName?: string | null, 
-    email?: string | null
+    passwordHash: string,
+    syncVersion: number
   }): void {
     
     const tx = this.db.transaction(() => {
       const stmt1 = this.db.prepare(`
-        INSERT INTO users (id, username, passwordHash, displayName, email)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO users (id, username, password_hash, sync_version)
+        VALUES (?, ?, ?, ?)
       `);
       stmt1.run(
         params.adminId, 
         params.username, 
-        params.passwordHash, 
-        params.displayName, 
-        params.email
+        params.passwordHash,
+        params.syncVersion
       );
-      const stmt2 = this.db.prepare(`UPDATE sync SET sync_version = 1`);
-      stmt2.run();
+      const stmt2 = this.db.prepare(`UPDATE sync SET sync_version = ?`);
+      stmt2.run(params.syncVersion);
     });
 
     tx();
