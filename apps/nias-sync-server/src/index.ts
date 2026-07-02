@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import app, { registerErrorHandlers } from './app.js';
 import { closeDb } from './db.js';
-import { authenticate, bootstrapAuthenticate, validate } from './middleware.js';
+import { userAuthenticate, bootstrapAuthenticate, appAuthenticate, validate } from './middleware.js';
 import { handlePush, handlePull, getBootstrapStatus, handleBootstrap, fetchLocalUser, syncLocalUsers } from './routes/sync.js';
 import { sharedSync } from '@nias/shared';
 import { SHUTDOWN_TIMEOUT } from './config.js';
@@ -16,7 +16,7 @@ app.get('/health', (_req, res) => {
 
 app.post(
   '/api/sync/push',
-  authenticate,
+  userAuthenticate,
   validate(sharedSync.PushPayloadSchema),
   (req, res, next) => {
     const context = {
@@ -32,14 +32,14 @@ app.post(
 
 app.post(
   '/api/sync/pull',
-  authenticate,
+  userAuthenticate,
   validate(sharedSync.SyncMetadataSchema),
   (req, res, next) => handlePull(req, res).catch(next)
 );
 
 app.post(
   '/api/login/fetch',
-  authenticate,
+  appAuthenticate,
   validate(sharedSync.AuthUsernameSchema),
   (req, res, next) => {
     const context = {
@@ -54,7 +54,7 @@ app.post(
 
 app.post(
   '/api/login/sync',
-  authenticate,
+  appAuthenticate,
   validate(sharedSync.AuthUserIdsSchema),
   (req, res, next) => {
     const context = {

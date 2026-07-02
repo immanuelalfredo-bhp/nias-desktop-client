@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron';
 import { AuthDatabase } from '../db/database.js';
-import { hashPassword, verifyPassword } from '@nias/shared/';
-import { SYNC_SERVER_URL } from '../config.js';
+import { verifyPassword } from '@nias/shared/';
+import { APP_ID, SYNC_SERVER_URL } from '../config.js';
 
 export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
   ipcMain.handle('auth:status', async () => {
@@ -37,6 +37,7 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
+          'app-id': `${APP_ID}`,
         },
         body: JSON.stringify({ username, password }),
       });
@@ -68,6 +69,7 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
+          'app-id': `${APP_ID}`,
         },
         body: JSON.stringify(payload),
       });

@@ -6,7 +6,7 @@ import { supabase } from './supabase.js';
  * Validates a Supabase bearer token and attaches the authenticated user
  * to the request.
  */
-export const authenticate: RequestHandler = async (req, res, next) => {
+export const userAuthenticate: RequestHandler = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -39,6 +39,23 @@ export const authenticate: RequestHandler = async (req, res, next) => {
     next(err);
   }
 };
+
+export const appAuthenticate: RequestHandler = async (req, res, next) => {
+  try {
+    const authHeader = req.headers['app-id'];
+
+    if (!authHeader || authHeader !== process.env.APP_ID) {
+      req.log.warn('App authentication failed: invalid token');
+      return res
+        .status(401)
+        .json({ error: 'Unauthorized: Invalid token' });
+    }
+    next();
+  } catch (err) {
+    req.log.error({ err }, 'Unexpected app authentication error');
+    next(err);
+  }
+}
 
 export const bootstrapAuthenticate: RequestHandler = async (req, res, next) => {
   try {
