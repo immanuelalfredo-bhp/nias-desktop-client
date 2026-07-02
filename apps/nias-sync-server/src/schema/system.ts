@@ -19,7 +19,7 @@ export const users = systemSchema.table('users', {
   updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   deletedAt: timestamp('deleted_at', { mode: 'string' }),
   isSynced: boolean('is_synced').default(false).notNull(),
-  syncVersion: integer('sync_version'),
+  syncVersion: integer('sync_version').notNull(),
 });
 
 // Infer the TypeScript types for the users table
@@ -40,7 +40,7 @@ export const audit = systemSchema.table('audit', {
   description: text('description').notNull(),
   timestamp: timestamp('timestamp', { mode: 'string' }).defaultNow().notNull(),
   isSynced: boolean('is_synced').default(false).notNull(),
-  syncVersion: integer('sync_version'),
+  syncVersion: integer('sync_version').notNull(),
 });
 
 // Infer the TypeScript types for the audit table

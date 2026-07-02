@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { ipcMain } from 'electron';
 import{ sharedSync } from '@nias/shared';
 import { SYNC_SERVER_URL } from '../config.js';
-import { hashPassword, slugify } from '../utils.js';
+import { hashPassword, slugify } from '@nias/shared/src/utils.js';
 import { AuthDatabase } from '../db/database.js';
 
 export function registerBootstrapIpcHandlers(authDb: AuthDatabase): void {
@@ -17,12 +17,12 @@ export function registerBootstrapIpcHandlers(authDb: AuthDatabase): void {
       });
 
       if (!response.ok) {
-        if (response.status === 401) return { isValid: false }; // Token issue
+        if (response.status === 401) return { success: false, isValid: false }; // Token issue
         throw new Error(`Server returned ${response.status}`);
       }
       
       const data = await response.json();
-      return data;
+      return { success: true, ...data };
     } catch (err) {
     console.error('Bootstrap IPC Error:', err);
     throw err; 
@@ -44,9 +44,9 @@ export function registerBootstrapIpcHandlers(authDb: AuthDatabase): void {
             tableName: 'users',
             payload: {
               id: adminId,
-              username: payload.username,
+              username: slugify(payload.username),
               passwordHash: passwordHash,
-              displayName: slugify(payload.displayName),
+              displayName: payload.displayName,
               email: payload.email,
             }
           }
@@ -70,14 +70,14 @@ export function registerBootstrapIpcHandlers(authDb: AuthDatabase): void {
 
       authDb.main.insertBootstrapUser({
         adminId: adminId,
-        username: payload.username,
+        username: slugify(payload.username),
         passwordHash: passwordHash,
         syncVersion: 1
       });
 
-      return {status: 'success', adminId: adminId, result: result};
+      return {success: true, adminId: adminId, result: result};
     } catch (error) {
-      return { status: 'error', message: error instanceof Error ? error.message : 'Unknown error' };
+      return { success: false, message: error instanceof Error ? error.message : 'Unknown error' };
     }
   });
 }

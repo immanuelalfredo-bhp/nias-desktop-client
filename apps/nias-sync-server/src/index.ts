@@ -2,7 +2,7 @@ import 'dotenv/config';
 import app, { registerErrorHandlers } from './app.js';
 import { closeDb } from './db.js';
 import { authenticate, bootstrapAuthenticate, validate } from './middleware.js';
-import { handlePush, handlePull, getBootstrapStatus, handleBootstrap } from './routes/sync.js';
+import { handlePush, handlePull, getBootstrapStatus, handleBootstrap, fetchLocalUser, syncLocalUsers } from './routes/sync.js';
 import { sharedSync } from '@nias/shared';
 import { SHUTDOWN_TIMEOUT } from './config.js';
 import { logger } from './logger.js';
@@ -35,6 +35,36 @@ app.post(
   authenticate,
   validate(sharedSync.SyncMetadataSchema),
   (req, res, next) => handlePull(req, res).catch(next)
+);
+
+app.post(
+  '/api/login/fetch',
+  authenticate,
+  validate(sharedSync.PushPayloadSchema),
+  (req, res, next) => {
+    const context = {
+      log: req.log,
+    };
+
+    return fetchLocalUser(req.validatedBody as sharedSync.PushPayload, context)
+      .then(result => res.json(result))
+      .catch(next);
+  }
+);
+
+app.post(
+  '/api/login/sync',
+  authenticate,
+  validate(sharedSync.PushPayloadSchema),
+  (req, res, next) => {
+    const context = {
+      log: req.log,
+    };
+
+    return syncLocalUsers(req.validatedBody as sharedSync.PushPayload, context)
+      .then(result => res.json(result))
+      .catch(next);
+  }
 );
 
 app.post(

@@ -11,9 +11,9 @@ export default function BootstrapModal({ onClose, onExecute }: BootstrapModalPro
   const [status, setStatus] = useState({ text: '', isError: false });
   const [bootstrapSecret, setBootstrapSecret] = useState('');
 
- const handleConfirm = async () => {
-  setIsBusy(true);
-  setStatus({ text: 'Verifying...', isError: false });
+  const handleConfirm = async () => {
+    setIsBusy(true);
+    setStatus({ text: 'Verifying...', isError: false });
 
     try {
       const result = await window.electronAPI.bootstrapStatus(bootstrapSecret);
@@ -36,7 +36,7 @@ export default function BootstrapModal({ onClose, onExecute }: BootstrapModalPro
   };
 
   return (
-    <ModalTemplate title="Bootstrap Token" onClose={onClose}>
+    <ModalTemplate title="Bootstrap Secret" onClose={onClose}>
       <input 
         id="input"
         type="password"

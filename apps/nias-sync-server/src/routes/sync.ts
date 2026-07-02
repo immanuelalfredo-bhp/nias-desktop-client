@@ -1,6 +1,6 @@
 import { type Request, type Response } from 'express';
 import { db } from '../db.js';
-import { asc, eq, gte, count } from 'drizzle-orm';
+import { asc, eq, gte, count, inArray, and, isNotNull } from 'drizzle-orm';
 import { SYNC_LIMIT } from '../config.js';
 import { TABLE_MAP, defaultRegistry, upsertSyncRecords } from '../utils.js';
 import {
@@ -9,7 +9,8 @@ import {
   proposedChanges,
 } from '../schema.js';
 import { 
-  sharedSync, 
+  sharedSync,
+  verifyPassword,
   type SyncChanges,
   type VersionRegistry 
 } from '@nias/shared';
@@ -212,10 +213,106 @@ export async function handleBootstrap(
       users: 1 
     };
 
-    await tx.insert(sync).values(initialRegistry);
+    await tx.update(sync).set(initialRegistry);
 
     context?.log?.info({ adminId: bootstrap.payload.id }, 'System successfully bootstrapped');
     
     return { status: 'success', admin: adminUser };
   });
+}
+
+export async function fetchLocalUser(
+  payload: sharedSync.PushPayload,
+  context?: { log?: Logger; userId?: string }
+) {
+  try {
+    const user = await db
+      .select({ 
+        id: users.id, 
+        username: users.username, 
+        passwordHash: users.passwordHash, 
+        syncVersion: users.syncVersion 
+      })
+      .from(users)
+      .where(
+        eq(users.username, payload.changes
+          .find(c => c.tableName === 'users')?.payload.username || '')
+      )
+      .limit(1)
+      .then(rows => rows[0] ?? null);
+
+    if (user) {
+      const providedHash = payload.changes.find(c => c.tableName === 'users')?.payload.passwordHash || '';
+      const isPasswordValid = await verifyPassword(user.passwordHash, providedHash);
+
+      if (!isPasswordValid) {
+        context?.log?.warn(
+          { username: user.username },
+          'Password verification failed for local user'
+        );
+        return null;
+      }
+    } else {
+      context?.log?.info(
+        { username: payload.changes.find(c => c.tableName === 'users')?.payload.username },
+        'Local user not found'
+      );
+      return null;
+    }
+
+    return user;
+  } catch (error) {
+    console.error("Error fetching local user:", error);
+    throw new Error("Database access failed");
+  }
+}
+
+export async function syncLocalUsers(
+  payload: sharedSync.PushPayload,
+  context?: { log?: Logger; userId?: string }
+) {
+  try {
+    const serverUsers = await db
+      .select({ 
+        id: users.id,
+        username: users.username,
+        passwordHash: users.passwordHash,
+        syncVersion: users.syncVersion,
+        deletedAt: users.deletedAt,
+      })
+      .from(users)
+      .where(inArray(
+        users.id, 
+        payload.changes
+          .filter(c => c.tableName === 'users')
+          .map(c => c.payload.id)
+          .filter((id): id is string => id !== undefined
+        )
+      ));
+    const changes: any[] = [];
+    const deletedUsers: string[] = [];
+
+    const payloadMap = new Map(
+      payload.changes
+        .filter(c => c.tableName === 'users')
+        .map(c => [c.payload.id, c.payload])
+    );
+
+    for (const user of serverUsers) {
+      if (user.deletedAt !== null) {
+        deletedUsers.push(user.id);
+        continue;
+      }
+
+      const localVersion = payloadMap.get(user.id)?.syncVersion ?? 0;
+      if (user.syncVersion > localVersion) {
+        changes.push(user);
+      }
+    }
+
+    return { changes, deletedUsers };
+  } catch (error) {
+    console.error("Error syncing local users:", error);
+    throw new Error("Database access failed");
+  }
 }

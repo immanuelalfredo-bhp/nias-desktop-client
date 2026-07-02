@@ -65,17 +65,9 @@ function ensureAuthDbSchema(db: Database.Database) {
       password_hash TEXT NOT NULL,
       sync_version INTEGER NOT NULL
     );
-    CREATE TABLE IF NOT EXISTS sync (
-      sync_version INTEGER NOT NULL
-    );
   `);
-
-  const syncRow = db.prepare('SELECT COUNT(*) AS count FROM sync').get() as { count: number };
-
-  if (syncRow.count === 0) {
-    db.prepare('INSERT INTO sync (sync_version) VALUES (?)').run(0);
-  }
 }
+
 
 function getOrGenerateEncryptionKey(): string {
   if (fs.existsSync(KEY_FILE)) {

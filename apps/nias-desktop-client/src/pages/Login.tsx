@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLocation } from 'react-router-dom';
 import BootstrapModal from '../components/modals/BootstrapModal';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+
+  const [isBusy, setIsBusy] = useState(false);
+  const [status, setStatus] = useState({ text: '', isError: false });
   const [isAuthEmpty, setIsAuthEmpty] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
@@ -24,7 +26,61 @@ export default function Login() {
     checkStatus();
   }, []);
 
-  const handleLogin = () => { /* ... */ };
+  const handleLogin = async () => {
+    setIsBusy(true);
+    setStatus({ text: 'Logging in...', isError: false });
+
+    try {
+      const result = await window.electronAPI.authLogin({
+        username: username, 
+        password: password 
+      });
+      if (result.success) {
+        navigate('/dashboard');
+        return;
+      }
+
+      setStatus({ text: 'Syncing account data...', isError: false });
+      const userResult = await window.electronAPI.authFetchUser(username, password);
+      const syncResult = await window.electronAPI.authSyncUsers();
+
+      if (userResult.success && syncResult.success) {
+        const retryLoginResult = await window.electronAPI.authLogin({
+          username: username, 
+          password: password 
+        });
+
+        if (retryLoginResult.success) {
+          navigate('/dashboard');
+          return;
+        } else {
+          setStatus({ text: `Sync succeeded but login failed: ${retryLoginResult.message || 'Unknown error'}`, isError: true });
+        }
+      } else {
+        setStatus({ text: `Login failed and could not sync account data: ${userResult.message || 'Unknown error'}`, isError: true });
+      }
+    } catch (error) {
+      setStatus({ text: `Login failed: ${error instanceof Error ? error.message : 'Unknown error'}`, isError: true });
+    } finally {
+      setIsBusy(false);
+    }
+  };
+  const handleSync = async () => {
+    setIsBusy(true);
+    setStatus({ text: 'Syncing...', isError: false });
+    try {
+      const result = await window.electronAPI.authSyncUsers();
+      if (result.success) {
+        setStatus({ text: 'Sync successful', isError: false });
+      } else {
+        setStatus({ text: `Sync failed: ${result.message || 'Unknown error'}`, isError: true });
+      }
+    } catch (error) {
+      setStatus({ text: `Sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`, isError: true });
+    } finally {
+      setIsBusy(false);
+    }
+  }
   const handleBootstrap = () => {
     navigate('/bootstrap');
   };
@@ -52,13 +108,16 @@ export default function Login() {
 
         <div className="actions">
           <button onClick={handleLogin} className="primary">Login</button>
+          <button onClick={handleSync} className="primary">Sync</button>
           {isAuthEmpty && (
             <button onClick={() => setShowModal(true)} className="secondary">
               Bootstrap
             </button>
           )}
         </div>
-      <div id="status" className="status"></div>
+      <div className={status.isError ? 'status error' : 'status'}>
+        {status.text}
+      </div>
       </section>
       {showModal && (
         <BootstrapModal

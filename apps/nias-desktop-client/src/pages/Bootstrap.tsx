@@ -38,7 +38,7 @@ const handleConfirm = async () => {
           password: password
         });
 
-        if (result.status === 'success') {
+        if (result.success) {
           navigate('/login', { state: { message: 'Bootstrap successful. Please log in.' } });
         } else {
           setStatus({ text: `Bootstrap failed: ${result.message}`, isError: true });
@@ -58,11 +58,11 @@ const handleConfirm = async () => {
     <div id="loginWrap" className="login-wrap">
       <section className="card login-card">
         <h1>Bootstrap User</h1>
-        <label htmlFor="bootstrapToken">Bootstrap Token</label>
+        <label htmlFor="bootstrapSecret">Bootstrap Secret</label>
           <input
-            id="bootstrapToken"
+            id="bootstrapSecret"
             type="password"
-            placeholder="Bootstrap Token"
+            placeholder="Bootstrap Secret"
             value={bootstrapSecret}
             onChange={(e) => setBootstrapSecret(e.target.value)}
           />
