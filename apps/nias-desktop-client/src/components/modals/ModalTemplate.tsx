@@ -9,14 +9,15 @@ interface ModalTemplateProps {
 export default function ModalTemplate({ title, children, onClose }: ModalTemplateProps) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <section className="modal-card" onClick={(e) => e.stopPropagation()}>
+      <section
+        className="modal-card"
+        onClick={(event) => event.stopPropagation()}
+      >
         <header>
           <h2 id="modalTitle">{title}</h2>
         </header>
-        
-        <div className="modal-body">
-          {children}
-        </div>
+
+        <div className="modal-body">{children}</div>
       </section>
     </div>
   );

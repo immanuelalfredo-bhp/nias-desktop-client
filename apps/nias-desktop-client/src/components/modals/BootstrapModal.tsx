@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ModalTemplate from './ModalTemplate';
+import type { StatusState } from '../../types/ui';
 
 interface BootstrapModalProps {
   onClose: () => void;
@@ -8,7 +9,10 @@ interface BootstrapModalProps {
 
 export default function BootstrapModal({ onClose, onExecute }: BootstrapModalProps) {
   const [isBusy, setIsBusy] = useState(false);
-  const [status, setStatus] = useState({ text: '', isError: false });
+  const [status, setStatus] = useState<StatusState>({
+    text: '',
+    isError: false,
+  });
   const [bootstrapSecret, setBootstrapSecret] = useState('');
 
   const handleConfirm = async () => {
@@ -20,15 +24,12 @@ export default function BootstrapModal({ onClose, onExecute }: BootstrapModalPro
 
       if (result.isValid === false) {
         setStatus({ text: 'Incorrect token', isError: true });
-      } 
-      else if (result.isEmpty === true) {
-        onExecute(); 
-        onClose();
-      } 
-      else {
+      } else if (result.isEmpty === true) {
+        onExecute();
+      } else {
         setStatus({ text: 'System already initialized', isError: true });
       }
-    } catch (err) {
+    } catch {
       setStatus({ text: 'Bootstrap failed: Connection error', isError: true });
     } finally {
       setIsBusy(false);
@@ -46,8 +47,12 @@ export default function BootstrapModal({ onClose, onExecute }: BootstrapModalPro
       />
 
       <div className="actions">
-        <button className="secondary" onClick={onClose} disabled={isBusy}>Cancel</button>
-        <button className="primary" onClick={handleConfirm} disabled={isBusy}>Confirm</button>
+        <button className="secondary" onClick={onClose} disabled={isBusy}>
+          Cancel
+        </button>
+        <button className="primary" onClick={handleConfirm} disabled={isBusy}>
+          Confirm
+        </button>
       </div>
       
       <div className={status.isError ? 'status error' : 'status'}>

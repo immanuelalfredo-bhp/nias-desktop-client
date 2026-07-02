@@ -1,12 +1,24 @@
 import crypto from 'node:crypto';
 import { ipcMain } from 'electron';
-import { sharedSync } from '@nias/shared';
+import { hashPassword, sharedAuth, sharedSync, slugify } from '@nias/shared';
 import { SYNC_SERVER_URL } from '../config.js';
-import { hashPassword, slugify } from '@nias/shared/';
 import { AuthDatabase } from '../db/database.js';
 
+interface BootstrapStatusResponse {
+  isEmpty: boolean;
+}
+
+interface ErrorResponseBody {
+  error?: string;
+  message?: string;
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export function registerBootstrapIpcHandlers(authDb: AuthDatabase): void {
-  ipcMain.handle('bootstrap:status', async (event, bootstrapSecret: string) => {
+  ipcMain.handle('bootstrap:status', async (_event, bootstrapSecret: string) => {
     try {
       const response = await fetch(`${SYNC_SERVER_URL}/api/bootstrap/status`, {
         method: 'POST',
@@ -17,23 +29,29 @@ export function registerBootstrapIpcHandlers(authDb: AuthDatabase): void {
       });
 
       if (!response.ok) {
-        if (response.status === 401) return { success: false, isValid: false }; // Token issue
+        if (response.status === 401) {
+          return { success: false, isEmpty: false, isValid: false };
+        }
+
         throw new Error(`Server returned ${response.status}`);
       }
-      
-      const data = await response.json();
-      return { success: true, ...data };
+
+      const data = (await response.json()) as BootstrapStatusResponse;
+      return { success: true, isEmpty: data.isEmpty, isValid: true };
     } catch (err) {
-    console.error('Bootstrap IPC Error:', err);
-    throw err; 
-  }
+      console.error('Bootstrap IPC error:', err);
+      throw err;
+    }
   });
 
-  ipcMain.handle('bootstrap:execute', async (event, bootstrapSecret: string, payload: any) => {
+  ipcMain.handle(
+    'bootstrap:execute',
+    async (_event, bootstrapSecret: string, payload: unknown) => {
     try {
+      const bootstrapAccount = sharedAuth.BootstrapAccountSchema.parse(payload);
       const adminId = crypto.randomUUID();
       const payloadId = crypto.randomUUID();
-      const passwordHash = await hashPassword(payload.password);
+      const passwordHash = await hashPassword(bootstrapAccount.password);
 
       const payloadData: sharedSync.PushPayload = {
         id: payloadId,
@@ -44,13 +62,13 @@ export function registerBootstrapIpcHandlers(authDb: AuthDatabase): void {
             tableName: 'users',
             payload: {
               id: adminId,
-              username: slugify(payload.username),
-              passwordHash: passwordHash,
-              displayName: payload.displayName,
-              email: payload.email,
-            }
-          }
-        ]
+              username: slugify(bootstrapAccount.username),
+              passwordHash,
+              displayName: bootstrapAccount.displayName,
+              email: bootstrapAccount.email,
+            },
+          },
+        ],
       };
 
       const response = await fetch(`${SYNC_SERVER_URL}/api/bootstrap/execute`, {
@@ -62,22 +80,28 @@ export function registerBootstrapIpcHandlers(authDb: AuthDatabase): void {
         body: JSON.stringify(payloadData),
       });
 
-      const result = await response.json() as any;
-      
+      const result = (await response.json()) as ErrorResponseBody;
+
       if (!response.ok) {
-        throw new Error(result.error || 'Bootstrap execution failed');
+        throw new Error(
+          result.error ?? result.message ?? 'Bootstrap execution failed'
+        );
       }
 
       authDb.main.insertBootstrapUser({
-        adminId: adminId,
-        username: slugify(payload.username),
-        passwordHash: passwordHash,
-        syncVersion: 1
+        adminId,
+        username: slugify(bootstrapAccount.username),
+        passwordHash,
+        syncVersion: 1,
       });
 
-      return {success: true, adminId: adminId, result: result};
+      return { success: true, message: 'Bootstrap completed successfully' };
     } catch (error) {
-      return { success: false, message: error instanceof Error ? error.message : 'Unknown error' };
+      return {
+        success: false,
+        message: getErrorMessage(error, 'Unknown error'),
+      };
     }
-  });
+    }
+  );
 }

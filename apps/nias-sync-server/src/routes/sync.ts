@@ -1,20 +1,23 @@
 import { type Request, type Response } from 'express';
-import { db } from '../db.js';
-import { asc, eq, gte, count, inArray, and, isNotNull } from 'drizzle-orm';
-import { SYNC_LIMIT } from '../config.js';
-import { TABLE_MAP, defaultRegistry, upsertSyncRecords } from '../utils.js';
+import { asc, count, eq, gt, inArray } from 'drizzle-orm';
+import type { Logger } from 'pino';
 import {
-  users,
-  sync, 
-  proposedChanges,
-} from '../schema.js';
-import { 
+  sharedAuth,
   sharedSync,
   verifyPassword,
   type SyncChanges,
-  type VersionRegistry 
+  type VersionRegistry,
 } from '@nias/shared';
-import type { Logger } from 'pino';
+import { SYNC_LIMIT } from '../config.js';
+import { db } from '../db.js';
+import {
+  proposedChanges,
+  sync,
+  users,
+} from '../schema.js';
+import { TABLE_MAP, defaultRegistry, upsertSyncRecords } from '../utils.js';
+
+type SyncRow = Record<string, unknown>;
 
 /**
  * Computes table-wise sync deltas by comparing client versions against
@@ -34,7 +37,7 @@ export async function getSyncDelta(
   const registry: VersionRegistry = { ...defaultRegistry, ...(rows[0] ?? {}) };
 
   const entries = await Promise.all(
-    TABLE_MAP.map(async (t): Promise<any[]> => {
+    TABLE_MAP.map(async (t): Promise<SyncRow[]> => {
       const clientVer = payload[t.key] ?? 0;
       const serverVer = registry[t.key] ?? 0;
 
@@ -42,9 +45,9 @@ export async function getSyncDelta(
         ? db
             .select()
             .from(t.table)
-            .where(gte(t.table.syncVersion, clientVer))
+            .where(gt(t.table.syncVersion, clientVer))
             .limit(syncLimit)
-            .orderBy(asc(t.table.syncVersion)) || []
+            .orderBy(asc(t.table.syncVersion))
         : [];
     })
   );
@@ -208,13 +211,6 @@ export async function handleBootstrap(
       throw new Error("Failed to create admin user");
     }
 
-    const initialRegistry = { 
-      ...defaultRegistry, 
-      users: 1 
-    };
-
-    await tx.update(sync).set(initialRegistry);
-
     context?.log?.info({ adminId: bootstrap.payload.id }, 'System successfully bootstrapped');
     
     return { status: 'success', admin: adminUser };
@@ -222,21 +218,19 @@ export async function handleBootstrap(
 }
 
 export async function fetchLocalUser(
-  payload: sharedSync.AuthUsername,
+  payload: sharedAuth.LoginCredentials,
   context?: { log?: Logger; userId?: string }
 ) {
   try {
     const user = await db
-      .select({ 
-        id: users.id, 
-        username: users.username, 
-        passwordHash: users.passwordHash, 
-        syncVersion: users.syncVersion 
+      .select({
+        id: users.id,
+        username: users.username,
+        passwordHash: users.passwordHash,
+        syncVersion: users.syncVersion,
       })
       .from(users)
-      .where(
-        eq(users.username, payload.username)
-      )
+      .where(eq(users.username, payload.username))
       .limit(1)
       .then(rows => rows[0] ?? null);
 
@@ -261,23 +255,22 @@ export async function fetchLocalUser(
 
     return user;
   } catch (error) {
-    console.error("Error fetching local user:", error);
-    throw new Error("Database access failed");
+    console.error('Error fetching local user:', error);
+    throw new Error('Database access failed');
   }
 }
 
 export async function syncLocalUsers(
-  payload: sharedSync.AuthUserIds,
+  payload: sharedAuth.UserSyncState[],
   context?: { log?: Logger; userId?: string }
 ) {
   try {
-    if (payload.id.length !== payload.syncVersion.length) {
-      context?.log?.error('Sync payload mismatch: id and syncVersion arrays differ in length');
-      throw new Error("Invalid sync payload");
+    if (payload.length === 0) {
+      return { changes: [], deletedUserIds: [] };
     }
 
     const serverUsers = await db
-      .select({ 
+      .select({
         id: users.id,
         username: users.username,
         passwordHash: users.passwordHash,
@@ -285,18 +278,18 @@ export async function syncLocalUsers(
         deletedAt: users.deletedAt,
       })
       .from(users)
-      .where(
-        inArray(users.id, payload.id)
-      )
+      .where(inArray(users.id, payload.map((item) => item.id)))
       .orderBy(asc(users.syncVersion));
-    const changes: any[] = [];
-    const deletedUsers: string[] = [];
+    const changes: sharedAuth.RemoteUserRecord[] = [];
+    const deletedUserIds: string[] = [];
 
-    const versionMap = new Map(payload.id.map((id, i) => [id, payload.syncVersion[i]]));
+    const versionMap = new Map(
+      payload.map((item) => [item.id, item.syncVersion])
+    );
 
     for (const user of serverUsers) {
       if (user.deletedAt !== null) {
-        deletedUsers.push(user.id);
+        deletedUserIds.push(user.id);
         continue;
       }
 
@@ -312,9 +305,9 @@ export async function syncLocalUsers(
       }
     }
 
-    return { changes, deletedUsers };
+    return { changes, deletedUserIds };
   } catch (error) {
-    console.error("Error syncing local users:", error);
-    throw new Error("Database access failed");
+    console.error('Error syncing local users:', error);
+    throw new Error('Database access failed');
   }
 }

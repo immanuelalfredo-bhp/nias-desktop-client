@@ -49,30 +49,14 @@ export const PushPayloadSchema = z.object({
       z.object({
         id: z.uuid(),
         tableName: z.literal('users'),
-        payload: UserSchema.partial()
+        payload: UserSchema.partial(),
       }),
       z.object({
         id: z.uuid(),
         tableName: z.literal('audit'),
-        payload: AuditSchema.partial()
-      })
-    ])
+        payload: AuditSchema.partial(),
+      }),
+    ]),
   ),
 });
-
-export const AuthUsernameSchema = z.object({
-  id: z.uuid(),
-  username: z.string().min(1).max(100),
-  password: z.string().min(1),
-});
-
-export const AuthUserIdsSchema = z.object({
-  id: z.array(z.uuid()),
-  username: z.array(z.string().min(1).max(100)),
-  passwordHash: z.array(z.string().min(1)),
-  syncVersion: z.array(z.number().int().nonnegative()),
-});
-
-export type AuthUsername = z.infer<typeof AuthUsernameSchema>;
-export type AuthUserIds = z.infer<typeof AuthUserIdsSchema>;
 export type PushPayload = z.infer<typeof PushPayloadSchema>;

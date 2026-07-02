@@ -44,7 +44,7 @@ export const appAuthenticate: RequestHandler = async (req, res, next) => {
   try {
     const authHeader = req.headers['app-id'];
 
-    if (!authHeader || authHeader !== process.env.APP_ID) {
+    if (typeof authHeader !== 'string' || authHeader !== process.env.APP_ID) {
       req.log.warn('App authentication failed: invalid token');
       return res
         .status(401)
@@ -55,13 +55,16 @@ export const appAuthenticate: RequestHandler = async (req, res, next) => {
     req.log.error({ err }, 'Unexpected app authentication error');
     next(err);
   }
-}
+};
 
 export const bootstrapAuthenticate: RequestHandler = async (req, res, next) => {
   try {
     const authHeader = req.headers['bootstrap-secret'];
 
-    if (!authHeader || authHeader !== process.env.BOOTSTRAP_SECRET) {
+    if (
+      typeof authHeader !== 'string' ||
+      authHeader !== process.env.BOOTSTRAP_SECRET
+    ) {
       req.log.warn('Bootstrap authentication failed: invalid token');
       return res
         .status(401)
@@ -72,7 +75,7 @@ export const bootstrapAuthenticate: RequestHandler = async (req, res, next) => {
     req.log.error({ err }, 'Unexpected bootstrap authentication error');
     next(err);
   }
-}
+};
 
 export const validate = <T>(schema: ZodType<T>): RequestHandler => {
   return (req, res, next) => {

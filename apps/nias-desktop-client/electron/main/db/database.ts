@@ -9,14 +9,14 @@ import {
 
 export class AuthDatabase {
   private readonly db: Database.Database;
-  readonly main: AuthQueries
+  readonly main: AuthQueries;
 
   constructor(dbPath: string, key: string) {
     this.db = new Database(dbPath);
     this.db.pragma(`key = '${key}'`);
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('foreign_keys = ON');
-    this.main = new AuthQueries(this.db)
+    this.main = new AuthQueries(this.db);
   }
 }
 
@@ -39,14 +39,14 @@ export function initializeAuthDatabase(): AuthDatabase {
       setupNewAuthDb(db, key);
     }
   } catch (error) {
-    console.error("Key incorrect or DB corrupted, resetting...", error);
-    if (fs.existsSync(AUTH_DB_PATH)) fs.unlinkSync(AUTH_DB_PATH);
+    console.error('Key incorrect or DB corrupted, backing up auth data...', error);
+    backupAuthArtifacts();
 
-    // Generate new key and DB
     key = rotateEncryptionKey();
     db = new Database(AUTH_DB_PATH);
     setupNewAuthDb(db, key);
   }
+
   return new AuthDatabase(AUTH_DB_PATH, key);
 }
 
@@ -68,6 +68,17 @@ function ensureAuthDbSchema(db: Database.Database) {
   `);
 }
 
+function backupAuthArtifacts(): void {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+  if (fs.existsSync(AUTH_DB_PATH)) {
+    fs.renameSync(AUTH_DB_PATH, `${AUTH_DB_PATH}.${timestamp}.bak`);
+  }
+
+  if (fs.existsSync(KEY_FILE)) {
+    fs.renameSync(KEY_FILE, `${KEY_FILE}.${timestamp}.bak`);
+  }
+}
 
 function getOrGenerateEncryptionKey(): string {
   if (fs.existsSync(KEY_FILE)) {

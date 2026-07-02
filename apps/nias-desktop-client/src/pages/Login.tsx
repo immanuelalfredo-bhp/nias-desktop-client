@@ -1,21 +1,36 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import BootstrapModal from '../components/modals/BootstrapModal';
+import type { LoginRouteState, StatusState } from '../types/ui';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const [isBusy, setIsBusy] = useState(false);
-  const [status, setStatus] = useState({ text: '', isError: false });
+  const [status, setStatus] = useState<StatusState>({
+    text: '',
+    isError: false,
+  });
   const [isAuthEmpty, setIsAuthEmpty] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const routeState = location.state as LoginRouteState | null;
+
+    if (!routeState?.message) {
+      return;
+    }
+
+    setStatus({ text: routeState.message, isError: false });
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        console.log('Checking auth database status...');
         const response = await window.electronAPI.authStatus();
         setIsAuthEmpty(response.isEmpty);
       } catch (error) {
@@ -43,8 +58,6 @@ export default function Login() {
       setStatus({ text: 'Syncing account data...', isError: false });
       const userResult = await window.electronAPI.authFetchUser(username, password);
       const syncResult = await window.electronAPI.authSyncUsers();
-      console.log('User fetch result:', userResult);
-      console.log('Sync result:', syncResult);
 
       if (userResult.success && syncResult.success) {
         const retryLoginResult = await window.electronAPI.authLogin({
@@ -109,10 +122,18 @@ export default function Login() {
           />
 
         <div className="actions">
-          <button onClick={handleLogin} className="primary">Login</button>
-          <button onClick={handleSync} className="secondary">Sync</button>
+          <button onClick={handleLogin} className="primary" disabled={isBusy}>
+            Login
+          </button>
+          <button onClick={handleSync} className="secondary" disabled={isBusy}>
+            Sync
+          </button>
           {isAuthEmpty && (
-            <button onClick={() => setShowModal(true)} className="secondary">
+            <button
+              onClick={() => setShowModal(true)}
+              className="secondary"
+              disabled={isBusy}
+            >
               Bootstrap
             </button>
           )}

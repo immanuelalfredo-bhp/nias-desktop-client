@@ -48,7 +48,7 @@ export const registerErrorHandlers = (server: express.Express) => {
   });
 
   // Global error handler to catch unhandled errors and prevent server crashes
-  server.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+  server.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
     req.log?.error({ err }, 'Unhandled request error');
     logger.error({ err }, 'Unhandled application error');
 

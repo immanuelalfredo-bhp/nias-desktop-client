@@ -1,10 +1,31 @@
+import type { BootstrapAccount, LoginCredentials } from '@nias/shared';
+
+interface AuthStatusResult {
+  isEmpty: boolean;
+}
+
+interface IpcResult {
+  success: boolean;
+  message?: string;
+}
+
+interface BootstrapStatusResult extends IpcResult {
+  isEmpty: boolean;
+  isValid: boolean;
+}
+
 export interface ElectronAPI {
-  authStatus: () => Promise<{ isEmpty: boolean }>;
-  authLogin: (payload: { username: string, password: string }) => Promise<{ success: boolean, message?: string }>;
-  authFetchUser: (username: string, password: string) => Promise<{ success: boolean, message?: string }>;
-  authSyncUsers: () => Promise<{ success: boolean, message?: string }>;
-  bootstrapStatus: (bootstrapSecret: string) => Promise<{ success: boolean, isEmpty: boolean, isValid: boolean }>;
-  bootstrapExecute: (bootstrapSecret: string, payload: any) => Promise<{ success: boolean, message?: string }>;
+  authStatus: () => Promise<AuthStatusResult>;
+  authLogin: (payload: LoginCredentials) => Promise<IpcResult>;
+  authFetchUser: (username: string, password: string) => Promise<IpcResult>;
+  authSyncUsers: () => Promise<IpcResult>;
+  bootstrapStatus: (
+    bootstrapSecret: string
+  ) => Promise<BootstrapStatusResult>;
+  bootstrapExecute: (
+    bootstrapSecret: string,
+    payload: BootstrapAccount
+  ) => Promise<IpcResult>;
 }
 
 declare global {
@@ -13,5 +34,5 @@ declare global {
   }
 }
 
-declare module "*.css";
-declare module "*.css?inline";
+declare module '*.css';
+declare module '*.css?inline';

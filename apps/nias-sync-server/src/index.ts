@@ -1,9 +1,21 @@
 import 'dotenv/config';
 import app, { registerErrorHandlers } from './app.js';
 import { closeDb } from './db.js';
-import { userAuthenticate, bootstrapAuthenticate, appAuthenticate, validate } from './middleware.js';
-import { handlePush, handlePull, getBootstrapStatus, handleBootstrap, fetchLocalUser, syncLocalUsers } from './routes/sync.js';
-import { sharedSync } from '@nias/shared';
+import {
+  userAuthenticate,
+  bootstrapAuthenticate,
+  appAuthenticate,
+  validate,
+} from './middleware.js';
+import {
+  handlePush,
+  handlePull,
+  getBootstrapStatus,
+  handleBootstrap,
+  fetchLocalUser,
+  syncLocalUsers,
+} from './routes/sync.js';
+import { sharedAuth, sharedSync } from '@nias/shared';
 import { SHUTDOWN_TIMEOUT } from './config.js';
 import { logger } from './logger.js';
 
@@ -40,14 +52,22 @@ app.post(
 app.post(
   '/api/login/fetch',
   appAuthenticate,
-  validate(sharedSync.AuthUsernameSchema),
+  validate(sharedAuth.LoginCredentialsSchema),
   (req, res, next) => {
     const context = {
       log: req.log,
     };
 
-    return fetchLocalUser(req.validatedBody as sharedSync.AuthUsername, context)
-      .then(result => res.json(result))
+    return fetchLocalUser(req.validatedBody as sharedAuth.LoginCredentials, context)
+      .then((result) => {
+        if (!result) {
+          return res.status(404).json({
+            message: 'User not found or password is incorrect',
+          });
+        }
+
+        return res.json({ user: result });
+      })
       .catch(next);
   }
 );
@@ -55,13 +75,13 @@ app.post(
 app.post(
   '/api/login/sync',
   appAuthenticate,
-  validate(sharedSync.AuthUserIdsSchema),
+  validate(sharedAuth.UserSyncStateListSchema),
   (req, res, next) => {
     const context = {
       log: req.log,
     };
 
-    return syncLocalUsers(req.validatedBody as sharedSync.AuthUserIds, context)
+    return syncLocalUsers(req.validatedBody as sharedAuth.UserSyncState[], context)
       .then(result => res.json(result))
       .catch(next);
   }

@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { BootstrapAccount } from '@nias/shared';
+import type { StatusState } from '../types/ui';
 
 export default function BootstrapPage() {
   const [username, setUsername] = useState('');
@@ -7,15 +9,18 @@ export default function BootstrapPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
+
   const [isBusy, setIsBusy] = useState(false);
-  const [status, setStatus] = useState({ text: '', isError: false });
+  const [status, setStatus] = useState<StatusState>({
+    text: '',
+    isError: false,
+  });
   const [bootstrapSecret, setBootstrapSecret] = useState('');
   const navigate = useNavigate();
 
-const handleConfirm = async () => {
-  setIsBusy(true);
-  setStatus({ text: 'Verifying...', isError: false });
+  const handleConfirm = async () => {
+    setIsBusy(true);
+    setStatus({ text: 'Verifying...', isError: false });
 
     try {
       if (!bootstrapSecret) {
@@ -31,15 +36,22 @@ const handleConfirm = async () => {
         setStatus({ text: 'Passwords do not match', isError: true });
         return;
       } else {
-        const result = await window.electronAPI.bootstrapExecute(bootstrapSecret, {
-          username: username,
-          displayName: displayName,
-          email: email,
-          password: password
-        });
+        const payload: BootstrapAccount = {
+          username,
+          displayName,
+          email,
+          password,
+        };
+
+        const result = await window.electronAPI.bootstrapExecute(
+          bootstrapSecret,
+          payload
+        );
 
         if (result.success) {
-          navigate('/login', { state: { message: 'Bootstrap successful. Please log in.' } });
+          navigate('/login', {
+            state: { message: 'Bootstrap successful. Please log in.' },
+          });
         } else {
           setStatus({ text: `Bootstrap failed: ${result.message}`, isError: true });
         }
@@ -112,14 +124,18 @@ const handleConfirm = async () => {
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
 
-      <div className="actions">
-        <button className="primary" onClick={handleConfirm} disabled={isBusy}>Confirm</button>
-        <button className="secondary" onClick={handleCancel} disabled={isBusy}>Cancel</button>
-      </div>
+        <div className="actions">
+          <button className="primary" onClick={handleConfirm} disabled={isBusy}>
+            Confirm
+          </button>
+          <button className="secondary" onClick={handleCancel} disabled={isBusy}>
+            Cancel
+          </button>
+        </div>
 
-      <div className={status.isError ? 'status error' : 'status'}>
-        {status.text}
-      </div>
+        <div className={status.isError ? 'status error' : 'status'}>
+          {status.text}
+        </div>
       </section>
     </div>
   );

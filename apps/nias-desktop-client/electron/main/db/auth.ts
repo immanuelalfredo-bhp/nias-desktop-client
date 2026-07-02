@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3-multiple-ciphers';
+import type { UserSyncState } from '@nias/shared';
 
 interface LocalUser {
   id: string;
@@ -6,40 +7,39 @@ interface LocalUser {
   password_hash: string;
 }
 
-interface LocalUserId {
-  id: string;
-}
-
 export class AuthQueries {
   constructor(private readonly db: Database.Database) {}
 
   countLocalUsers(): number {
-    const result = this.db.prepare('SELECT COUNT(*) AS count FROM users').get() as { count: number };
+    const result = this.db
+      .prepare('SELECT COUNT(*) AS count FROM users')
+      .get() as { count: number };
+
     return result.count;
   }
 
-  listLocalUserIdsAndSyncVersion(): LocalUserId[] {
+  listLocalUserSyncStates(): UserSyncState[] {
     const result = this.db.prepare(`
       SELECT id, sync_version AS syncVersion FROM users
-    `).all() as LocalUserId[];
+    `).all() as UserSyncState[];
+
     return result;
   }
 
   insertBootstrapUser(params: {
-    adminId: string, 
-    username: string, 
-    passwordHash: string,
-    syncVersion: number
+    adminId: string;
+    username: string;
+    passwordHash: string;
+    syncVersion: number;
   }): void {
-    
     const tx = this.db.transaction(() => {
       const stmt1 = this.db.prepare(`
         INSERT INTO users (id, username, password_hash, sync_version)
         VALUES (?, ?, ?, ?)
       `);
       stmt1.run(
-        params.adminId, 
-        params.username, 
+        params.adminId,
+        params.username,
         params.passwordHash,
         params.syncVersion
       );
@@ -51,19 +51,28 @@ export class AuthQueries {
   }
 
   findLocalUser(username: string): LocalUser | null {
-    const result = this.db.prepare('SELECT id, username, password_hash FROM users WHERE username = ?').get(username) as LocalUser | undefined;
+    const result = this.db
+      .prepare(
+        'SELECT id, username, password_hash FROM users WHERE username = ?'
+      )
+      .get(username) as LocalUser | undefined;
+
     return result || null;
   }
 
-  insertLocalUser(params: { 
-    id: string; 
+  upsertLocalUser(params: {
+    id: string;
     username: string; 
-    passwordHash: string,
-    syncVersion: number
+    passwordHash: string;
+    syncVersion: number;
   }): void {
     const stmt = this.db.prepare(`
       INSERT INTO users (id, username, password_hash, sync_version)
       VALUES (?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        username = excluded.username,
+        password_hash = excluded.password_hash,
+        sync_version = excluded.sync_version
     `);
     stmt.run(params.id, params.username, params.passwordHash, params.syncVersion);
   }
@@ -87,8 +96,8 @@ export class AuthQueries {
     stmt.run(id);
   }
 
-  async runInTransaction(callback: () => void) {
+  runInTransaction(callback: () => void): void {
     const transaction = this.db.transaction(callback);
-    return transaction();
+    transaction();
   }
 }
