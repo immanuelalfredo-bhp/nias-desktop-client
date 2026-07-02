@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
 import { ipcMain } from 'electron';
-import{ sharedSync } from '@nias/shared';
+import { sharedSync } from '@nias/shared';
 import { SYNC_SERVER_URL } from '../config.js';
-import { hashPassword, slugify } from '@nias/shared/src/utils.js';
+import { hashPassword, slugify } from '@nias/shared/';
 import { AuthDatabase } from '../db/database.js';
 
 export function registerBootstrapIpcHandlers(authDb: AuthDatabase): void {

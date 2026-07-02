@@ -43,6 +43,8 @@ export default function Login() {
       setStatus({ text: 'Syncing account data...', isError: false });
       const userResult = await window.electronAPI.authFetchUser(username, password);
       const syncResult = await window.electronAPI.authSyncUsers();
+      console.log('User fetch result:', userResult);
+      console.log('Sync result:', syncResult);
 
       if (userResult.success && syncResult.success) {
         const retryLoginResult = await window.electronAPI.authLogin({
@@ -108,7 +110,7 @@ export default function Login() {
 
         <div className="actions">
           <button onClick={handleLogin} className="primary">Login</button>
-          <button onClick={handleSync} className="primary">Sync</button>
+          <button onClick={handleSync} className="secondary">Sync</button>
           {isAuthEmpty && (
             <button onClick={() => setShowModal(true)} className="secondary">
               Bootstrap

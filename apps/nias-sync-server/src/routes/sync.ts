@@ -222,7 +222,7 @@ export async function handleBootstrap(
 }
 
 export async function fetchLocalUser(
-  payload: sharedSync.PushPayload,
+  payload: sharedSync.AuthUsername,
   context?: { log?: Logger; userId?: string }
 ) {
   try {
@@ -235,14 +235,13 @@ export async function fetchLocalUser(
       })
       .from(users)
       .where(
-        eq(users.username, payload.changes
-          .find(c => c.tableName === 'users')?.payload.username || '')
+        eq(users.username, payload.username)
       )
       .limit(1)
       .then(rows => rows[0] ?? null);
 
     if (user) {
-      const providedHash = payload.changes.find(c => c.tableName === 'users')?.payload.passwordHash || '';
+      const providedHash = payload.password || '';
       const isPasswordValid = await verifyPassword(user.passwordHash, providedHash);
 
       if (!isPasswordValid) {
@@ -254,7 +253,7 @@ export async function fetchLocalUser(
       }
     } else {
       context?.log?.info(
-        { username: payload.changes.find(c => c.tableName === 'users')?.payload.username },
+        { username: payload.username },
         'Local user not found'
       );
       return null;
@@ -268,10 +267,15 @@ export async function fetchLocalUser(
 }
 
 export async function syncLocalUsers(
-  payload: sharedSync.PushPayload,
+  payload: sharedSync.AuthUserIds,
   context?: { log?: Logger; userId?: string }
 ) {
   try {
+    if (payload.id.length !== payload.syncVersion.length) {
+      context?.log?.error('Sync payload mismatch: id and syncVersion arrays differ in length');
+      throw new Error("Invalid sync payload");
+    }
+
     const serverUsers = await db
       .select({ 
         id: users.id,
@@ -281,22 +285,14 @@ export async function syncLocalUsers(
         deletedAt: users.deletedAt,
       })
       .from(users)
-      .where(inArray(
-        users.id, 
-        payload.changes
-          .filter(c => c.tableName === 'users')
-          .map(c => c.payload.id)
-          .filter((id): id is string => id !== undefined
-        )
-      ));
+      .where(
+        inArray(users.id, payload.id)
+      )
+      .orderBy(asc(users.syncVersion));
     const changes: any[] = [];
     const deletedUsers: string[] = [];
 
-    const payloadMap = new Map(
-      payload.changes
-        .filter(c => c.tableName === 'users')
-        .map(c => [c.payload.id, c.payload])
-    );
+    const versionMap = new Map(payload.id.map((id, i) => [id, payload.syncVersion[i]]));
 
     for (const user of serverUsers) {
       if (user.deletedAt !== null) {
@@ -304,9 +300,15 @@ export async function syncLocalUsers(
         continue;
       }
 
-      const localVersion = payloadMap.get(user.id)?.syncVersion ?? 0;
+      const localVersion = versionMap.get(user.id) ?? 0;
+
       if (user.syncVersion > localVersion) {
-        changes.push(user);
+        changes.push({
+          id: user.id,
+          username: user.username,
+          passwordHash: user.passwordHash,
+          syncVersion: user.syncVersion,
+        });
       }
     }
 

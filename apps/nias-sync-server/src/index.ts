@@ -40,13 +40,13 @@ app.post(
 app.post(
   '/api/login/fetch',
   authenticate,
-  validate(sharedSync.PushPayloadSchema),
+  validate(sharedSync.AuthUsernameSchema),
   (req, res, next) => {
     const context = {
       log: req.log,
     };
 
-    return fetchLocalUser(req.validatedBody as sharedSync.PushPayload, context)
+    return fetchLocalUser(req.validatedBody as sharedSync.AuthUsername, context)
       .then(result => res.json(result))
       .catch(next);
   }
@@ -55,13 +55,13 @@ app.post(
 app.post(
   '/api/login/sync',
   authenticate,
-  validate(sharedSync.PushPayloadSchema),
+  validate(sharedSync.AuthUserIdsSchema),
   (req, res, next) => {
     const context = {
       log: req.log,
     };
 
-    return syncLocalUsers(req.validatedBody as sharedSync.PushPayload, context)
+    return syncLocalUsers(req.validatedBody as sharedSync.AuthUserIds, context)
       .then(result => res.json(result))
       .catch(next);
   }
