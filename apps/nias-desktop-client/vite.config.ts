@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import electron from 'vite-plugin-electron';
+import copy from 'rollup-plugin-copy';
 
 export default defineConfig({
   // Use relative asset URLs so renderer works from Electron file:// loading.
@@ -9,6 +10,7 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
   },
+  assetsInclude: ['**/*.sql'],
   plugins: [
     react(),
     electron([
@@ -16,6 +18,14 @@ export default defineConfig({
         // Main Process
         entry: 'electron/main/index.ts',
         vite: {
+          plugins: [
+            copy({
+              targets: [
+                // Copies from project root/src/migrations to dist-electron/main/migrations
+                { src: 'electron/main/db/migrations', dest: 'dist-electron/main' }
+              ]
+            })
+          ],
           build: {
             outDir: 'dist-electron/main',
             lib: {
@@ -25,7 +35,7 @@ export default defineConfig({
             },
             emptyOutDir: true,
             rollupOptions: {
-              external: ['better-sqlite3-multiple-ciphers', 'argon2'],
+              external: ['better-sqlite3-multiple-ciphers', 'argon2', 'keytar'],
               output: {
                 format: 'cjs',
                 entryFileNames: '[name].js',

@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron';
-import { AuthDatabase } from '../db/database.js';
+import { AuthDatabase, initializeUserDatabase } from '../db/database.js';
 import {
+  slugify,
   verifyPassword,
   type LoginCredentials,
   type RemoteUserRecord,
@@ -57,7 +58,7 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
           'content-type': 'application/json',
           'app-id': `${APP_ID}`,
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username: slugify(username), password }),
       });
 
       const data = (await response.json()) as
@@ -146,6 +147,42 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
         message: getErrorMessage(
           error,
           'An error occurred while syncing users'
+        ),
+      };
+    }
+  });
+
+  ipcMain.handle('auth:get-local-user-id', async (_event, username: string ) => {
+    try {
+      const userId = authDb.main.getLocalUserIdByUsername(username);
+      if (userId) {
+        return { success: true, userId };
+      } else {
+        return { success: false, message: 'User not found' };
+      }
+    } catch (error) {
+      console.error('Error getting user ID:', error);
+      return {
+        success: false,
+        message: getErrorMessage(
+          error,
+          'An error occurred while getting the user ID'
+        ),
+      };
+    }
+  });
+
+  ipcMain.handle('auth:initialize-db', async (_event, uuid: string) => {
+    try {
+      initializeUserDatabase(uuid);
+      return { success: true, message: 'User database initialized successfully' };
+    } catch (error) {
+      console.error('Error initializing user database:', error);
+      return {
+        success: false,
+        message: getErrorMessage(
+          error,
+          'An error occurred while initializing the user database'
         ),
       };
     }

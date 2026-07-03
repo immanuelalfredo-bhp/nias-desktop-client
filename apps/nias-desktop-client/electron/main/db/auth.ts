@@ -96,6 +96,14 @@ export class AuthQueries {
     stmt.run(id);
   }
 
+  getLocalUserIdByUsername(username: string): string | null {
+    const result = this.db
+      .prepare('SELECT id FROM users WHERE username = ?')
+      .get(username) as { id: string } | undefined;
+
+    return result ? result.id : null;
+  }
+
   runInTransaction(callback: () => void): void {
     const transaction = this.db.transaction(callback);
     transaction();

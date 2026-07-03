@@ -8,6 +8,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   authFetchUser: (username: string, password: string) =>
     ipcRenderer.invoke('auth:fetch-user', username, password),
   authSyncUsers: () => ipcRenderer.invoke('auth:sync-users'),
+  authGetLocalUserIdByUsername: (username: string) =>
+    ipcRenderer.invoke('auth:get-local-user-id', username),
+  authInitializeDb: (uuid: string) => ipcRenderer.invoke('auth:initialize-db', uuid),
   bootstrapStatus: (secret: string) => ipcRenderer.invoke('bootstrap:status', secret),
   bootstrapExecute: (secret: string, payload: BootstrapAccount) =>
     ipcRenderer.invoke('bootstrap:execute', secret, payload),

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import BootstrapModal from '../components/modals/BootstrapModal';
 import type { LoginRouteState, StatusState } from '../types/ui';
+import { el } from 'zod/locales';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -51,7 +52,16 @@ export default function Login() {
         password: password 
       });
       if (result.success) {
-        navigate('/dashboard');
+        const userResult = await window.electronAPI.authGetLocalUserIdByUsername(username);
+        const initResult = await window.electronAPI.authInitializeDb(userResult.userId);
+        if (initResult.success) {
+          navigate('/dashboard');
+          return;
+        } else {
+          setStatus({ 
+            text: `Login succeeded but failed to initialize user database: ${initResult.message || 
+              'Unknown error'}`, isError: true });
+        }
         return;
       }
 
