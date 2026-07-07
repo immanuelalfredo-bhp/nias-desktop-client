@@ -1,42 +1,51 @@
 import { z } from 'zod';
+import * as schemas from './defines.js'
 
-const usernameSchema = z.string().trim().min(1).max(100);
-const passwordSchema = z.string().min(1);
-const syncVersionSchema = z.number().int().nonnegative();
+export const BootstrapPayloadSchema = z.object({
+  username: schemas.username,
+  displayName: schemas.displayName,
+  email: schemas.email,
+  password: schemas.password,
+  passwordHash: schemas.passwordHash,
+});
 
 export const LoginCredentialsSchema = z.object({
-  username: usernameSchema,
-  password: passwordSchema,
+  username: schemas.username,
+  email: schemas.email,
+  password: schemas.password,
 });
 
-export const RemoteUserRecordSchema = z.object({
-  id: z.uuid(),
-  username: usernameSchema,
-  passwordHash: z.string().min(1),
-  syncVersion: syncVersionSchema,
+export const LoginDataSchema = z.object({
+  success: z.boolean(),
+  id: schemas.uuid,
+  username: schemas.username,
+  email: schemas.email,
+  passwordHash: schemas.passwordHash,
+  syncVersion: schemas.syncVersion,
+  jwtToken: schemas.jwtToken,
+  jwtTokenExpiration: schemas.jwtTokenExpiration,
 });
 
-export const UserSyncStateSchema = z.object({
-  id: z.uuid(),
-  syncVersion: syncVersionSchema,
+export const LoginSyncStateSchema = z.object({
+  id: schemas.uuid,
+  syncVersion: schemas.syncVersion,
 });
 
-export const UserSyncStateListSchema = z.array(UserSyncStateSchema);
-
-export const UserSyncDeltaSchema = z.object({
-  changes: z.array(RemoteUserRecordSchema),
-  deletedUserIds: z.array(z.uuid()),
-});
-
-export const BootstrapAccountSchema = z.object({
-  username: usernameSchema,
-  displayName: z.string().trim().max(100).optional().default(''),
-  email: z.email().optional().or(z.literal('')).default(''),
-  password: passwordSchema,
+export const LoginSyncDeltaSchema = z.object({
+  success: z.boolean(),
+  changes: z.array(LoginDataSchema),
+  deletedUserIds: z.array(schemas.uuid),
 });
 
 export type LoginCredentials = z.infer<typeof LoginCredentialsSchema>;
-export type RemoteUserRecord = z.infer<typeof RemoteUserRecordSchema>;
-export type UserSyncState = z.infer<typeof UserSyncStateSchema>;
-export type UserSyncDelta = z.infer<typeof UserSyncDeltaSchema>;
-export type BootstrapAccount = z.infer<typeof BootstrapAccountSchema>;
+export type BootstrapPayload = z.infer<typeof BootstrapPayloadSchema>;
+export type LoginData = z.infer<typeof LoginDataSchema>;
+export type LoginSyncState = z.infer<typeof LoginSyncStateSchema>;
+export type LoginSyncDelta = z.infer<typeof LoginSyncDeltaSchema>;
+
+export const BootstrapResponseSchema = z.object({
+  success: z.boolean(),
+  adminId: z.string().optional(),
+});
+
+export type BootstrapResponse = z.infer<typeof BootstrapResponseSchema>;

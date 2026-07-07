@@ -7,6 +7,7 @@ import { REQUEST_LIMIT, REQUEST_INTERVAL } from './config.js';
 import type { Request, Response, NextFunction } from 'express';
 import { httpLogger, logger } from './logger.js';
 
+// export default app;
 const app = express();
 
 // Trust proxy for rate limiting behind Render/Cloudflare/Nginx
@@ -20,6 +21,7 @@ app.use(helmet());
 
 // Configure CORS to allow requests from the specified origin
 app.use(cors({ origin: process.env.CORS_ORIGIN }));
+
 
 // Use compression to gzip responses for better performance
 app.use(compression());
@@ -35,6 +37,7 @@ app.use('/api/', limiter);
 // Parse JSON bodies for all routes
 app.use(express.json());
 
+
 /**
  * Registers terminal middleware handlers that should run only after all routes
  * are mounted.
@@ -42,7 +45,7 @@ app.use(express.json());
 export const registerErrorHandlers = (server: express.Express) => {
   server.use((_req, res) => {
     res.status(404).json({
-      status: 'error',
+      status: false,
       message: 'Route not found',
     });
   });
@@ -53,7 +56,7 @@ export const registerErrorHandlers = (server: express.Express) => {
     logger.error({ err }, 'Unhandled application error');
 
     res.status(500).json({
-      status: 'error',
+      success : false,
       message: 'An internal server error occurred.',
     });
   });

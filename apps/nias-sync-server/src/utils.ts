@@ -1,9 +1,9 @@
 import { 
   users, 
   audit,
-} from './schema.js';
+} from './schema/index.js';
 import { 
-  sharedSync,
+  sync,
   type VersionRegistry 
 } from '@nias/shared';
 import { type PgTransaction } from 'drizzle-orm/pg-core';
@@ -18,9 +18,9 @@ export type DBTransaction = PgTransaction<any, any, any>;
  * `sharedSync.SyncMetadata` and point `table` to its Drizzle schema.
  */
 export const TABLE_MAP: {
-  key: keyof sharedSync.SyncMetadata;
+  key: keyof sync.SyncMetadata;
   table: any;
-  responseKey: keyof sharedSync.SyncMetadata;
+  responseKey: keyof sync.SyncMetadata;
 }[] = [
   {
     key: 'users' as const,
@@ -46,15 +46,15 @@ export const defaultRegistry = TABLE_MAP.reduce((acc, t) => {
 export async function upsertSyncRecords(
   tx: DBTransaction,
   table: any,
-  payload: any,
+  payloads: any[],
   version: number
 ) {
   return await tx
     .insert(table)
-    .values({ ...payload, syncVersion: version })
+    .values(payloads.map(p => ({ ...p, syncVersion: version })))
     .onConflictDoUpdate({
       target: table.id,
-      set: { ...payload, syncVersion: version },
+      set: { ...payloads[0], syncVersion: version },
     })
     .returning();
 }

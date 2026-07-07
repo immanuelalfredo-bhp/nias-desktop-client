@@ -14,7 +14,7 @@ export const userAuthenticate: RequestHandler = async (req, res, next) => {
       req.log.warn('Authentication failed: missing bearer token');
       return res
         .status(401)
-        .json({ error: 'Missing or invalid authorization header' });
+        .json({ success: false, message: 'Missing or invalid authorization header' });
     }
 
     const token = authHeader.split(' ')[1];
@@ -28,7 +28,7 @@ export const userAuthenticate: RequestHandler = async (req, res, next) => {
         { supabaseError: error?.message },
         'Authentication failed: invalid token'
       );
-      return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+      return res.status(401).json({ success: false, message: 'Unauthorized: Invalid token' });
     }
 
     req.user = user;
@@ -48,7 +48,7 @@ export const appAuthenticate: RequestHandler = async (req, res, next) => {
       req.log.warn('App authentication failed: invalid token');
       return res
         .status(401)
-        .json({ error: 'Unauthorized: Invalid token' });
+        .json({ success: false, message: 'Unauthorized: Invalid token' });
     }
     next();
   } catch (err) {
@@ -68,7 +68,7 @@ export const bootstrapAuthenticate: RequestHandler = async (req, res, next) => {
       req.log.warn('Bootstrap authentication failed: invalid token');
       return res
         .status(401)
-        .json({ error: 'Unauthorized: Invalid token' });
+        .json({ success: false, message: 'Unauthorized: Invalid token' });
     }
     next();
   } catch (err) {
@@ -84,7 +84,8 @@ export const validate = <T>(schema: ZodType<T>): RequestHandler => {
     if (!result.success) {
       req.log.warn({ issues: result.error.issues }, 'Request validation failed');
       return res.status(400).json({
-        error: 'Invalid request body',
+        success: false,
+        message: 'Invalid request body',
         details: result.error.issues,
       });
     }

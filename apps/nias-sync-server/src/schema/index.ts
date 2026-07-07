@@ -2,11 +2,15 @@
 // other parts of the app can import them from a single place.
 
 export { 
-  sync,
+  syncMetadata,
   proposedChanges 
-} from './schema/sync.js';
+} from './sync.js';
 
 export { 
   users, 
   audit 
-} from './schema/system.js';
+} from './system.js';
+
+export {
+  authUsers
+} from './auth.js';

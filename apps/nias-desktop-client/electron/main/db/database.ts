@@ -167,7 +167,10 @@ function ensureAuthDbSchema(db: Database.Database) {
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       username TEXT UNIQUE NOT NULL,
+      email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
+      jwt_token TEXT,
+      jwt_token_expiration INTEGER,
       sync_version INTEGER NOT NULL
     );
   `);

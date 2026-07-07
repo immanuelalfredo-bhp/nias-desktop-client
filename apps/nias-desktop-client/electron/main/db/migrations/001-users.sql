@@ -17,3 +17,9 @@ CREATE INDEX IF NOT EXISTS idx_users_is_managed_by ON users (is_managed_by);
 CREATE INDEX IF NOT EXISTS idx_users_is_synced ON users (is_synced);
 CREATE INDEX IF NOT EXISTS idx_users_sync_version ON users (sync_version);
 CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON users (deleted_at);
+
+CREATE TABLE IF NOT EXISTS sync (
+  users INTEGER NOT NULL DEFAULT 0
+);
+
+INSERT INTO sync (users) VALUES (0) ON CONFLICT DO NOTHING;

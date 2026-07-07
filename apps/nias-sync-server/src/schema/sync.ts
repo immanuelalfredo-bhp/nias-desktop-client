@@ -8,13 +8,13 @@ export const syncSchema = pgSchema('sync');
 // ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
 
 // Define the sync table schema
-export const sync = syncSchema.table('metadata', {
+export const syncMetadata = syncSchema.table('metadata', {
   users: integer('users').notNull().default(0),
   audit: integer('audit').notNull().default(0),
 });
 
-// Infer the TypeScript type for the sync table
-export type SyncVersion = typeof sync.$inferSelect;
+
+export type SyncVersion = typeof syncMetadata.$inferSelect;
 
 // ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 // ║                                    PROPOSED CHANGES SCHEMAS                                   ║

@@ -7,7 +7,6 @@ import { registerBootstrapIpcHandlers } from './ipc/bootstrap.js';
 import { registerAuthIpcHandlers } from './ipc/auth.js';
 
 let mainWindow: BrowserWindow | null = null;
-// let database: AppDatabase | null = null;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

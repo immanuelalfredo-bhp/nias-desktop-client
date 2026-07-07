@@ -10,12 +10,16 @@ import {
 import {
   handlePush,
   handlePull,
+} from './routes/sync.js';
+import {
   getBootstrapStatus,
   handleBootstrap,
-  fetchLocalUser,
+} from './routes/bootstrap.js';
+import {
+  initialLogin,
   syncLocalUsers,
-} from './routes/sync.js';
-import { sharedAuth, sharedSync } from '@nias/shared';
+} from './routes/login.js';
+import { auth, sync } from '@nias/shared';
 import { SHUTDOWN_TIMEOUT } from './config.js';
 import { logger } from './logger.js';
 
@@ -29,14 +33,14 @@ app.get('/health', (_req, res) => {
 app.post(
   '/api/sync/push',
   userAuthenticate,
-  validate(sharedSync.PushPayloadSchema),
+  validate(sync.PushPayloadSchema),
   (req, res, next) => {
     const context = {
       log: req.log,
       ...(req.user?.id ? { userId: req.user.id } : {}),
     };
 
-    return handlePush(req.validatedBody as sharedSync.PushPayload, context)
+    return handlePush(req.validatedBody as sync.PushPayload, context)
       .then(result => res.json(result))
       .catch(next);
   }
@@ -45,28 +49,29 @@ app.post(
 app.post(
   '/api/sync/pull',
   userAuthenticate,
-  validate(sharedSync.SyncMetadataSchema),
+  validate(sync.SyncMetadataSchema),
   (req, res, next) => handlePull(req, res).catch(next)
 );
 
 app.post(
-  '/api/login/fetch',
+  '/api/login/initial',
   appAuthenticate,
-  validate(sharedAuth.LoginCredentialsSchema),
+  validate(auth.LoginCredentialsSchema),
   (req, res, next) => {
     const context = {
       log: req.log,
     };
 
-    return fetchLocalUser(req.validatedBody as sharedAuth.LoginCredentials, context)
+    return initialLogin(req.validatedBody as auth.LoginCredentials, context)
       .then((result) => {
         if (!result) {
           return res.status(404).json({
+            success: false,
             message: 'User not found or password is incorrect',
           });
         }
 
-        return res.json({ user: result });
+        return res.json({ success: true, user: result });
       })
       .catch(next);
   }
@@ -75,17 +80,18 @@ app.post(
 app.post(
   '/api/login/sync',
   appAuthenticate,
-  validate(sharedAuth.UserSyncStateListSchema),
+  validate(auth.LoginSyncStateSchema),
   (req, res, next) => {
     const context = {
       log: req.log,
     };
 
-    return syncLocalUsers(req.validatedBody as sharedAuth.UserSyncState[], context)
+    return syncLocalUsers(req.validatedBody as auth.LoginSyncState[], context)
       .then(result => res.json(result))
       .catch(next);
   }
 );
+
 
 app.post(
   '/api/bootstrap/status',
@@ -96,13 +102,13 @@ app.post(
 app.post(
   '/api/bootstrap/execute',
   bootstrapAuthenticate,
-  validate(sharedSync.PushPayloadSchema),
+  validate(auth.BootstrapPayloadSchema),
   (req, res, next) => {
     const context = {
       log: req.log,
     };
 
-    return handleBootstrap(req.validatedBody as sharedSync.PushPayload, context)
+    return handleBootstrap(req.validatedBody as auth.BootstrapPayload, context)
       .then(result => res.json(result))
       .catch(next);
   }
@@ -116,6 +122,7 @@ const server = app.listen(PORT, () => {
     'Sync server is listening'
   );
 });
+
 
 /**
  * Handles graceful process shutdown by closing the HTTP server and database
