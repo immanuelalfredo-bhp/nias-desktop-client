@@ -1,13 +1,7 @@
-import { pgSchema, uuid, text, boolean, integer, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, integer, pgSchema, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-// Define the system schema
 export const systemSchema = pgSchema('system');
 
-// ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
-// ║                                          USER SCHEMAS                                         ║
-// ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
-
-// Define the users table schema
 export const users = systemSchema.table('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   username: text('username').notNull(),
@@ -22,15 +16,12 @@ export const users = systemSchema.table('users', {
   syncVersion: integer('sync_version').notNull(),
 });
 
-// Infer the TypeScript types for the users table
 export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
 
 // ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 // ║                                          AUDIT SCHEMAS                                        ║
 // ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
 
-// Define the audit table schema
 export const audit = systemSchema.table('audit', {
   id: uuid('id').primaryKey().defaultRandom(),
   entityId: uuid('entity_id').notNull(),
@@ -43,6 +34,4 @@ export const audit = systemSchema.table('audit', {
   syncVersion: integer('sync_version').notNull(),
 });
 
-// Infer the TypeScript types for the audit table
 export type Audit = typeof audit.$inferSelect;
-export type NewAudit = typeof audit.$inferInsert;

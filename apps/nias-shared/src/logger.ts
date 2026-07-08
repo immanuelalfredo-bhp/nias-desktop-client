@@ -4,7 +4,6 @@ import { randomUUID } from 'crypto';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-/** Shared base logger for application and infrastructure events. */
 const loggerOptions: LoggerOptions = {
   level: process.env.LOG_LEVEL || 'info',
   base: {
@@ -12,12 +11,7 @@ const loggerOptions: LoggerOptions = {
     env: process.env.NODE_ENV || 'development',
   },
   redact: {
-    paths: [
-      'req.headers.authorization',
-      'authorization',
-      'password',
-      'passwordHash',
-    ],
+    paths: ['req.headers.authorization', 'authorization', 'password', 'passwordHash'],
     remove: true,
   },
 };
@@ -35,17 +29,11 @@ if (!isProduction) {
 
 export const logger = pino(loggerOptions);
 
-/**
- * HTTP request logger configured with request IDs and status-aware log levels.
- */
 export const httpLogger = pinoHttp({
   logger,
   genReqId: (req, res) => {
     const requestId = req.headers['x-request-id'];
-    const reqId =
-      typeof requestId === 'string' && requestId.length > 0
-        ? requestId
-        : randomUUID();
+    const reqId = typeof requestId === 'string' && requestId.length > 0 ? requestId : randomUUID();
     res.setHeader('x-request-id', reqId);
     return reqId;
   },
@@ -58,8 +46,7 @@ export const httpLogger = pinoHttp({
     }
     return 'info';
   },
-  customSuccessMessage: (req, res) =>
-    `${req.method} ${req.url} completed with ${res.statusCode}`,
+  customSuccessMessage: (req, res) => `${req.method} ${req.url} completed with ${res.statusCode}`,
   customErrorMessage: (req, res, err) =>
     `${req.method} ${req.url} failed with ${res.statusCode}: ${err.message}`,
 });

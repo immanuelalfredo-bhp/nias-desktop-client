@@ -1,100 +1,83 @@
 import Database from 'better-sqlite3-multiple-ciphers';
-import { auth } from '@nias/shared';
-
-interface LocalUser {
-  id: string;
-  username: string;
-  email: string;
-  password_hash: string;
-  jwt_token?: string;
-  jwt_token_expiration?: number;
-}
+import { auth, logger } from '@nias/shared';
 
 export class AuthQueries {
   constructor(private readonly db: Database.Database) {}
 
-  insertBootstrapUser(params: {
-    adminId: string;
-    username: string;
-    email: string;
-    passwordHash: string;
-    syncVersion: number;
-  }): void {
-    const tx = this.db.transaction(() => {
-      const stmt1 = this.db.prepare(`
-        INSERT INTO users (id, username, email, password_hash, sync_version)
-        VALUES (?, ?, ?, ?, ?)
-      `);
-      stmt1.run(
-        params.adminId,
-        params.username,
-        params.email,
-        params.passwordHash,
-        params.syncVersion
-      );
-      const stmt2 = this.db.prepare(`UPDATE sync SET users = ?`);
-      stmt2.run(params.syncVersion);
-    });
-
-    tx();
-  }
-  
   countLocalUsers(): number {
-    const result = this.db
-      .prepare('SELECT COUNT(*) AS count FROM users')
-      .get() as { count: number };
+    const result = this.db.prepare('SELECT COUNT(*) AS count FROM users').get() as {
+      count: number;
+    };
 
+    logger.info({ scope: 'auth', count: result.count }, 'Counted local users');
     return result.count;
   }
 
   listLocalUserSyncStates(): auth.LoginSyncState[] {
-    const result = this.db.prepare(`
+    const result = this.db
+      .prepare(
+        `
       SELECT id, sync_version AS syncVersion FROM users
-    `).all() as auth.LoginSyncState[];
+    `,
+      )
+      .all() as auth.LoginSyncState[];
 
+    logger.info({ scope: 'auth', count: result.length }, 'Listed local user sync states');
     return result;
   }
 
-  findLocalUser(username: string): LocalUser | null {
+  getLocalUser(email: string): auth.LocalUser | null {
     const result = this.db
       .prepare(
-        'SELECT id, username, email, password_hash, jwt_token, jwt_token_expiration FROM users WHERE username = ?'
+        `SELECT
+          id,
+          email,
+          password_hash AS passwordHash,
+          jwt_token AS jwtToken,
+          jwt_token_expiration AS jwtTokenExpiration,
+          sync_version AS syncVersion
+        FROM users WHERE email = ?
+      `,
       )
-      .get(username) as LocalUser | undefined;
+      .get(email) as auth.LocalUser | undefined;
 
+    logger.info({ scope: 'auth', email, found: !!result }, 'Fetched local user by email');
     return result || null;
   }
 
-  upsertLocalUser(params: {
-    id: string;
-    username: string; 
-    email: string;
-    passwordHash: string;
-    syncVersion: number;
-  }): void {
+  upsertLocalUser(params: auth.LocalUser): void {
     const stmt = this.db.prepare(`
-      INSERT INTO users (id, username, email, password_hash, sync_version)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO users (
+        id,
+        email,
+        password_hash,
+        jwt_token,
+        jwt_token_expiration,
+        sync_version
+      )
+      VALUES (?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
-        username = excluded.username,
         email = excluded.email,
         password_hash = excluded.password_hash,
+        jwt_token = excluded.jwt_token,
+        jwt_token_expiration = excluded.jwt_token_expiration,
         sync_version = excluded.sync_version
     `);
-    stmt.run(params.id, params.username, params.email, params.passwordHash, params.syncVersion);
+    stmt.run(
+      params.id,
+      params.email,
+      params.passwordHash,
+      params.jwtToken,
+      params.jwtTokenExpiration,
+      params.syncVersion,
+    );
+    logger.info({ scope: 'auth', userId: params.id }, 'Upserted local user');
   }
 
-  deleteLocalUsers(id: string): void {
+  deleteLocalUser(id: string): void {
     const stmt = this.db.prepare('DELETE FROM users WHERE id = ?');
     stmt.run(id);
-  }
-
-  getLocalUserIdByUsername(username: string): string | null {
-    const result = this.db
-      .prepare('SELECT id FROM users WHERE username = ?')
-      .get(username) as { id: string } | undefined;
-
-    return result ? result.id : null;
+    logger.info({ scope: 'auth', userId: id }, 'Deleted local user');
   }
 
   runInTransaction(callback: () => void): void {

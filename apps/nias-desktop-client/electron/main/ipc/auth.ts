@@ -1,105 +1,100 @@
 import { ipcMain } from 'electron';
+import { safeParse } from 'zod';
 import { AuthDatabase, initializeUserDatabase } from '../db/database.js';
 import {
-  slugify,
+  auth,
+  common,
+  logger,
+  isSuccess,
+  handleResponse,
   verifyPassword,
-  type LoginCredentials,
-  type RemoteUserRecord,
-  type UserSyncDelta,
+  type Envelope,
 } from '@nias/shared';
 import { APP_ID, SYNC_SERVER_URL } from '../config.js';
 
-interface ErrorResponseBody {
-  error?: string;
-  message?: string;
-}
-
-function isErrorResponseBody(value: unknown): value is ErrorResponseBody {
-  return typeof value === 'object' && value !== null;
-}
-
-function getErrorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
-}
-
 export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
-  ipcMain.handle('auth:status', async () => {
+  ipcMain.handle('auth:status', async (_event): Promise<Envelope<auth.StatusResponse>> => {
     const userCount = authDb.main.countLocalUsers();
-    return { isEmpty: userCount === 0 };
+    logger.info({ scope: 'auth', userCount }, 'Auth status retrieved successfully');
+    return {
+      success: true,
+      message: 'Auth status retrieved successfully',
+      data: {
+        isEmpty: userCount === 0,
+      },
+    };
   });
 
-  ipcMain.handle('auth:login', async (_event, payload: LoginCredentials) => {
-    try {
-      const user = authDb.main.findLocalUser(payload.username);
-      if (!user) {
-        return { success: false, message: 'User not found' };
+  ipcMain.handle(
+    'auth:login',
+    async (_event, email: string, password: string): Promise<common.SuccessResponse> => {
+      try {
+        const loginCredentials = safeParse(auth.LoginCredentialsSchema, { email, password });
+        if (!loginCredentials.success) {
+          logger.warn({ scope: 'auth', email }, 'Login failed: Invalid credentials format');
+          return { success: false, message: 'Invalid credentials format' };
+        }
+
+        const user = authDb.main.getLocalUser(email);
+        if (!user) {
+          const response = await fetch(`${SYNC_SERVER_URL}/api/login/initial`, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              'app-id': `${APP_ID}`,
+            },
+            body: JSON.stringify(loginCredentials),
+          });
+
+          const data = await handleResponse(response, auth.LoginDataSchema, 'auth');
+          if (!isSuccess(data)) {
+            return data;
+          }
+
+          logger.info(
+            { scope: 'auth', userId: data.id },
+            'User fetched successfully from sync server',
+          );
+          authDb.main.runInTransaction(() => {
+            authDb.main.upsertLocalUser({
+              id: data.id,
+              email: data.email,
+              passwordHash: data.passwordHash,
+              syncVersion: data.syncVersion,
+              jwtToken: data.jwtToken,
+              jwtTokenExpiration: data.jwtTokenExpiration,
+            });
+          });
+          logger.info({ scope: 'auth', userId: data.id }, 'User fetched and stored successfully');
+
+          initializeUserDatabase(data.id);
+          logger.info({ scope: 'auth', userId: data.id }, 'User database initialized successfully');
+
+          return { success: true, message: 'User fetched and stored successfully' };
+        }
+
+        const isPasswordValid = await verifyPassword(user.passwordHash, password);
+        if (!isPasswordValid) {
+          logger.warn({ scope: 'auth', userId: user.id }, 'Login failed: Invalid password');
+          return { success: false, message: 'Invalid password' };
+        }
+
+        logger.info({ scope: 'auth', userId: user.id }, 'Login successful for local user');
+        return { success: true, message: 'Login successful' };
+      } catch (error) {
+        logger.error({ scope: 'auth', error }, 'Error during login');
+        return {
+          success: false,
+          message: error instanceof Error ? error.message : 'An error occurred during login',
+        };
       }
+    },
+  );
 
-      const isPasswordValid = await verifyPassword(user.password_hash, payload.password);
-      if (!isPasswordValid) {
-        return { success: false, message: 'Invalid password' };
-      }
-
-      return { success: true, message: 'Login successful' };
-    } catch (error) {
-      console.error('Error during login:', error);
-      return {
-        success: false,
-        message: getErrorMessage(error, 'An error occurred during login'),
-      };
-    }
-  });
-
-  ipcMain.handle('auth:fetch-user', async (_event, username: string, password: string) => {
-    try {
-      const response = await fetch(`${SYNC_SERVER_URL}/api/login/fetch`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'app-id': `${APP_ID}`,
-        },
-        body: JSON.stringify({ username: slugify(username), password }),
-      });
-
-      const data = (await response.json()) as
-        | { user?: RemoteUserRecord | null }
-        | ErrorResponseBody;
-
-      if (!response.ok) {
-        const responseMessage = isErrorResponseBody(data)
-          ? data.message ?? data.error
-          : undefined;
-
-        throw new Error(responseMessage ?? 'Fetch user request failed');
-      }
-
-      if (!('user' in data) || !data.user) {
-        return { success: false, message: 'User not found on sync server' };
-      }
-
-      authDb.main.upsertLocalUser({
-        id: data.user.id,
-        username: data.user.username,
-        passwordHash: data.user.passwordHash,
-        syncVersion: data.user.syncVersion,
-      });
-
-      return { success: true, message: 'User fetched and stored successfully' };
-    } catch (error) {
-      console.error('Error fetching user:', error);
-      return {
-        success: false,
-        message: getErrorMessage(
-          error,
-          'An error occurred while fetching the user'
-        ),
-      };
-    }
-  });
-
-  ipcMain.handle('auth:sync-users', async (_event) => {
+  ipcMain.handle('auth:sync', async (_event): Promise<common.SuccessResponse> => {
     try {
       const payload = authDb.main.listLocalUserSyncStates();
+      logger.info({ scope: 'auth', payload }, 'Syncing users with sync server');
 
       const response = await fetch(`${SYNC_SERVER_URL}/api/login/sync`, {
         method: 'POST',
@@ -110,80 +105,37 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
         body: JSON.stringify(payload),
       });
 
-      const data = (await response.json()) as UserSyncDelta | ErrorResponseBody;
-
-      if (!response.ok) {
-        const responseMessage = isErrorResponseBody(data)
-          ? data.message ?? data.error
-          : undefined;
-
-        throw new Error(responseMessage ?? 'Sync request failed');
+      const data = await handleResponse(response, auth.LoginSyncDeltaSchema, 'auth');
+      if (!isSuccess(data)) {
+        return data;
       }
 
-      if (!('changes' in data) || !('deletedUserIds' in data)) {
-        throw new Error('Sync server returned an invalid payload');
-      }
-
+      logger.info({ scope: 'auth', data }, 'Received user sync delta from sync server');
       authDb.main.runInTransaction(() => {
         for (const user of data.changes) {
-          authDb.main.updateLocalUsers({
+          authDb.main.upsertLocalUser({
             id: user.id,
-            username: user.username,
+            email: user.email,
             passwordHash: user.passwordHash,
             syncVersion: user.syncVersion,
+            jwtToken: user.jwtToken,
+            jwtTokenExpiration: user.jwtTokenExpiration,
           });
+          logger.info({ scope: 'auth', userId: user.id }, 'Upserted user from sync delta');
         }
-
         for (const deletedUserId of data.deletedUserIds) {
-          authDb.main.deleteLocalUsers(deletedUserId);
+          authDb.main.deleteLocalUser(deletedUserId);
+          logger.info({ scope: 'auth', userId: deletedUserId }, 'Deleted user from sync delta');
         }
       });
 
+      logger.info({ scope: 'auth' }, 'Users synced successfully with sync server');
       return { success: true, message: 'Users synced successfully' };
     } catch (error) {
-      console.error('Error syncing users:', error);
+      logger.error({ scope: 'auth', error }, 'Error syncing users with sync server');
       return {
         success: false,
-        message: getErrorMessage(
-          error,
-          'An error occurred while syncing users'
-        ),
-      };
-    }
-  });
-
-  ipcMain.handle('auth:get-local-user-id', async (_event, username: string ) => {
-    try {
-      const userId = authDb.main.getLocalUserIdByUsername(username);
-      if (userId) {
-        return { success: true, userId };
-      } else {
-        return { success: false, message: 'User not found' };
-      }
-    } catch (error) {
-      console.error('Error getting user ID:', error);
-      return {
-        success: false,
-        message: getErrorMessage(
-          error,
-          'An error occurred while getting the user ID'
-        ),
-      };
-    }
-  });
-
-  ipcMain.handle('auth:initialize-db', async (_event, uuid: string) => {
-    try {
-      initializeUserDatabase(uuid);
-      return { success: true, message: 'User database initialized successfully' };
-    } catch (error) {
-      console.error('Error initializing user database:', error);
-      return {
-        success: false,
-        message: getErrorMessage(
-          error,
-          'An error occurred while initializing the user database'
-        ),
+        message: error instanceof Error ? error.message : 'An error occurred while syncing users',
       };
     }
   });

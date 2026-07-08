@@ -1,11 +1,11 @@
+import compression from 'compression';
+import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
-import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import compression from 'compression';
-import { REQUEST_LIMIT, REQUEST_INTERVAL } from './config.js';
-import type { Request, Response, NextFunction } from 'express';
-import { httpLogger, logger } from './logger.js';
+import { httpLogger, logger } from '@nias/shared';
+import { REQUEST_INTERVAL, REQUEST_LIMIT } from './config.js';
+import type { NextFunction, Request, Response } from 'express';
 
 // export default app;
 const app = express();
@@ -30,13 +30,12 @@ app.use(compression());
 const limiter = rateLimit({
   windowMs: REQUEST_INTERVAL,
   max: REQUEST_LIMIT,
-  message: 'Too many requests from this IP, please try again later.'
+  message: 'Too many requests from this IP, please try again later.',
 });
 app.use('/api/', limiter);
 
 // Parse JSON bodies for all routes
 app.use(express.json());
-
 
 /**
  * Registers terminal middleware handlers that should run only after all routes
@@ -45,18 +44,17 @@ app.use(express.json());
 export const registerErrorHandlers = (server: express.Express) => {
   server.use((_req, res) => {
     res.status(404).json({
-      status: false,
+      success: false,
       message: 'Route not found',
     });
   });
 
-  // Global error handler to catch unhandled errors and prevent server crashes
   server.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
-    req.log?.error({ err }, 'Unhandled request error');
-    logger.error({ err }, 'Unhandled application error');
+    req.log?.error({ scope: 'app', err }, 'Unhandled request error');
+    logger.error({ scope: 'app', err }, 'Unhandled application error');
 
     res.status(500).json({
-      success : false,
+      success: false,
       message: 'An internal server error occurred.',
     });
   });

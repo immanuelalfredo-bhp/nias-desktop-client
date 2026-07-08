@@ -1,27 +1,17 @@
 import 'dotenv/config';
+import { auth, logger, sync } from '@nias/shared';
 import app, { registerErrorHandlers } from './app.js';
+import { SHUTDOWN_TIMEOUT } from './config.js';
 import { closeDb } from './db.js';
 import {
-  userAuthenticate,
-  bootstrapAuthenticate,
   appAuthenticate,
+  bootstrapAuthenticate,
+  userAuthenticate,
   validate,
 } from './middleware.js';
-import {
-  handlePush,
-  handlePull,
-} from './routes/sync.js';
-import {
-  getBootstrapStatus,
-  handleBootstrap,
-} from './routes/bootstrap.js';
-import {
-  initialLogin,
-  syncLocalUsers,
-} from './routes/login.js';
-import { auth, sync } from '@nias/shared';
-import { SHUTDOWN_TIMEOUT } from './config.js';
-import { logger } from './logger.js';
+import { getBootstrapStatus, handleBootstrap } from './routes/bootstrap.js';
+import { initialLogin, syncLocalUsers } from './routes/login.js';
+import { handlePull, handlePush } from './routes/sync.js';
 
 const shutdownTimeout = SHUTDOWN_TIMEOUT;
 const PORT = Number(process.env.PORT || 3000);
@@ -30,27 +20,19 @@ app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.post(
-  '/api/sync/push',
-  userAuthenticate,
-  validate(sync.PushPayloadSchema),
-  (req, res, next) => {
-    const context = {
-      log: req.log,
-      ...(req.user?.id ? { userId: req.user.id } : {}),
-    };
+app.post('/api/sync/push', userAuthenticate, validate(sync.PushPayloadSchema), (req, res, next) => {
+  const context = {
+    log: req.log,
+    ...(req.user?.id ? { userId: req.user.id } : {}),
+  };
 
-    return handlePush(req.validatedBody as sync.PushPayload, context)
-      .then(result => res.json(result))
-      .catch(next);
-  }
-);
+  return handlePush(req.validatedBody as sync.PushPayload, context)
+    .then((result) => res.json(result))
+    .catch(next);
+});
 
-app.post(
-  '/api/sync/pull',
-  userAuthenticate,
-  validate(sync.SyncMetadataSchema),
-  (req, res, next) => handlePull(req, res).catch(next)
+app.post('/api/sync/pull', userAuthenticate, validate(sync.SyncMetadataSchema), (req, res, next) =>
+  handlePull(req, res).catch(next),
 );
 
 app.post(
@@ -74,7 +56,7 @@ app.post(
         return res.json({ success: true, user: result });
       })
       .catch(next);
-  }
+  },
 );
 
 app.post(
@@ -86,17 +68,14 @@ app.post(
       log: req.log,
     };
 
-    return syncLocalUsers(req.validatedBody as auth.LoginSyncState[], context)
-      .then(result => res.json(result))
+    return syncLocalUsers(req.validatedBody as auth.LoginSyncState, context)
+      .then((result) => res.json({ success: true, result }))
       .catch(next);
-  }
+  },
 );
 
-
-app.post(
-  '/api/bootstrap/status',
-  bootstrapAuthenticate,
-  (req, res, next) => getBootstrapStatus(req, res).catch(next)
+app.post('/api/bootstrap/status', bootstrapAuthenticate, (req, res, next) =>
+  getBootstrapStatus(req, res).catch(next),
 );
 
 app.post(
@@ -109,25 +88,20 @@ app.post(
     };
 
     return handleBootstrap(req.validatedBody as auth.BootstrapPayload, context)
-      .then(result => res.json(result))
+      .then((result) => res.json({ success: true, result }))
       .catch(next);
-  }
+  },
 );
-
-registerErrorHandlers(app);
 
 const server = app.listen(PORT, () => {
   logger.info(
-    { port: PORT, nodeEnv: process.env.NODE_ENV },
-    'Sync server is listening'
+    { scope: 'server', port: PORT, nodeEnv: process.env.NODE_ENV },
+    'Sync server is listening',
   );
 });
 
+registerErrorHandlers(app);
 
-/**
- * Handles graceful process shutdown by closing the HTTP server and database
- * connections before forcing termination at timeout.
- */
 const gracefulShutdown = async (signal: string) => {
   logger.info({ signal }, 'Received shutdown signal, closing server');
 
@@ -139,18 +113,20 @@ const gracefulShutdown = async (signal: string) => {
 
     try {
       await closeDb();
-      logger.info('Database connection closed');
+      logger.info({ scope: 'db' }, 'Database connection closed');
       process.exit(0);
     } catch (dbErr) {
-      logger.error({ dbErr }, 'Error closing database connection');
+      logger.error({ scope: 'db', dbErr }, 'Error closing database connection');
       process.exit(1);
     }
   });
 
   setTimeout(() => {
+    // We force-exit if the DB/Server fails to close within the timeout,
+    // ensuring the container or process doesn't hang indefinitely.
     logger.error(
-      { timeoutSeconds: shutdownTimeout / 1000 },
-      'Forcing shutdown after timeout'
+      { scope: 'server', timeoutSeconds: shutdownTimeout / 1000 },
+      'Forcing shutdown after timeout',
     );
     process.exit(1);
   }, shutdownTimeout);

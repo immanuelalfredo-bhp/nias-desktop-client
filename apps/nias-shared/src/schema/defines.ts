@@ -5,7 +5,6 @@ const argon2Regex = new RegExp(
     '\\$[A-Za-z0-9+/]+={0,2}\\$[A-Za-z0-9+/]+={0,2}$'
 );
 
-// Define reusable schema components for authentication and user management
 export const uuid = z.uuid();
 export const username = z.string().trim().min(1).max(100);
 export const displayName = z.string().trim().max(100).optional().default('');

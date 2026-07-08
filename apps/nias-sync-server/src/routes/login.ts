@@ -1,51 +1,55 @@
 import { asc, eq, inArray } from 'drizzle-orm';
 import type { Logger } from 'pino';
-import {
-  auth,
-  common,
-  verifyPassword,
-} from '@nias/shared';
+import { auth, verifyPassword, type Envelope } from '@nias/shared';
 import { db } from '../db.js';
 import { authUsers, users } from '../schema/index.js';
 import { supabase } from '../supabase.js';
 
 export async function syncLocalUsers(
-  payload: auth.LoginSyncState[],
-  context?: { log?: Logger; userId?: string }
-): Promise<auth.LoginSyncDelta | common.SuccessResponse> {
+  payload: auth.LoginSyncState,
+  context?: { log?: Logger; userId?: string },
+): Promise<Envelope<auth.LoginSyncDelta>> {
   try {
     if (payload.length === 0) {
-			context?.log?.info('No local users to sync');
-      return { success: true, changes: [], deletedUserIds: [] };
+      context?.log?.info({ scope: 'login' }, 'No local users to sync');
+      return {
+        success: true,
+        message: 'No local users to sync',
+        data: { changes: [], deletedUserIds: [] },
+      };
     }
 
     const serverUsers = await db
       .select({
         id: users.id,
         username: users.username,
-				email: users.email,
+        email: users.email,
         passwordHash: users.passwordHash,
         syncVersion: users.syncVersion,
-				jwtToken: authUsers.accessToken,
-				jwtTokenExpiration: authUsers.expiresAt,
+        jwtToken: authUsers.accessToken,
+        jwtTokenExpiration: authUsers.expiresAt,
         deletedAt: users.deletedAt,
       })
       .from(users)
-			.innerJoin(authUsers, eq(users.id, authUsers.id))
-      .where(inArray(users.id, payload.map((item) => item.id)))
+      .innerJoin(authUsers, eq(users.id, authUsers.id))
+      .where(
+        inArray(
+          users.id,
+          payload.map((item) => item.id)
+        ),
+      )
       .orderBy(asc(users.syncVersion));
 
     const changes: auth.LoginData[] = [];
     const deletedUserIds: string[] = [];
 
-    const versionMap = new Map(
-      payload.map((item) => [item.id, item.syncVersion])
-    );
+    // We use a Map for O(1) lookups during the iteration, 
+    // ensuring O(n) performance even with large local user lists.
+    const versionMap = new Map(payload.map((item) => [item.id, item.syncVersion]));
 
     for (const user of serverUsers) {
       if (user.deletedAt !== null) {
-				context?.log?.info({ userId: user.id }, 
-					'User marked as deleted on server');
+        context?.log?.info({ scope: 'login', userId: user.id }, 'User marked as deleted on server');
         deletedUserIds.push(user.id);
         continue;
       }
@@ -53,150 +57,173 @@ export async function syncLocalUsers(
       const localVersion = versionMap.get(user.id) ?? 0;
 
       if (user.syncVersion > localVersion) {
-				context?.log?.info({ userId: user.id, localVersion, serverVersion: user.syncVersion },
-					'User has newer version on server, adding to changes');
+        context?.log?.info(
+          { scope: 'login', userId: user.id, localVersion, serverVersion: user.syncVersion },
+          'User has newer version on server, adding to changes',
+        );
         changes.push({
-          success: true,
           id: user.id,
-          username: user.username,
           email: user.email,
           passwordHash: user.passwordHash,
           syncVersion: user.syncVersion,
-					jwtToken: user.jwtToken,
-					jwtTokenExpiration: user.jwtTokenExpiration.getTime(),
+          jwtToken: user.jwtToken,
+          jwtTokenExpiration: user.jwtTokenExpiration.getTime(),
         });
       }
     }
 
-		context?.log?.info(
-			{ changesCount: changes.length, deletedCount: deletedUserIds.length },
-			'Completed syncing local users'
-		);
+    context?.log?.info(
+      { scope: 'login', changesCount: changes.length, deletedCount: deletedUserIds.length },
+      'Completed syncing local users',
+    );
 
-    return { success: true, changes, deletedUserIds };
+    return {
+      success: true,
+      message: 'Local users synced successfully',
+      data: { changes, deletedUserIds },
+    };
   } catch (error) {
-		context?.log?.error({ error }, 'Error syncing local users');
-		return { success: false, message: 'Error syncing local users' };
+    context?.log?.error({ scope: 'login', error }, 'Error syncing local users');
+    return { success: false, message: 'Error syncing local users' };
   }
 }
 
 export async function initialLogin(
-	payload: auth.LoginCredentials,
-	context?: { log?: Logger; userId?: string }
-): Promise<auth.LoginData | common.SuccessResponse> {
+  payload: auth.LoginCredentials,
+  context?: { log?: Logger; userId?: string },
+): Promise<Envelope<auth.LoginData>> {
+  const supabaseSession = await signIntoSupabase(payload, context);
+
+  if (!supabaseSession?.success) {
+    context?.log?.warn(
+      { scope: 'login', email: payload.email },
+      'Initial login failed: Supabase authentication failed',
+    );
+    return {
+      success: false,
+      message: 'Initial login failed: Supabase authentication failed',
+    };
+  }
+
+  const { accessToken, expiresAt } = supabaseSession.data;
+
+  const localUser = await fetchLocalUser(payload, context);
+
+  if (!localUser?.success) {
+    context?.log?.warn(
+      { scope: 'login', email: payload.email },
+      'Initial login failed: Local user verification failed',
+    );
+    return {
+      success: false,
+      message: 'Initial login failed: Local user verification failed',
+    };
+  }
   
-	const supabaseSession = await signIntoSupabase(payload, context);
-
-  if (!supabaseSession) {
-    context?.log?.warn(
-      { username: payload.username },
-      'Initial login failed: Supabase authentication failed'
-    );
-    return { success: false, message: 'Initial login failed: Supabase authentication failed' };
-  }
-
-	const { accessToken, expiresAt } = supabaseSession;
-
-	const localUser = await fetchLocalUser(payload, context);
-
-  if (!localUser.success) {
-    context?.log?.warn(
-      { username: payload.username },
-      'Initial login failed: local user not found or invalid credentials'
-    );
-    return { success: false, message: 'Initial login failed: local user not found or invalid credentials' };
-  }
-
-	return {
-		...localUser,
-		jwtToken: accessToken,
-		jwtTokenExpiration: expiresAt.getTime(),
-	};
+  // We prefer the local database for user metadata (roles, preferences) 
+  // while relying on Supabase for the primary auth token.
+  return {
+    success: true,
+    message: 'Initial login successful',
+    data: {
+      ...localUser.data,
+      jwtToken: accessToken,
+      // Convert from JavaScript Date (milliseconds) to a standard Unix timestamp (milliseconds)
+      // for consistency with the application's internal data format.
+      jwtTokenExpiration: expiresAt.getTime(),
+    },
+  };
 }
 
-async function signIntoSupabase(	
-	payload: auth.LoginCredentials,
-	context?: { log?: Logger; userId?: string }
-) {
-	try {
-		const { data, error } = await supabase.auth.signInWithPassword({
-			email: payload.email,
-			password: payload.password,
-		});
+async function signIntoSupabase(
+  payload: auth.LoginCredentials,
+  context?: { log?: Logger; userId?: string },
+): Promise<Envelope<auth.SupabaseSession> | null> {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: payload.email,
+      password: payload.password,
+    });
 
-		if (error) {
-			context?.log?.error({ error }, 'Supabase sign-in failed');
-			throw new Error(`Supabase sign-in failed: ${error.message}`);
-		}
+    if (error) {
+      context?.log?.error({ scope: 'login', error }, 'Supabase sign-in failed');
+      return null;
+    }
 
-		if (!data.session || !data.session.access_token || !data.session.expires_at) {
-			context?.log?.error({ data }, 'Supabase sign-in returned incomplete session data');
-			throw new Error('Supabase sign-in returned incomplete session data');
-		}
+    if (!data.session || !data.session.access_token || !data.session.expires_at) {
+      context?.log?.error(
+        { scope: 'login', data },
+        'Supabase sign-in returned incomplete session data',
+      );
+      return null;
+    }
 
-		return {
-			accessToken: data.session.access_token,
-			expiresAt: new Date(data.session.expires_at * 1000), // Convert seconds to milliseconds
-		};
-
-	} catch (error) {
-		context?.log?.error({ error }, 'Error during Supabase sign-in');
-		throw new Error('Error during Supabase sign-in');
-	}
+    return {
+      success: true,
+      message: 'Supabase sign-in successful',
+      data: {
+        accessToken: data.session.access_token,
+        // Supabase returns 'expires_at' in seconds (Unix timestamp), 
+        // but JavaScript's Date constructor expects milliseconds.
+        expiresAt: new Date(data.session.expires_at * 1000),
+      },
+    };
+  } catch (error) {
+    context?.log?.error({ scope: 'login', error }, 'Error during Supabase sign-in');
+    return null;
+  }
 }
 
 async function fetchLocalUser(
   payload: auth.LoginCredentials,
-  context?: { log?: Logger; userId?: string }
-): Promise<auth.LoginData | common.SuccessResponse> {
+  context?: { log?: Logger; userId?: string },
+): Promise<Envelope<auth.LoginData> | null> {
   try {
     const user = await db
       .select({
         id: users.id,
-        username: users.username,
-				email: users.email,
+        email: users.email,
         passwordHash: users.passwordHash,
         syncVersion: users.syncVersion,
-				jwtToken: authUsers.accessToken,
-				jwtTokenExpiration: authUsers.expiresAt,
+        jwtToken: authUsers.accessToken,
+        jwtTokenExpiration: authUsers.expiresAt,
       })
       .from(users)
-			.innerJoin(authUsers, eq(users.id, authUsers.id))
-      .where(eq(users.username, payload.username))
+      .innerJoin(authUsers, eq(users.id, authUsers.id))
+      .where(eq(users.email, payload.email))
       .limit(1)
-      .then(rows => rows[0] ?? null);
-      
+      // Drizzle returns an array, so we explicitly extract the first 
+      // match to treat the result as a single record.
+      .then((rows) => rows[0] ?? null);
+
     if (user) {
       const isPasswordValid = await verifyPassword(user.passwordHash, payload.password);
 
       if (!isPasswordValid) {
         context?.log?.warn(
-          { username: user.username },
-          'Password verification failed for local user'
+          { scope: 'login', email: user.email },
+          'Password verification failed for local user',
         );
         return { success: false, message: 'Invalid credentials' };
       }
     } else {
-      context?.log?.info(
-        { username: payload.username },
-        'Local user not found'
-      );
+      context?.log?.info({ scope: 'login', email: payload.email }, 'Local user not found');
       return { success: false, message: 'Local user not found' };
     }
 
-		const normalizedUser = {
-			...user,
-			jwtTokenExpiration: user.jwtTokenExpiration.getTime(), // Converts Date to Unix timestamp (ms)
-		};
+    const normalizedUser = {
+      ...user,
+      jwtTokenExpiration: user.jwtTokenExpiration.getTime(), // Converts Date to Unix timestamp (ms)
+    };
 
-		context?.log?.info(
-			{ userId: normalizedUser.id, username: normalizedUser.username },
-			'Local user fetched successfully'
-		);
+    context?.log?.info(
+      { scope: 'login', userId: normalizedUser.id, email: normalizedUser.email },
+      'Local user fetched successfully',
+    );
 
-    return { success: true, ...normalizedUser };
+    return { success: true, message: 'Local user fetched successfully', data: normalizedUser };
   } catch (error) {
-    context?.log?.error({ error }, 'Error fetching local user');
-		return { success: false, message: 'Error fetching local user' };
+    context?.log?.error({ scope: 'login', error }, 'Error fetching local user');
+    return { success: false, message: 'Error fetching local user' };
   }
 }

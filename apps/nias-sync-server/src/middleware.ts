@@ -2,16 +2,12 @@ import type { RequestHandler } from 'express';
 import type { ZodType } from 'zod';
 import { supabase } from './supabase.js';
 
-/**
- * Validates a Supabase bearer token and attaches the authenticated user
- * to the request.
- */
 export const userAuthenticate: RequestHandler = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      req.log.warn('Authentication failed: missing bearer token');
+      req.log.warn({ scope: 'auth' }, 'Authentication failed: missing bearer token');
       return res
         .status(401)
         .json({ success: false, message: 'Missing or invalid authorization header' });
@@ -25,17 +21,17 @@ export const userAuthenticate: RequestHandler = async (req, res, next) => {
 
     if (error || !user) {
       req.log.warn(
-        { supabaseError: error?.message },
-        'Authentication failed: invalid token'
+        { scope: 'auth', supabaseError: error?.message },
+        'Authentication failed: invalid token',
       );
       return res.status(401).json({ success: false, message: 'Unauthorized: Invalid token' });
     }
 
     req.user = user;
-    req.log.debug({ userId: user.id }, 'Request authenticated');
+    req.log.debug({ scope: 'auth', userId: user.id }, 'Request authenticated');
     next();
   } catch (err) {
-    req.log.error({ err }, 'Unexpected authentication error');
+    req.log.error({ scope: 'auth', err }, 'Unexpected authentication error');
     next(err);
   }
 };
@@ -45,14 +41,12 @@ export const appAuthenticate: RequestHandler = async (req, res, next) => {
     const authHeader = req.headers['app-id'];
 
     if (typeof authHeader !== 'string' || authHeader !== process.env.APP_ID) {
-      req.log.warn('App authentication failed: invalid token');
-      return res
-        .status(401)
-        .json({ success: false, message: 'Unauthorized: Invalid token' });
+      req.log.warn({ scope: 'auth' }, 'App authentication failed: invalid token');
+      return res.status(401).json({ success: false, message: 'Unauthorized: Invalid token' });
     }
     next();
   } catch (err) {
-    req.log.error({ err }, 'Unexpected app authentication error');
+    req.log.error({ scope: 'auth', err }, 'Unexpected app authentication error');
     next(err);
   }
 };
@@ -61,18 +55,13 @@ export const bootstrapAuthenticate: RequestHandler = async (req, res, next) => {
   try {
     const authHeader = req.headers['bootstrap-secret'];
 
-    if (
-      typeof authHeader !== 'string' ||
-      authHeader !== process.env.BOOTSTRAP_SECRET
-    ) {
-      req.log.warn('Bootstrap authentication failed: invalid token');
-      return res
-        .status(401)
-        .json({ success: false, message: 'Unauthorized: Invalid token' });
+    if (typeof authHeader !== 'string' || authHeader !== process.env.BOOTSTRAP_SECRET) {
+      req.log.warn({ scope: 'auth' }, 'Bootstrap authentication failed: invalid token');
+      return res.status(401).json({ success: false, message: 'Unauthorized: Invalid token' });
     }
     next();
   } catch (err) {
-    req.log.error({ err }, 'Unexpected bootstrap authentication error');
+    req.log.error({ scope: 'auth', err }, 'Unexpected bootstrap authentication error');
     next(err);
   }
 };
@@ -82,7 +71,7 @@ export const validate = <T>(schema: ZodType<T>): RequestHandler => {
     const result = schema.safeParse(req.body);
 
     if (!result.success) {
-      req.log.warn({ issues: result.error.issues }, 'Request validation failed');
+      req.log.warn({ scope: 'auth', issues: result.error.issues }, 'Request validation failed');
       return res.status(400).json({
         success: false,
         message: 'Invalid request body',

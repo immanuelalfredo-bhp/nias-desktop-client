@@ -1,34 +1,22 @@
 import { type Request, type Response } from 'express';
 import { asc, gt } from 'drizzle-orm';
 import type { Logger } from 'pino';
-import {
-  sync,
-  common,
-  type VersionRegistry,
-} from '@nias/shared';
+import { sync, type Envelope } from '@nias/shared';
 import { SYNC_LIMIT } from '../config.js';
 import { db } from '../db.js';
-import {
-  proposedChanges,
-  syncMetadata,
-} from '../schema/index.js';
-import { TABLE_MAP, defaultRegistry, upsertSyncRecords } from '../utils.js';
+import { changelog, syncMetadata } from '../schema/index.js';
+import { defaultRegistry, TABLE_MAP, upsertSyncRecords } from '../utils.js';
 
-/**
- * Computes table-wise sync deltas by comparing client versions against
- * the server version registry.
- */
 async function getSyncDelta(
   clientVersions: sync.SyncMetadata,
-  context?: { log?: Logger; userId?: string }
-): Promise<sync.PullManifest | common.SuccessResponse> {
-
+  context?: { log?: Logger; userId?: string },
+): Promise<Envelope<sync.PullManifest>> {
   try {
     const rows = await db.select().from(syncMetadata).limit(1);
     const syncLimit = SYNC_LIMIT;
     const payload = clientVersions;
 
-    const registry: VersionRegistry = { ...defaultRegistry, ...(rows[0] ?? {}) };
+    const registry: sync.SyncMetadata = { ...defaultRegistry, ...(rows[0] ?? {}) };
 
     const entries = await Promise.all(
       TABLE_MAP.map(async (tableInfo) => {
@@ -39,140 +27,156 @@ async function getSyncDelta(
             .select()
             .from(tableInfo.table)
             .where(gt(tableInfo.table.syncVersion, clientVersion))
+            // We limit the number of records to avoid massive memory spikes 
+            // and to keep individual network responses within safe size limits.
             .limit(syncLimit)
             .orderBy(asc(tableInfo.table.syncVersion));
         } else {
           return [];
         }
-      })
+      }),
     );
 
     const changes = Object.fromEntries(
-      TABLE_MAP.map((t, idx) => [t.responseKey, entries[idx] ?? []])
+      TABLE_MAP.map((t, idx) => [t.responseKey, entries[idx] ?? []]),
     ) as sync.PullManifest['changes'];
 
     context?.log?.info(
       {
-        hasMore: entries.some(r => r.length === syncLimit),
+        scope: 'sync',
+        hasMore: entries.some((r) => r.length === syncLimit),
         latestVersions: registry,
         tableCounts: Object.fromEntries(
-        Object.entries(changes).map(([key, rows]) => [key, rows.length])
-      ),
+          Object.entries(changes).map(([key, rows]) => [key, rows.length]),
+        ),
       },
-      'Computed sync delta'
+      'Computed sync delta',
     );
 
     return {
       success: true,
-      changes,
-      latestVersions: registry,
-      hasMore: entries.some(r => r.length === syncLimit),
+      message: 'Sync delta computed successfully',
+      data: {
+        changes,
+        hasMore: entries.some((r) => r.length === syncLimit),
+        latestVersions: registry,
+      },
     };
   } catch (error) {
-    context?.log?.error({ error }, 'Error computing sync delta');
+    context?.log?.error({ scope: 'sync', error }, 'Error computing sync delta');
     return { success: false, message: 'Failed to compute sync delta' };
   }
 }
 
-export async function handlePull(req: Request, res: Response):
-  Promise<Response<sync.PullManifest | common.SuccessResponse>> 
-{
+export async function handlePull(
+  req: Request,
+  res: Response,
+): Promise<Response<Envelope<sync.PullManifest>>> {
   try {
     const metadata = req.validatedBody as sync.SyncMetadata;
-    req.log.info({ metadata }, 'Starting sync pull');
+    req.log.info({ scope: 'sync', metadata }, 'Starting sync pull');
 
     const data = await getSyncDelta(metadata);
-    const changes = 'changes' in data ? data.changes : {};
+
+    if (!data.success) {
+      req.log.error({ scope: 'sync', message: data.message }, 'Failed to compute sync delta');
+      return res.status(500).json(data);
+    }
+
+    const changes = data.data?.changes ?? {};
+    if (!changes) {
+      req.log.info({ scope: 'sync' }, 'No changes to sync, returning empty response');
+      return res.json(data);
+    }
 
     req.log.info(
       {
+        scope: 'sync',
         hasMore: 'hasMore' in data ? data.hasMore : false,
         latestVersions: 'latestVersions' in data ? data.latestVersions : {},
         tableCounts: Object.fromEntries(
-          Object.entries(changes).map(([key, rows]) => [
-            key, 
-            (rows as any[]).length
-          ])
+          Object.entries(changes).map(([key, rows]) => [key, (rows as any[]).length]),
         ),
       },
-      'Completed sync pull'
+      'Completed sync pull',
     );
 
     return res.json(data);
   } catch (error) {
-    req.log.error({ error }, 'Error handling sync pull');
+    req.log.error({ scope: 'sync', error }, 'Error handling sync pull');
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 }
 
-  /**
-   * Applies client-submitted changes in a transaction and advances
-   * per-table sync versions.
-   */
-export async function handlePush (
+export async function handlePush(
   payload: sync.PushPayload,
-  context?: { log?: Logger; userId?: string }): 
-  Promise<sync.PushResponse | common.SuccessResponse> 
-{
-    try {
+  context?: { log?: Logger; userId?: string },
+): Promise<Envelope<sync.PushResponse>> {
+  try {
     context?.log?.info(
       {
+        scope: 'sync',
         actorId: payload.actorId,
         changes: payload.changes.length,
       },
-      'Starting sync push'
+      'Starting sync push',
     );
 
     return await db.transaction(async (tx) => {
-      const [syncRow] = await tx
-        .select()
-        .from(syncMetadata)
-        .for('update')
-        .limit(1);
+      // We lock the metadata row to ensure that concurrent sync pushes 
+      // do not result in race conditions when calculating the next version number.
+      const [syncRow] = await tx.select().from(syncMetadata).for('update').limit(1);
 
-      const registry: VersionRegistry = { 
-        ...defaultRegistry, 
-        ...(syncRow ?? {}) 
+      const registry: sync.SyncMetadata = {
+        ...defaultRegistry,
+        ...(syncRow ?? {}),
       };
-        
-      const changesByTable = payload.changes.reduce((acc, change) => {
-        if (!acc[change.tableName]) {
-          acc[change.tableName] = [];
-        }
-        acc[change.tableName]?.push(change);
-        return acc;
-      }, {} as Record<string, typeof payload.changes>);
+
+      const changesByTable = payload.changes.reduce(
+        (acc, change) => {
+          if (!acc[change.tableName]) {
+            acc[change.tableName] = [];
+          }
+          acc[change.tableName]?.push(change);
+          return acc;
+        },
+        {} as Record<string, typeof payload.changes>,
+      );
       const processedItems = [];
 
       for (const [tableName, changes] of Object.entries(changesByTable)) {
-        const tableInfo = TABLE_MAP.find(t => t.key === tableName);
+        const tableInfo = TABLE_MAP.find((t) => t.key === tableName);
         if (!tableInfo) {
           context?.log?.warn(
-            { tableName },
-            'Unknown table in sync change, skipping'
+            { scope: 'sync', tableName, actorId: payload.actorId },
+            'Unknown table in sync change, skipping',
           );
           continue;
         }
 
+        // Increment the global table version by the number of changes processed 
+        // to ensure every distinct batch of updates receives a unique version watermark.
         const newVersion = (registry[tableInfo.key] ?? 0) + changes.length;
         registry[tableInfo.key] = newVersion;
 
         const updated = await upsertSyncRecords(
           tx,
           tableInfo.table,
-          changes.map(c => c.payload),
-          newVersion
+          changes.map((c) => c.payload),
+          newVersion,
         );
         processedItems.push({ table: tableName, data: updated });
 
-        await tx.insert(proposedChanges).values(
-          changes.map(c => ({
+        // We record processed changes in a history table for auditability 
+        // and to allow for potential future "undo" or conflict resolution features.
+        await tx.insert(changelog).values(
+          changes.map((c) => ({
             id: c.id,
+            userId: payload.actorId,
             tableName: c.tableName,
             payload: JSON.stringify(c.payload),
-            status: 'processed',
             processedAt: new Date().toISOString(),
-          }))
+          })),
         );
       }
 
@@ -180,17 +184,22 @@ export async function handlePush (
 
       context?.log?.info(
         {
+          scope: 'sync',
           actorId: payload.actorId,
           changes: payload.changes.length,
           processed: processedItems.length,
         },
-        'Completed sync push'
+        'Completed sync push',
       );
 
-      return { success: true, syncedItems: processedItems };
+      return {
+        success: true,
+        message: 'Sync push completed successfully',
+        data: { syncedItems: processedItems },
+      };
     });
   } catch (error) {
-    context?.log?.error({ error }, 'Error handling sync push');
+    context?.log?.error({ scope: 'sync', error }, 'Error handling sync push');
     return { success: false, message: 'Failed to process sync push' };
   }
 }

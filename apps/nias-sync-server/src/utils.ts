@@ -1,22 +1,10 @@
-import { 
-  users, 
-  audit,
-} from './schema/index.js';
-import { 
-  sync,
-  type VersionRegistry 
-} from '@nias/shared';
 import { type PgTransaction } from 'drizzle-orm/pg-core';
+import { sync } from '@nias/shared';
+import { audit, users } from './schema/index.js';
 
 /** Database transaction type used by sync write operations. */
 export type DBTransaction = PgTransaction<any, any, any>;
 
-/**
- * Registry of sync-enabled tables.
- *
- * To add a new table, append an entry with a `key` matching
- * `sharedSync.SyncMetadata` and point `table` to its Drizzle schema.
- */
 export const TABLE_MAP: {
   key: keyof sync.SyncMetadata;
   table: any;
@@ -34,24 +22,20 @@ export const TABLE_MAP: {
   },
 ];
 
-/** Default server version registry for all sync-enabled tables. */
 export const defaultRegistry = TABLE_MAP.reduce((acc, t) => {
   acc[t.key] = 0;
   return acc;
-}, {} as VersionRegistry);
+}, {} as sync.SyncMetadata);
 
-/**
- * Inserts or updates a record while stamping the next sync version.
- */
 export async function upsertSyncRecords(
   tx: DBTransaction,
   table: any,
   payloads: any[],
-  version: number
+  version: number,
 ) {
   return await tx
     .insert(table)
-    .values(payloads.map(p => ({ ...p, syncVersion: version })))
+    .values(payloads.map((p) => ({ ...p, syncVersion: version })))
     .onConflictDoUpdate({
       target: table.id,
       set: { ...payloads[0], syncVersion: version },

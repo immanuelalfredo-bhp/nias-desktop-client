@@ -1,4 +1,5 @@
 import { app, BrowserWindow } from 'electron';
+import { logger } from '@nias/shared';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -27,8 +28,10 @@ function createMainWindow(): void {
 
   if (preloadPath) {
     webPreferences.preload = preloadPath;
+    logger.info({scope: 'main'}, `Preload script found at ${preloadPath}`);
   } else {
-    console.warn('Preload bundle not found. electronAPI will be unavailable in renderer.');
+    logger.error({scope: 'bootstrap'},
+      'Preload script not found. Checked ../preload/index.js and ./preload/index.js');
   }
 
   mainWindow = new BrowserWindow({
@@ -43,16 +46,17 @@ function createMainWindow(): void {
   ]);
 
   if (!htmlPath) {
-    console.error('Renderer HTML not found. Checked dist/index.html in known output layouts.');
+    logger.error({scope: 'bootstrap'},
+      'Renderer build not found. Checked ../../dist/index.html and ../dist/index.html');
     void mainWindow.loadURL('data:text/html,<h1>Renderer build not found</h1><p>Run npm.cmd run build in apps/nias-desktop-client.</p>');
   } else {
     mainWindow.loadFile(htmlPath).catch((error) => {
-      console.error('Failed to load renderer HTML:', error);
+      logger.error({scope: 'bootstrap', error}, 'Failed to load renderer HTML');
     });
   }
 
   mainWindow.webContents.on('did-fail-load', (_event, code, description, validatedURL) => {
-    console.error('Renderer failed to load.', { code, description, validatedURL });
+    logger.error({scope: 'bootstrap', code, description, validatedURL}, 'Renderer failed to load');
   });
 
   mainWindow.on('closed', () => {
@@ -64,7 +68,7 @@ app.whenReady()
   .then(() => {
     const authDb = initializeAuthDatabase();
     registerAuthIpcHandlers(authDb);
-    registerBootstrapIpcHandlers(authDb);
+    registerBootstrapIpcHandlers();
     createMainWindow();
 
     app.on('activate', () => {
@@ -85,6 +89,8 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
-  // database?.close();
-  // database = null;
+  if (mainWindow) {
+    mainWindow.removeAllListeners('close');
+    mainWindow.close();
+  }
 });

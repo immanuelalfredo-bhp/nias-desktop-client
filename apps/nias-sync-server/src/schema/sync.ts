@@ -1,34 +1,19 @@
-import { pgSchema, uuid, text, integer, timestamp } from 'drizzle-orm/pg-core';
+import { integer, pgSchema, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-// Define the sync schema
 export const syncSchema = pgSchema('sync');
 
-// ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
-// ║                                          SYNC SCHEMAS                                         ║
-// ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
-
-// Define the sync table schema
 export const syncMetadata = syncSchema.table('metadata', {
   users: integer('users').notNull().default(0),
   audit: integer('audit').notNull().default(0),
 });
 
-
-export type SyncVersion = typeof syncMetadata.$inferSelect;
-
-// ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
-// ║                                    PROPOSED CHANGES SCHEMAS                                   ║
-// ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
-
-// Define the proposed_changes table schema
-export const proposedChanges = syncSchema.table('proposed_changes', {
+export const changelog = syncSchema.table('changes', {
   id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull(),
   tableName: text('table_name').notNull(),
-  payload: text('payload').notNull(), // JSON string representing the proposed changes
-  status: text('status').notNull(), // 'pending', 'processed', or 'rejected'
-  createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+  payload: text('payload').notNull(), // JSON string representing the pushed changes
   processedAt: timestamp('processed_at', { mode: 'string' }).defaultNow().notNull(),
 });
 
-// Infer the TypeScript type for the proposed_changes table
-export type ProposedChanges = typeof proposedChanges.$inferSelect;
+export type SyncMetadata = typeof syncMetadata.$inferSelect;
+export type Changelog = typeof changelog.$inferSelect;

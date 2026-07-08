@@ -4,11 +4,6 @@ import * as system from './schema/system.js';
 import * as common from './schema/common.js';
 
 export * from './utils.js';
-export * from './types/sync.js';
+export * from './logger.js';
 
-export {
-  auth,
-  sync,
-  system,
-  common
-};
+export { auth, sync, system, common };

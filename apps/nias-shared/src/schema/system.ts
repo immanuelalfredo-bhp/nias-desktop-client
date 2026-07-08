@@ -1,35 +1,25 @@
 import { z } from 'zod';
+import * as schemas from './defines.js';
+import { EntityIdSchema } from './common.js';
 
 // ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 // ║                                          USER SCHEMAS                                         ║
 // ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
 
-const argon2Regex = new RegExp(
-  '^\\$argon2(?:i|d|id)\\$v=\\d+\\$m=\\d+,t=\\d+,p=\\d+' +
-    '\\$[A-Za-z0-9+/]+={0,2}\\$[A-Za-z0-9+/]+={0,2}$'
-);
-
-// Define the Zod schema for an entity ID (UUID v7)
-export const EntityIdSchema = z.object({
-  id: z.uuid(),
-});
-
-// Define the Zod schema for a User
 export const UserSchema = z.object({
-  id: z.uuid(),
-  username: z.string().min(3).max(20),
-  passwordHash: z.string().regex(argon2Regex),
-  displayName: z.string().min(1).max(100).nullable(),
-  email: z.email().toLowerCase().nullable(),
-  isManagedBy: z.uuid().nullable(), // Nullable for users not managed by anyone
+  id: schemas.uuid,
+  username: schemas.username,
+  passwordHash: schemas.passwordHash,
+  displayName: schemas.displayName,
+  email: schemas.email,
+  isManagedBy: schemas.uuid.nullable(), // Nullable for users not managed by anyone
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
   deletedAt: z.iso.datetime().nullable(), // Nullable for non-deleted users
   isSynced: z.boolean(),
-  syncVersion: z.number().int().nonnegative().nullable(), // Nullable for users not yet synced
+  syncVersion: schemas.syncVersion, // Nullable for users not yet synced
 });
 
-// Define the Zod schema for creating a new User (without id, timestamps, and sync fields)
 export const CreateUserSchema = UserSchema.omit({
   createdAt: true,
   updatedAt: true,
@@ -38,7 +28,6 @@ export const CreateUserSchema = UserSchema.omit({
   syncVersion: true,
 });
 
-// Define the Zod schema for updating an existing User (without id, timestamps, and sync fields)
 export const UpdateUserSchema = UserSchema.partial().omit({
   createdAt: true,
   updatedAt: true,
@@ -47,13 +36,16 @@ export const UpdateUserSchema = UserSchema.partial().omit({
   syncVersion: true,
 });
 
-// Define the Zod schema for updating the current user's own profile (without isManagedBy,
-// timestamps, and sync fields)
 export const UpdateSelfSchema = UpdateUserSchema.omit({
   isManagedBy: true,
 });
 
-// Infer the TypeScript type from the Zod schema
+export const DeleteUserSchema = EntityIdSchema;
+
+export const RestoreUserSchema = EntityIdSchema;
+
+export const HardDeleteUserSchema = EntityIdSchema;
+
 export type User = z.infer<typeof UserSchema>;
 export type CreateUser = z.infer<typeof CreateUserSchema>;
 export type UpdateUser = z.infer<typeof UpdateUserSchema>;
@@ -66,7 +58,6 @@ export type HardDeleteUser = z.infer<typeof EntityIdSchema>;
 // ║                                          ROLE SCHEMAS                                         ║
 // ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
 
-// Define the Zod schema for a Role
 export const RoleSchema = z.object({
   id: z.uuid(),
   name: z.string().min(1).max(50),
@@ -79,8 +70,6 @@ export const RoleSchema = z.object({
   syncVersion: z.number().int().nonnegative().nullable(), // Nullable for roles not yet synced
 });
 
-// For creation, we omit the ID (since it will be generated), the timestamps, 
-// and the sync fields
 export const CreateRoleSchema = RoleSchema.omit({
   id: true,
   createdAt: true,
@@ -90,8 +79,6 @@ export const CreateRoleSchema = RoleSchema.omit({
   syncVersion: true,
 });
 
-// For updates, all fields are optional except for the ID, and we also omit 
-// the timestamps and sync fields
 export const UpdateRoleSchema = RoleSchema.partial().omit({
   createdAt: true,
   updatedAt: true,
@@ -100,7 +87,6 @@ export const UpdateRoleSchema = RoleSchema.partial().omit({
   syncVersion: true,
 });
 
-// Infer the TypeScript type from the Zod schema
 export type Role = z.infer<typeof RoleSchema>;
 export type CreateRole = z.infer<typeof CreateRoleSchema>;
 export type UpdateRole = z.infer<typeof UpdateRoleSchema>;
@@ -111,7 +97,6 @@ export type HardDeleteRole = z.infer<typeof EntityIdSchema>;
 // ║                                          AUDIT SCHEMAS                                        ║
 // ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
 
-// Define the Zod schema for an Audit entry
 export const AuditSchema = z.object({
   id: z.uuid(),
   entityId: z.uuid(),
@@ -140,6 +125,5 @@ export const CreateAuditSchema = AuditSchema.omit({
   syncVersion: true,
 });
 
-// Infer the TypeScript type from the Zod schema
 export type Audit = z.infer<typeof AuditSchema>;
 export type CreateAudit = z.infer<typeof CreateAuditSchema>;

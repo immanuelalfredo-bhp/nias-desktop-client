@@ -1,17 +1,17 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { BootstrapAccount, LoginCredentials } from '@nias/shared';
+import { auth } from '@nias/shared';
 
 contextBridge.exposeInMainWorld('electronAPI', {
+
+  // Authentication IPC handlers
   authStatus: () => ipcRenderer.invoke('auth:status'),
-  authLogin: (payload: LoginCredentials) =>
+  authLogin: (payload: auth.LoginCredentials) =>
     ipcRenderer.invoke('auth:login', payload),
-  authFetchUser: (username: string, password: string) =>
-    ipcRenderer.invoke('auth:fetch-user', username, password),
-  authSyncUsers: () => ipcRenderer.invoke('auth:sync-users'),
-  authGetLocalUserIdByUsername: (username: string) =>
-    ipcRenderer.invoke('auth:get-local-user-id', username),
-  authInitializeDb: (uuid: string) => ipcRenderer.invoke('auth:initialize-db', uuid),
-  bootstrapStatus: (secret: string) => ipcRenderer.invoke('bootstrap:status', secret),
-  bootstrapExecute: (secret: string, payload: BootstrapAccount) =>
-    ipcRenderer.invoke('bootstrap:execute', secret, payload),
+  authSync: () => ipcRenderer.invoke('auth:sync'),
+
+  // Bootstrap IPC handlers
+  bootstrapStatus: (bootstrapSecret: string) =>
+    ipcRenderer.invoke('bootstrap:status', bootstrapSecret),
+  bootstrapExecute: (bootstrapSecret: string, payload: auth.BootstrapPayload) =>
+    ipcRenderer.invoke('bootstrap:execute', bootstrapSecret, payload),
 });
