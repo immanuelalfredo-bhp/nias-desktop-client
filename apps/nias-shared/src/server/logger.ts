@@ -17,14 +17,9 @@ const loggerOptions: LoggerOptions = {
 };
 
 if (!isProduction) {
-  loggerOptions.transport = {
-    target: 'pino-pretty',
-    options: {
-      colorize: true,
-      translateTime: 'SYS:standard',
-      ignore: 'pid,hostname',
-    },
-  };
+  // Keep development logging in-process to avoid worker-thread transport
+  // resolution issues in Electron bundles.
+  loggerOptions.level = process.env.LOG_LEVEL || 'debug';
 }
 
 export const logger = pino(loggerOptions);

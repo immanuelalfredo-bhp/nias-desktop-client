@@ -1,7 +1,7 @@
 import argon2 from 'argon2';
 import { safeParse, ZodType } from 'zod';
 import { logger } from './logger.js';
-import { common } from './index.js';
+import { common } from '../index.common.js';
 
 export type Envelope<T> =
   { success: true; message: string; data: T } | { success: false; message: string };
@@ -63,6 +63,28 @@ export async function handleResponse<T>(
   }
 
   const json = await response.json();
+
+  const envelopeResult = safeParse(
+    common.SuccessResponseSchema.extend({
+      data: schema.optional(),
+    }),
+    json,
+  );
+
+  if (envelopeResult.success) {
+    if (!envelopeResult.data.success) {
+      logger.error({ scope, data: envelopeResult.data }, 'Sync request returned an error envelope');
+      return { success: false, message: envelopeResult.data.message };
+    }
+
+    if (envelopeResult.data.data === undefined) {
+      logger.error({ scope, data: json }, 'Sync request envelope is missing data payload');
+      return { success: false, message: 'Invalid response from sync server' };
+    }
+
+    return envelopeResult.data.data;
+  }
+
   const responseData = safeParse(schema, json);
   if (!responseData.success) {
     logger.error({ scope, data: json }, 'Sync request failed: Invalid response from sync server');

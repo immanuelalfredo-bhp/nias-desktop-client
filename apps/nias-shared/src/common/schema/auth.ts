@@ -13,7 +13,12 @@ export const BootstrapPayloadSchema = z.object({
   passwordHash: schemas.passwordHash,
 });
 
+export const BootstrapInputSchema = BootstrapPayloadSchema.omit({
+  passwordHash: true,
+});
+
 export type BootstrapPayload = z.infer<typeof BootstrapPayloadSchema>;
+export type BootstrapInput = z.infer<typeof BootstrapInputSchema>;
 
 // ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 // ║                                          LOGIN SCHEMAS                                        ║

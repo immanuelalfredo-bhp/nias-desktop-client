@@ -6,7 +6,7 @@ const argon2Regex = new RegExp(
 );
 
 export const uuid = z.uuid();
-export const username = z.string().trim().min(1).max(100);
+export const username = z.string().trim().min(1).max(100).lowercase();
 export const displayName = z.string().trim().max(100).optional().default('');
 export const email = z.email();
 export const password = z.string().min(1);
@@ -17,3 +17,5 @@ export const jwtTokenExpiration = z.number().int().nonnegative();
 
 export const genericString = z.string().trim().min(1).max(100);
 export const genericBlob = z.string().trim().min(1).max(1000);
+
+
