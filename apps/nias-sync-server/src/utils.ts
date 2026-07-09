@@ -1,6 +1,6 @@
 import { type PgTransaction } from 'drizzle-orm/pg-core';
 import { sync } from '@nias/shared';
-import { audit, users } from './schema/index.js';
+import { users } from '@nias/shared/server';
 
 /** Database transaction type used by sync write operations. */
 export type DBTransaction = PgTransaction<any, any, any>;
@@ -14,11 +14,6 @@ export const TABLE_MAP: {
     key: 'users' as const,
     table: users,
     responseKey: 'users' as const,
-  },
-  {
-    key: 'audit' as const,
-    table: audit,
-    responseKey: 'audit' as const,
   },
 ];
 

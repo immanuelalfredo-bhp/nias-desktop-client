@@ -1,5 +1,6 @@
 import 'dotenv/config';
-import { auth, logger, sync } from '@nias/shared';
+import { auth, sync } from '@nias/shared';
+import { logger } from '@nias/shared/server';
 import app, { registerErrorHandlers } from './app.js';
 import { SHUTDOWN_TIMEOUT } from './config.js';
 import { closeDb } from './db.js';
@@ -45,16 +46,7 @@ app.post(
     };
 
     return initialLogin(req.validatedBody as auth.LoginCredentials, context)
-      .then((result) => {
-        if (!result) {
-          return res.status(404).json({
-            success: false,
-            message: 'User not found or password is incorrect',
-          });
-        }
-
-        return res.json({ success: true, user: result });
-      })
+      .then((result) => res.status(result.success ? 200 : 404).json(result))
       .catch(next);
   },
 );
@@ -69,7 +61,7 @@ app.post(
     };
 
     return syncLocalUsers(req.validatedBody as auth.LoginSyncState, context)
-      .then((result) => res.json({ success: true, result }))
+      .then((result) => res.status(result.success ? 200 : 400).json(result))
       .catch(next);
   },
 );
@@ -88,7 +80,7 @@ app.post(
     };
 
     return handleBootstrap(req.validatedBody as auth.BootstrapPayload, context)
-      .then((result) => res.json({ success: true, result }))
+      .then((result) => res.status(result.success ? 200 : 400).json(result))
       .catch(next);
   },
 );

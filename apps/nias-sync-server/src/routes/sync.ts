@@ -1,10 +1,10 @@
 import { type Request, type Response } from 'express';
 import { asc, gt } from 'drizzle-orm';
 import type { Logger } from 'pino';
-import { sync, type Envelope } from '@nias/shared';
+import { sync } from '@nias/shared';
+import { changelog, syncMetadata, type Envelope } from '@nias/shared/server';
 import { SYNC_LIMIT } from '../config.js';
 import { db } from '../db.js';
-import { changelog, syncMetadata } from '../schema/index.js';
 import { defaultRegistry, TABLE_MAP, upsertSyncRecords } from '../utils.js';
 
 async function getSyncDelta(
@@ -23,14 +23,16 @@ async function getSyncDelta(
         const clientVersion = payload[tableInfo.key] ?? 0;
         const serverVersion = registry[tableInfo.key] ?? 0;
         if (clientVersion < serverVersion) {
-          return db
-            .select()
-            .from(tableInfo.table)
-            .where(gt(tableInfo.table.syncVersion, clientVersion))
-            // We limit the number of records to avoid massive memory spikes 
-            // and to keep individual network responses within safe size limits.
-            .limit(syncLimit)
-            .orderBy(asc(tableInfo.table.syncVersion));
+          return (
+            db
+              .select()
+              .from(tableInfo.table)
+              .where(gt(tableInfo.table.syncVersion, clientVersion))
+              // We limit the number of records to avoid massive memory spikes
+              // and to keep individual network responses within safe size limits.
+              .limit(syncLimit)
+              .orderBy(asc(tableInfo.table.syncVersion))
+          );
         } else {
           return [];
         }
@@ -123,7 +125,7 @@ export async function handlePush(
     );
 
     return await db.transaction(async (tx) => {
-      // We lock the metadata row to ensure that concurrent sync pushes 
+      // We lock the metadata row to ensure that concurrent sync pushes
       // do not result in race conditions when calculating the next version number.
       const [syncRow] = await tx.select().from(syncMetadata).for('update').limit(1);
 
@@ -154,7 +156,7 @@ export async function handlePush(
           continue;
         }
 
-        // Increment the global table version by the number of changes processed 
+        // Increment the global table version by the number of changes processed
         // to ensure every distinct batch of updates receives a unique version watermark.
         const newVersion = (registry[tableInfo.key] ?? 0) + changes.length;
         registry[tableInfo.key] = newVersion;
@@ -167,7 +169,7 @@ export async function handlePush(
         );
         processedItems.push({ table: tableName, data: updated });
 
-        // We record processed changes in a history table for auditability 
+        // We record processed changes in a history table for auditability
         // and to allow for potential future "undo" or conflict resolution features.
         await tx.insert(changelog).values(
           changes.map((c) => ({

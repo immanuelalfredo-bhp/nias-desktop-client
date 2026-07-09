@@ -3,7 +3,7 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { httpLogger, logger } from '@nias/shared';
+import { httpLogger, logger } from '@nias/shared/server';
 import { REQUEST_INTERVAL, REQUEST_LIMIT } from './config.js';
 import type { NextFunction, Request, Response } from 'express';
 

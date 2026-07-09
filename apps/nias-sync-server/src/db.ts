@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { logger } from '@nias/shared';
-import * as schema from './schema/index.js';
+import { logger } from '@nias/shared/server';
+import { schemas } from '@nias/shared/server'
 
 /**
  * Establishes a connection to the PostgreSQL database using the connection string from the
@@ -20,7 +20,7 @@ logger.info({ scope: 'db' }, 'Connecting to the database using DATABASE_URL from
 
 const queryClient = postgres(connectionString);
 
-export const db = drizzle(queryClient, { schema });
+export const db = drizzle(queryClient, { schema: schemas });
 
 export const closeDb = async () => {
   await queryClient.end();

@@ -1,8 +1,8 @@
 import { asc, eq, inArray } from 'drizzle-orm';
 import type { Logger } from 'pino';
-import { auth, verifyPassword, type Envelope } from '@nias/shared';
+import { auth } from '@nias/shared';
+import { authUsers, users, verifyPassword, type Envelope } from '@nias/shared/server';
 import { db } from '../db.js';
-import { authUsers, users } from '../schema/index.js';
 import { supabase } from '../supabase.js';
 
 export async function syncLocalUsers(

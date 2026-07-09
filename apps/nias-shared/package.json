@@ -18,11 +18,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@nias/sync-server": "file:../nias-sync-server",
     "argon2": "^0.44.0",
     "zod": "^4.4.3"
-  },
-  "devDependencies": {
-    "drizzle-zod": "^0.8.3"
   }
 }

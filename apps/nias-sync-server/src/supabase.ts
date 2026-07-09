@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { logger } from '@nias/shared';
+import { logger } from '@nias/shared/server';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const publicRoleKey = process.env.SUPABASE_PUBLIC_ROLE_KEY!;

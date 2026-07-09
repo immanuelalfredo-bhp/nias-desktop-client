@@ -1,9 +1,9 @@
 import { count } from 'drizzle-orm';
 import type { Logger } from 'pino';
 import { type Request, type Response } from 'express';
-import { auth, common, type Envelope } from '@nias/shared';
+import { auth, common } from '@nias/shared';
+import { users, type Envelope } from '@nias/shared/server';
 import { db } from '../db.js';
-import { users } from '../schema/index.js';
 import { supabaseAdmin } from '../supabase.js';
 
 export async function getBootstrapStatus(
