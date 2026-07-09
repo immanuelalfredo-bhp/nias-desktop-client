@@ -35,7 +35,7 @@ export async function syncLocalUsers(
       .where(
         inArray(
           users.id,
-          payload.map((item) => item.id)
+          payload.map((item) => item.id),
         ),
       )
       .orderBy(asc(users.syncVersion));
@@ -43,7 +43,7 @@ export async function syncLocalUsers(
     const changes: auth.LoginData[] = [];
     const deletedUserIds: string[] = [];
 
-    // We use a Map for O(1) lookups during the iteration, 
+    // We use a Map for O(1) lookups during the iteration,
     // ensuring O(n) performance even with large local user lists.
     const versionMap = new Map(payload.map((item) => [item.id, item.syncVersion]));
 
@@ -119,8 +119,8 @@ export async function initialLogin(
       message: 'Initial login failed: Local user verification failed',
     };
   }
-  
-  // We prefer the local database for user metadata (roles, preferences) 
+
+  // We prefer the local database for user metadata (roles, preferences)
   // while relying on Supabase for the primary auth token.
   return {
     success: true,
@@ -163,7 +163,7 @@ async function signIntoSupabase(
       message: 'Supabase sign-in successful',
       data: {
         accessToken: data.session.access_token,
-        // Supabase returns 'expires_at' in seconds (Unix timestamp), 
+        // Supabase returns 'expires_at' in seconds (Unix timestamp),
         // but JavaScript's Date constructor expects milliseconds.
         expiresAt: new Date(data.session.expires_at * 1000),
       },
@@ -185,14 +185,10 @@ async function fetchLocalUser(
         email: users.email,
         passwordHash: users.passwordHash,
         syncVersion: users.syncVersion,
-        jwtToken: authUsers.accessToken,
-        jwtTokenExpiration: authUsers.expiresAt,
       })
       .from(users)
-      .innerJoin(authUsers, eq(users.id, authUsers.id))
-      .where(eq(users.email, payload.email))
       .limit(1)
-      // Drizzle returns an array, so we explicitly extract the first 
+      // Drizzle returns an array, so we explicitly extract the first
       // match to treat the result as a single record.
       .then((rows) => rows[0] ?? null);
 
@@ -211,9 +207,23 @@ async function fetchLocalUser(
       return { success: false, message: 'Local user not found' };
     }
 
+    const session = await supabase.auth.getSession();
+
+    if (!session.data.session) {
+      context?.log?.error(
+        { scope: 'login', email: user.email },
+        'Supabase session retrieval failed after local user verification',
+      );
+      return { success: false, message: 'Supabase session retrieval failed' };
+    }
+
+    const jwtToken = session.data.session.access_token;
+    const jwtTokenExpiration = new Date(session.data.session.expires_at! * 1000);
+
     const normalizedUser = {
       ...user,
-      jwtTokenExpiration: user.jwtTokenExpiration.getTime(), // Converts Date to Unix timestamp (ms)
+      jwtToken,
+      jwtTokenExpiration: jwtTokenExpiration.getTime(), // Converts Date to Unix timestamp (ms)
     };
 
     context?.log?.info(
