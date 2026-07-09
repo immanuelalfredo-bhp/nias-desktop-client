@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { BootstrapAccount } from '@nias/shared';
-import type { StatusState } from '../types/ui';
+import type { auth } from '@nias/shared';
+import type { StatusState } from '../types';
 
 export default function BootstrapPage() {
   const [username, setUsername] = useState('');
@@ -36,7 +36,7 @@ export default function BootstrapPage() {
         setStatus({ text: 'Passwords do not match', isError: true });
         return;
       } else {
-        const payload: BootstrapAccount = {
+        const payload: auth.BootstrapInput = {
           username,
           displayName,
           email,
