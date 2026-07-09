@@ -4,7 +4,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "build:shared": "npm --prefix ../nias-shared install && npm --prefix ../nias-shared run build",
+    "build:shared": "npm run build --workspace=@nias/shared",
     "build": "npm run build:shared && tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "db:generate": "drizzle-kit generate",

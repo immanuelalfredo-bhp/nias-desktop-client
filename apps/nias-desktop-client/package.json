@@ -5,7 +5,7 @@
   "description": "",
   "main": "dist-electron/main/index.js",
   "scripts": {
-    "build:shared": "npm --prefix ../nias-shared install && npm --prefix ../nias-shared run build",
+    "build:shared": "npm run build:shared && tsc -p tsconfig.json",
     "build": "npm run build:shared && vite build",
     "dev": "vite",
     "start": "electron ."
