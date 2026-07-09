@@ -1,15 +1,13 @@
 import { ipcMain } from 'electron';
-import { safeParse } from 'zod';
 import { AuthDatabase, initializeUserDatabase } from '../db/database.js';
+import { auth, common } from '@nias/shared';
 import {
-  auth,
-  common,
-  logger,
-  isSuccess,
   handleResponse,
+  isSuccess,
+  logger,
   verifyPassword,
   type Envelope,
-} from '@nias/shared';
+} from '@nias/shared/server';
 import { APP_ID, SYNC_SERVER_URL } from '../config.js';
 
 export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
@@ -27,13 +25,15 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
 
   ipcMain.handle(
     'auth:login',
-    async (_event, email: string, password: string): Promise<common.SuccessResponse> => {
+    async (_event, payload: auth.LoginCredentials): Promise<common.SuccessResponse> => {
       try {
-        const loginCredentials = safeParse(auth.LoginCredentialsSchema, { email, password });
+        const loginCredentials = auth.LoginCredentialsSchema.safeParse(payload);
         if (!loginCredentials.success) {
-          logger.warn({ scope: 'auth', email }, 'Login failed: Invalid credentials format');
+          logger.warn({ scope: 'auth', payload }, 'Login failed: Invalid credentials format');
           return { success: false, message: 'Invalid credentials format' };
         }
+
+        const { email, password } = loginCredentials.data;
 
         const user = authDb.main.getLocalUser(email);
         if (!user) {
@@ -43,7 +43,7 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
               'content-type': 'application/json',
               'app-id': `${APP_ID}`,
             },
-            body: JSON.stringify(loginCredentials),
+            body: JSON.stringify(loginCredentials.data),
           });
 
           const data = await handleResponse(response, auth.LoginDataSchema, 'auth');

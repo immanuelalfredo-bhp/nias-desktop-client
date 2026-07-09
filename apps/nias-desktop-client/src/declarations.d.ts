@@ -1,11 +1,15 @@
-import type { BootstrapAccount, LoginCredentials } from '@nias/shared';
+import { auth, common } from '@nias/shared';
+import type { Envelope } from '@nias/shared/server';
 
 export interface ElectronAPI {
-  authStatus: () => Promise<common.SuccessResponse & auth.AuthStatusResponse>;
-  authLogin: (payload: LoginCredentials) => Promise<common.SuccessResponse>;
+  authStatus: () => Promise<Envelope<auth.StatusResponse>>;
+  authLogin: (payload: auth.LoginCredentials) => Promise<common.SuccessResponse>;
   authSync: () => Promise<common.SuccessResponse>;
-  bootstrapStatus: (bootstrapSecret: string) => Promise<common.SuccessResponse & auth.AuthStatusResponse>;
-  bootstrapExecute: (bootstrapSecret: string, payload: BootstrapAccount) => Promise<common.SuccessResponse>;
+  bootstrapStatus: (bootstrapSecret: string) => Promise<Envelope<auth.StatusResponse>>;
+  bootstrapExecute: (
+    bootstrapSecret: string,
+    payload: auth.BootstrapInput,
+  ) => Promise<common.SuccessResponse>;
 }
 
 declare global {

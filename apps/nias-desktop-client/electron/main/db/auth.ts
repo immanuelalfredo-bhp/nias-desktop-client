@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3-multiple-ciphers';
-import { auth, logger } from '@nias/shared';
+import { auth } from '@nias/shared';
+import { logger } from '@nias/shared/server';
 
 export class AuthQueries {
   constructor(private readonly db: Database.Database) {}

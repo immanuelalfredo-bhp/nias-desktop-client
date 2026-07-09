@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import electron from 'vite-plugin-electron';
 import copy from 'rollup-plugin-copy';
+import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig({
   // Use relative asset URLs so renderer works from Electron file:// loading.
@@ -12,6 +13,7 @@ export default defineConfig({
   },
   assetsInclude: ['**/*.sql'],
   plugins: [
+    visualizer({ open: true }),
     react(),
     electron([
       {
@@ -35,7 +37,10 @@ export default defineConfig({
             },
             emptyOutDir: true,
             rollupOptions: {
-              external: ['better-sqlite3-multiple-ciphers', 'argon2', 'keytar'],
+              external: [
+                '@nias/shared/server',
+                'better-sqlite3-multiple-ciphers',
+              ],
               output: {
                 format: 'cjs',
                 entryFileNames: '[name].js',

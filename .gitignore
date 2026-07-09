@@ -21,3 +21,4 @@ Thumbs.db
 # env files
 **/.env
 **/.env.*
+apps/nias-desktop-client/stats.html

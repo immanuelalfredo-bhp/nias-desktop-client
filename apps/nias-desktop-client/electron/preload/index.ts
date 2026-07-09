@@ -12,6 +12,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Bootstrap IPC handlers
   bootstrapStatus: (bootstrapSecret: string) =>
     ipcRenderer.invoke('bootstrap:status', bootstrapSecret),
-  bootstrapExecute: (bootstrapSecret: string, payload: auth.BootstrapPayload) =>
+  bootstrapExecute: (bootstrapSecret: string, payload: auth.BootstrapInput) =>
     ipcRenderer.invoke('bootstrap:execute', bootstrapSecret, payload),
 });

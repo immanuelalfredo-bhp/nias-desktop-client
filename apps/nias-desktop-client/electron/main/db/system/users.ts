@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3-multiple-ciphers';
-import { logger, type system } from '@nias/shared';
+import { type system } from '@nias/shared';
+import { logger } from '@nias/shared/server';
 
 export class UserQueries {
   constructor(private readonly db: Database.Database) {}

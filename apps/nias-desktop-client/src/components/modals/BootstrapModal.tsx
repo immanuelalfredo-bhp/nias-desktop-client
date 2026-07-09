@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import ModalTemplate from './ModalTemplate';
-import type { StatusState } from '../../types/ui';
+import type { StatusState } from '../../types';
 
 interface BootstrapModalProps {
   onClose: () => void;
@@ -22,9 +22,9 @@ export default function BootstrapModal({ onClose, onExecute }: BootstrapModalPro
     try {
       const result = await window.electronAPI.bootstrapStatus(bootstrapSecret);
 
-      if (result.isValid === false) {
+      if (!result.success) {
         setStatus({ text: 'Incorrect token', isError: true });
-      } else if (result.isEmpty === true) {
+      } else if (result.data.isEmpty) {
         onExecute();
       } else {
         setStatus({ text: 'System already initialized', isError: true });

@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { app, safeStorage } from 'electron';
-import { logger } from '@nias/shared'
+import { logger } from '@nias/shared/server';
 import {
   AuthQueries,
 } from './auth.js';

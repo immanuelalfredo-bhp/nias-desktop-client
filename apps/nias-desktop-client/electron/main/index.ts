@@ -1,5 +1,5 @@
 import { app, BrowserWindow } from 'electron';
-import { logger } from '@nias/shared';
+import { logger } from '@nias/shared/server';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -59,6 +59,17 @@ function createMainWindow(): void {
     logger.error({scope: 'bootstrap', code, description, validatedURL}, 'Renderer failed to load');
   });
 
+  mainWindow.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    logger.error(
+      { scope: 'renderer', level, message, line, sourceId },
+      'Renderer console message',
+    );
+  });
+
+  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+    logger.error({ scope: 'renderer', details }, 'Renderer process terminated');
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -68,7 +79,9 @@ app.whenReady()
   .then(() => {
     const authDb = initializeAuthDatabase();
     registerAuthIpcHandlers(authDb);
-    registerBootstrapIpcHandlers();
+    if (authDb.main.countLocalUsers() === 0) {
+      registerBootstrapIpcHandlers();
+    }
     createMainWindow();
 
     app.on('activate', () => {

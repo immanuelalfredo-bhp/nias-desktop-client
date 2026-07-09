@@ -1,14 +1,13 @@
 import { ipcMain } from 'electron';
+import { auth, common } from '@nias/shared';
 import {
-  auth,
-  common,
   hashPassword,
   handleResponse,
   isSuccess,
   logger,
   slugify,
   type Envelope,
-} from '@nias/shared';
+} from '@nias/shared/server';
 import { SYNC_SERVER_URL } from '../config.js';
 
 export function registerBootstrapIpcHandlers(): void {
@@ -50,10 +49,10 @@ export function registerBootstrapIpcHandlers(): void {
     async (
       _event,
       bootstrapSecret: string,
-      payload: auth.BootstrapPayload,
+      payload: auth.BootstrapInput,
     ): Promise<common.SuccessResponse> => {
       try {
-        const bootstrapPayload = auth.BootstrapPayloadSchema.parse(payload);
+        const bootstrapPayload = auth.BootstrapInputSchema.parse(payload);
         const passwordHash = await hashPassword(bootstrapPayload.password);
 
         const response = await fetch(`${SYNC_SERVER_URL}/api/bootstrap/execute`, {
