@@ -28,9 +28,9 @@ export const UserSchema = createSelectSchema(users, {
   passwordHash: schemas.passwordHash,
   displayName: schemas.displayName,
   email: schemas.email,
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-  deletedAt: z.iso.datetime().nullable(),
+  createdAt: schemas.dateTime,
+  updatedAt: schemas.dateTime,
+  deletedAt: schemas.dateTime.nullable(),
 });
 
 export type User = typeof users.$inferSelect;
