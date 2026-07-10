@@ -13,7 +13,9 @@ export const HardDeleteUserSchema = EntityIdSchema;
 
 export type User = DrizzleUser;
 
-export const CreateUserSchema = UserSchema.omit({
+export const CreateUserSchema = UserSchema.extend({
+  password: schemas.password,
+}).omit({
   createdAt: true,
   updatedAt: true,
   deletedAt: true,
@@ -33,9 +35,7 @@ export const UpdateSelfSchema = UpdateUserSchema.omit({
   isManagedBy: true,
 });
 
-export const CreateUserInputSchema = CreateUserSchema.extend({
-  password: schemas.password,
-}).omit({
+export const CreateUserInputSchema = CreateUserSchema.omit({
   passwordHash: true,
 });
 

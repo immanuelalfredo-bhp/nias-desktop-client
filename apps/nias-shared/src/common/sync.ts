@@ -13,6 +13,11 @@ export const ChangelogSchema = DrizzleChangelogSchema;
 export type SyncMetadata = DrizzleSyncMetadata;
 export type Changelog = DrizzleChangelog;
 
+export const UserSyncVersionSchema = z.object({
+  userId: schemas.uuid,
+  syncVersion: schemas.syncVersion,
+});
+
 export const PushPayloadSchema = z.object({
   id: schemas.uuid,
   actorId: schemas.uuid,
@@ -44,6 +49,7 @@ export const PushResponseSchema = z.object({
   ),
 });
 
+export type UserSyncVersion = z.infer<typeof UserSyncVersionSchema>;
 export type PushPayload = z.infer<typeof PushPayloadSchema>;
 export type PullManifest = z.infer<typeof PullManifestSchema>;
 export type PushResponse = z.infer<typeof PushResponseSchema>;

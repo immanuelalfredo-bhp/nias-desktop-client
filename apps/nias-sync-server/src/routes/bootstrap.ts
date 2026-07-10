@@ -35,8 +35,6 @@ export async function handleBootstrap(
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: payload.email,
       password: payload.password,
-      // We auto-confirm because this is a bootstrap/admin creation flow 
-      // where the user is initialized by an authorized system process.
       email_confirm: true,
     });
 
@@ -58,11 +56,26 @@ export async function handleBootstrap(
       email: payload.email,
       isManagedBy: null,
       isSynced: true,
-      // Default to version 1 to ensure new users are immediately 
-      // compatible with the sync engine's initial state.
-      syncVersion: 1,
+      syncVersion: 0,
     };
-    await tx.insert(users).values(adminData);
+
+    try {
+      await tx.insert(users).values(adminData);
+    } catch (dbError) {
+      context?.log?.error(
+        { scope: 'bootstrap', error: dbError },
+        'Failed to insert admin user into the database',
+      );
+      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+      context?.log?.info(
+        { scope: 'bootstrap', adminId: authData.user.id },
+        'Rolled back Supabase admin user creation due to database error',
+      );
+      return {
+        success: false,
+        message: 'Failed to insert admin user into the database',
+      };
+    }
 
     context?.log?.info(
       { scope: 'bootstrap', adminId: authData.user.id },

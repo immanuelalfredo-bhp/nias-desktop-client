@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { auth, sync } from '@nias/shared';
+import { auth, sync, system } from '@nias/shared';
 import { logger } from '@nias/shared/server';
 import app, { registerErrorHandlers } from './app.js';
 import { SHUTDOWN_TIMEOUT } from './config.js';
@@ -13,6 +13,7 @@ import {
 import { getBootstrapStatus, handleBootstrap } from './routes/bootstrap.js';
 import { initialLogin, syncLocalUsers } from './routes/login.js';
 import { handlePull, handlePush } from './routes/sync.js';
+import { handleCreateUser } from './routes/database.js';
 
 const shutdownTimeout = SHUTDOWN_TIMEOUT;
 const PORT = Number(process.env.PORT || 3000);
@@ -61,6 +62,21 @@ app.post(
     };
 
     return syncLocalUsers(req.validatedBody as auth.LoginSyncState, context)
+      .then((result) => res.status(result.success ? 200 : 400).json(result))
+      .catch(next);
+  },
+);
+
+app.post('/api/database/new-user',
+  userAuthenticate,
+  validate(system.CreateUserSchema),
+  (req, res, next) => {
+    const context = {
+      log: req.log,
+      ...(req.user?.id ? { userId: req.user.id } : {}),
+    };
+
+    return handleCreateUser(req.validatedBody as system.CreateUser, context)
       .then((result) => res.status(result.success ? 200 : 400).json(result))
       .catch(next);
   },
