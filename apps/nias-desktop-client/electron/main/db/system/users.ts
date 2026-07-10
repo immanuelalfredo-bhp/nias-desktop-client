@@ -9,7 +9,6 @@ export class UserQueries {
     const stmt = this.db.prepare(`
       SELECT
         id,
-        username,
         password_hash AS passwordHash,
         display_name AS displayName,
         email,
@@ -21,7 +20,6 @@ export class UserQueries {
         sync_version AS syncVersion
       FROM users u
       WHERE u.deleted_at IS NULL
-      ORDER BY username ASC
     `);
     logger.debug({ scope: 'UserQueries' }, 'listUsers: SQL query executed successfully.');
     return stmt.all() as system.User[];
@@ -31,7 +29,6 @@ export class UserQueries {
     const stmt = this.db.prepare(`
       SELECT
         id,
-        username,
         password_hash AS passwordHash,
         display_name AS displayName,
         email,
@@ -43,7 +40,6 @@ export class UserQueries {
         sync_version AS syncVersion
       FROM users u
       WHERE u.deleted_at IS NOT NULL
-      ORDER BY username ASC
     `);
     logger.debug({ scope: 'UserQueries' }, 'listDeletedUsers: SQL query executed successfully.');
     return stmt.all() as system.User[];
@@ -53,7 +49,6 @@ export class UserQueries {
     const stmt = this.db.prepare(`
       SELECT
         id,
-        username,
         password_hash AS passwordHash,
         display_name AS displayName,
         email,
@@ -73,11 +68,10 @@ export class UserQueries {
     return stmt.get(id) as system.User | null;
   }
 
-  findUserByUsername(username: string): system.User | null {
+  findUserByEmail(email: string): system.User | null {
     const stmt = this.db.prepare(`
       SELECT
         id,
-        username,
         password_hash AS passwordHash,
         display_name AS displayName,
         email,
@@ -88,20 +82,19 @@ export class UserQueries {
         is_synced AS isSynced,
         sync_version AS syncVersion
       FROM users u
-      WHERE u.username = ?
+      WHERE u.email = ?
     `);
     logger.debug(
-      { scope: 'UserQueries', username },
-      `findUserByUsername: SQL query executed successfully for username: ${username}.`,
+      { scope: 'UserQueries', email },
+      `findUserByEmail: SQL query executed successfully for email: ${email}.`,
     );
-    return stmt.get(username) as system.User | null;
+    return stmt.get(email) as system.User | null;
   }
 
   createUser(params: system.CreateUser): void {
     const stmt = this.db.prepare(`
       INSERT INTO users (
         id,
-        username,
         password_hash,
         display_name,
         email,
@@ -111,7 +104,6 @@ export class UserQueries {
 
     stmt.run(
       params.id,
-      params.username,
       params.passwordHash,
       params.displayName,
       params.email,
@@ -138,7 +130,6 @@ export class UserQueries {
     const stmt = this.db.prepare(`
       UPDATE users
       SET
-        username = ?,
         password_hash = ?,
         display_name = ?,
         email = ?,
@@ -147,7 +138,6 @@ export class UserQueries {
     `);
 
     stmt.run(
-      params.username ?? existingUser.username,
       params.passwordHash ?? existingUser.passwordHash,
       params.displayName ?? existingUser.displayName,
       params.email ?? existingUser.email,
@@ -183,6 +173,72 @@ export class UserQueries {
     logger.debug(
       { scope: 'UserQueries', userId: id },
       `restoreUser: SQL query executed successfully for id: ${id}.`,
+    );
+  }
+
+  syncUsers(params: system.User): void {
+    const conflictingUser = this.db
+      .prepare(
+        `
+      SELECT id FROM users
+      WHERE id <> ?
+      LIMIT 1
+    `,
+      )
+      .get(params.id) as { id: string } | undefined;
+
+    if (conflictingUser) {
+      // Keep server identity authoritative by removing the stale local row that collides on id.
+      this.db.prepare(`DELETE FROM users WHERE id = ?`).run(conflictingUser.id);
+      logger.warn(
+        {
+          scope: 'UserQueries',
+          userId: params.id,
+          conflictingUserId: conflictingUser.id,
+        },
+        'Removed conflicting local user row before sync upsert',
+      );
+    }
+
+    const stmt = this.db.prepare(`
+      INSERT INTO users (
+        id,
+        password_hash,
+        display_name,
+        email,
+        is_managed_by,
+        created_at,
+        updated_at,
+        deleted_at,
+        is_synced,
+        sync_version
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET
+        password_hash = excluded.password_hash,
+        display_name = excluded.display_name,
+        email = excluded.email,
+        is_managed_by = excluded.is_managed_by,
+        created_at = excluded.created_at,
+        updated_at = excluded.updated_at,
+        deleted_at = excluded.deleted_at,
+        is_synced = excluded.is_synced,
+        sync_version = excluded.sync_version
+    `);
+
+    stmt.run(
+      params.id,
+      params.passwordHash,
+      params.displayName,
+      params.email,
+      params.isManagedBy ?? null,
+      params.createdAt,
+      params.updatedAt,
+      params.deletedAt,
+      params.isSynced ? 1 : 0,
+      params.syncVersion,
+    );
+    logger.debug(
+      { scope: 'UserQueries', userId: params.id },
+      `syncUser: SQL query executed successfully for id: ${params.id}.`,
     );
   }
 }

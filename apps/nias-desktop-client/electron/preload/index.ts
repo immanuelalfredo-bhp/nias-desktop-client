@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { auth } from '@nias/shared';
+import { auth, sync } from '@nias/shared';
 
 contextBridge.exposeInMainWorld('electronAPI', {
   // Authentication IPC handlers
@@ -14,5 +14,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('bootstrap:execute', bootstrapSecret, payload),
 
   // Sync IPC handlers
-  syncFetchVersion: () => ipcRenderer.invoke('sync:fetch-version'),
+  syncPull: () => ipcRenderer.invoke('sync:pull'),
+  
 });

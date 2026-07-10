@@ -68,7 +68,8 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
           });
           logger.info({ scope: 'auth', userId: data.id }, 'User fetched and stored successfully');
 
-          initializeUserDatabase(data.id);
+          const userDb = initializeUserDatabase(data.id);
+          registerSyncIpcHandlers(userDb, data.jwtToken);
           logger.info({ scope: 'auth', userId: data.id }, 'User database initialized successfully');
 
           return { success: true, message: 'User fetched and stored successfully' };
@@ -80,8 +81,53 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
           return { success: false, message: 'Invalid password' };
         }
 
+        const refreshThresholdMs = 60_000;
+        const isTokenMissingOrExpired =
+          !user.jwtToken ||
+          !user.jwtTokenExpiration ||
+          user.jwtTokenExpiration <= Date.now() + refreshThresholdMs;
+
+        let jwtToken = user.jwtToken;
+        if (isTokenMissingOrExpired) {
+          logger.info(
+            { scope: 'auth', userId: user.id, jwtTokenExpiration: user.jwtTokenExpiration },
+            'Refreshing JWT token for local user before registering sync handlers',
+          );
+
+          const refreshResponse = await fetch(`${SYNC_SERVER_URL}/api/login/initial`, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              'app-id': `${APP_ID}`,
+            },
+            body: JSON.stringify(loginCredentials.data),
+          });
+
+          const refreshData = await handleResponse(refreshResponse, auth.LoginDataSchema, 'auth');
+          if (!isSuccess(refreshData)) {
+            logger.error(
+              { scope: 'auth', userId: user.id, message: refreshData.message },
+              'Failed to refresh JWT token for local user',
+            );
+            return { success: false, message: 'Failed to refresh authentication token' };
+          }
+
+          authDb.main.runInTransaction(() => {
+            authDb.main.upsertLocalUser({
+              id: refreshData.id,
+              email: refreshData.email,
+              passwordHash: refreshData.passwordHash,
+              syncVersion: refreshData.syncVersion,
+              jwtToken: refreshData.jwtToken,
+              jwtTokenExpiration: refreshData.jwtTokenExpiration,
+            });
+          });
+
+          jwtToken = refreshData.jwtToken;
+        }
+
         const userDb = initializeUserDatabase(user.id);
-        registerSyncIpcHandlers(userDb);
+        registerSyncIpcHandlers(userDb, jwtToken);
         logger.info(
           { scope: 'auth', userId: user.id },
           'User database initialized and sync handlers registered',

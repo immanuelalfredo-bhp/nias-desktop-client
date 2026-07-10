@@ -6,7 +6,6 @@ import * as schemas from './defines.js';
 // ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
 
 export const BootstrapPayloadSchema = z.object({
-  username: schemas.username,
   displayName: schemas.displayName,
   email: schemas.email,
   password: schemas.password,

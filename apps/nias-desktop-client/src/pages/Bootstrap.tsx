@@ -4,7 +4,6 @@ import type { auth } from '@nias/shared';
 import type { StatusState } from '../types';
 
 export default function BootstrapPage() {
-  const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,8 +25,8 @@ export default function BootstrapPage() {
       if (!bootstrapSecret) {
         setStatus({ text: 'Bootstrap token is required', isError: true });
         return;
-      } else if (!username) {
-        setStatus({ text: 'Username is required', isError: true });
+      } else if (!displayName) {
+        setStatus({ text: 'Display Name is required', isError: true });
         return;
       } else if (!password || !confirmPassword) {
         setStatus({ text: 'Password is required', isError: true });
@@ -37,7 +36,6 @@ export default function BootstrapPage() {
         return;
       } else {
         const payload: auth.BootstrapInput = {
-          username,
           displayName,
           email,
           password,
@@ -74,15 +72,6 @@ export default function BootstrapPage() {
           placeholder="Bootstrap Secret"
           value={bootstrapSecret}
           onChange={(e) => setBootstrapSecret(e.target.value)}
-        />
-
-        <label htmlFor="username">Username</label>
-        <input
-          id="username"
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
         />
 
         <label htmlFor="displayName">Display Name</label>

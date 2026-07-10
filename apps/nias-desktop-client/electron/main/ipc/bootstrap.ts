@@ -62,7 +62,6 @@ export function registerBootstrapIpcHandlers(): void {
             'bootstrap-secret': bootstrapSecret,
           },
           body: JSON.stringify({
-            username: slugify(bootstrapPayload.username),
             displayName: bootstrapPayload.displayName,
             email: bootstrapPayload.email,
             password: bootstrapPayload.password,

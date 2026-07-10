@@ -53,7 +53,6 @@ export async function handleBootstrap(
 
     const adminData: typeof users.$inferInsert = {
       id: authData.user.id,
-      username: payload.username,
       passwordHash: payload.passwordHash,
       displayName: payload.displayName || 'Admin',
       email: payload.email,

@@ -22,7 +22,6 @@ export async function syncLocalUsers(
     const serverUsers = await db
       .select({
         id: users.id,
-        username: users.username,
         email: users.email,
         passwordHash: users.passwordHash,
         syncVersion: users.syncVersion,

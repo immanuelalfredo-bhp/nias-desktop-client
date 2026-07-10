@@ -11,8 +11,7 @@ const dateTransformer = z.string().transform((val) => {
 });
 
 export const uuid = z.uuid();
-export const username = z.string().trim().min(1).max(100).lowercase();
-export const displayName = z.string().trim().max(100).optional().default('');
+export const displayName = z.string().trim().max(100).default('');
 export const email = z.email();
 export const password = z.string().min(1);
 export const passwordHash = z.string().regex(argon2Regex);

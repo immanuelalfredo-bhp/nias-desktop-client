@@ -1,4 +1,4 @@
-import { auth, common } from '@nias/shared';
+import { auth, common, sync } from '@nias/shared';
 import type { Envelope } from '@nias/shared/server';
 
 export interface ElectronAPI {
@@ -10,7 +10,7 @@ export interface ElectronAPI {
     bootstrapSecret: string,
     payload: auth.BootstrapInput,
   ) => Promise<common.SuccessResponse>;
-  syncFetchVersion: () => Promise<Envelope<auth.SyncMetadata>>;
+  syncPull: () => Promise<Envelope<sync.PullManifest>>;
 }
 
 declare global {

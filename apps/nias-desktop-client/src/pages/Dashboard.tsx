@@ -6,14 +6,20 @@ export default function Dashboard() {
   const handleSync = async () => {
     setIsBusy(true);
     try {
-      const versionResult = await window.electronAPI.syncFetchVersion();
+      const versionResult = await window.electronAPI.syncPull();
       if (!versionResult.success) {
-        console.error('Error getting sync version:', versionResult.message);
+        console.error('Sync pull failed:', versionResult.message);
         return;
       }
-      console.log('Sync version fetched successfully:', versionResult.data.syncVersion);
+
+      const changeCount = Object.values(versionResult.data?.changes || {}).reduce(
+        (acc, changes) => acc + changes.length,
+        0,
+      );
+      console.log(`Sync pull completed successfully. Total changes: ${changeCount}`);
+
     } catch (error) {
-      console.error('Error fetching sync version:', error);
+      console.error('Error during sync pull:', error);
     } finally {
       setIsBusy(false);
     }
