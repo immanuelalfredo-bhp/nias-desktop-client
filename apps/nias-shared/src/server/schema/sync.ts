@@ -5,7 +5,6 @@ const syncSchema = pgSchema('sync');
 
 export const syncMetadata = syncSchema.table('metadata', {
   users: integer('users').notNull().default(0),
-  audit: integer('audit').notNull().default(0),
 });
 
 export const changelog = syncSchema.table('changes', {
