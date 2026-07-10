@@ -6,3 +6,8 @@ export interface StatusState {
 export interface LoginRouteState {
   message?: string;
 }
+
+export interface AuthenticatedRouteState {
+  email?: string;
+  message?: string;
+}

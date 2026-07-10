@@ -10,6 +10,7 @@ export interface ElectronAPI {
     bootstrapSecret: string,
     payload: auth.BootstrapInput,
   ) => Promise<common.SuccessResponse>;
+  syncFetchVersion: () => Promise<Envelope<auth.SyncMetadata>>;
 }
 
 declare global {

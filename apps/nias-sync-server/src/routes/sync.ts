@@ -23,6 +23,17 @@ async function getSyncDelta(
         const clientVersion = payload[tableInfo.key] ?? 0;
         const serverVersion = registry[tableInfo.key] ?? 0;
         if (clientVersion < serverVersion) {
+          context?.log?.info(
+            {
+              scope: 'sync',
+              table: tableInfo.key,
+              clientVersion,
+              serverVersion,
+              userId: context?.userId,
+              syncVersion: tableInfo.table.syncVersion,
+            },
+            'Client version is behind server version, fetching changes',
+          );
           return (
             db
               .select()

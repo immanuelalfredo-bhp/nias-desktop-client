@@ -1,7 +1,7 @@
 import { boolean, integer, pgSchema, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import * as schemas from '../../common/schema/defines.js';
+import * as schemas from '../../common/defines.js';
 
 export const systemSchema = pgSchema('system');
 

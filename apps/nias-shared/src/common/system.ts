@@ -3,7 +3,7 @@ import { EntityIdSchema } from './common.js';
 import {
   UserSchema as DrizzleUserSchema,
   type User as DrizzleUser,
-} from '../../server/schema/system.js';
+} from '../server/schema/system.js';
 
 export const UserSchema = DrizzleUserSchema;
 export const DeleteUserSchema = EntityIdSchema;

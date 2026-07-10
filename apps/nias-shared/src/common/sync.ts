@@ -4,9 +4,9 @@ import {
   ChangelogSchema as DrizzleChangelogSchema,
   type SyncMetadata as DrizzleSyncMetadata,
   type Changelog as DrizzleChangelog,
-} from '../../server/schema/sync.js';
+} from '../server/schema/sync.js';
 import * as schemas from './defines.js';
-import { UserSchema } from '../schema/system.js';
+import { UserSchema } from '../server/schema/system.js';
 
 export const SyncMetadataSchema = DrizzleSyncMetadataSchema;
 export const ChangelogSchema = DrizzleChangelogSchema;

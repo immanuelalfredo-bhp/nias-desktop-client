@@ -44,7 +44,6 @@ export default function Login() {
           setIsAuthEmpty(true);
           setStatus({ text: 'Auth database is empty.', isError: false });
         }
-        
       } catch (error) {
         console.error('Error checking auth database:', error);
       }
@@ -64,7 +63,8 @@ export default function Login() {
       });
 
       if (result.success) {
-        navigate('/dashboard');
+        window.localStorage.setItem('nias.currentEmail', email);
+        navigate('/dashboard', { replace: true });
         return;
       }
 
@@ -100,7 +100,7 @@ export default function Login() {
   };
 
   const handleBootstrap = () => {
-    navigate('/bootstrap');
+    navigate('/bootstrap', { replace: true });
   };
 
   return (

@@ -9,6 +9,7 @@ import {
   type Envelope,
 } from '@nias/shared/server';
 import { APP_ID, SYNC_SERVER_URL } from '../config.js';
+import { registerSyncIpcHandlers } from '../ipc/sync.js';
 
 export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
   ipcMain.handle('auth:status', async (_event): Promise<Envelope<auth.StatusResponse>> => {
@@ -78,6 +79,13 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
           logger.warn({ scope: 'auth', userId: user.id }, 'Login failed: Invalid password');
           return { success: false, message: 'Invalid password' };
         }
+
+        const userDb = initializeUserDatabase(user.id);
+        registerSyncIpcHandlers(userDb);
+        logger.info(
+          { scope: 'auth', userId: user.id },
+          'User database initialized and sync handlers registered',
+        );
 
         logger.info({ scope: 'auth', userId: user.id }, 'Login successful for local user');
         return { success: true, message: 'Login successful' };
