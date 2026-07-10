@@ -10,6 +10,7 @@ import {
 } from '@nias/shared/server';
 import { APP_ID, SYNC_SERVER_URL } from '../config.js';
 import { registerSyncIpcHandlers } from '../ipc/sync.js';
+import { registerUserIpcHandlers } from '../ipc/system/users.js';
 
 export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
   ipcMain.handle('auth:status', async (_event): Promise<Envelope<auth.StatusResponse>> => {
@@ -127,11 +128,10 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
         }
 
         const userDb = initializeUserDatabase(user.id);
+        logger.info({ scope: 'auth', userId: user.id }, 'User database initialized successfully');
+
         registerSyncIpcHandlers(userDb, jwtToken);
-        logger.info(
-          { scope: 'auth', userId: user.id },
-          'User database initialized and sync handlers registered',
-        );
+        registerUserIpcHandlers(userDb);
 
         logger.info({ scope: 'auth', userId: user.id }, 'Login successful for local user');
         return { success: true, message: 'Login successful' };

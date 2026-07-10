@@ -6,6 +6,7 @@ import { app, safeStorage } from 'electron';
 import { logger } from '@nias/shared/server';
 import { AuthQueries } from './auth.js';
 import { SyncQueries } from './sync.js';
+import { UserQueries } from './system/users.js';
 
 export class AuthDatabase {
   private readonly db: Database.Database;
@@ -23,6 +24,7 @@ export class AuthDatabase {
 export class UserDatabase {
   private readonly db: Database.Database;
   readonly sync: SyncQueries;
+  readonly user: UserQueries;
 
   constructor(dbPath: string, key: string) {
     this.db = new Database(dbPath);
@@ -30,6 +32,7 @@ export class UserDatabase {
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('foreign_keys = ON');
     this.sync = new SyncQueries(this.db);
+    this.user = new UserQueries(this.db);
   }
 }
 

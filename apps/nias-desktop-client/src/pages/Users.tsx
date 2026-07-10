@@ -1,47 +1,57 @@
-interface UserRow {
-  id: string;
-  username: string;
-  displayName: string;
-  role: string;
-  canModify: boolean;
-  canAssignProjects: boolean;
-  canSetInactive: boolean;
-}
-
-const activeUsers: UserRow[] = [
-  {
-    id: '1',
-    username: 'admin',
-    displayName: 'System Admin',
-    role: 'Admin',
-    canModify: true,
-    canAssignProjects: true,
-    canSetInactive: false,
-  },
-  {
-    id: '2',
-    username: 'procurement',
-    displayName: 'Procurement Team',
-    role: 'Procurement',
-    canModify: true,
-    canAssignProjects: true,
-    canSetInactive: true,
-  },
-];
-
-const inactiveUsers: UserRow[] = [
-  {
-    id: '3',
-    username: 'legacy-user',
-    displayName: 'Legacy Account',
-    role: 'Viewer',
-    canModify: false,
-    canAssignProjects: false,
-    canSetInactive: false,
-  },
-];
+import { useEffect, useState } from 'react';
+import type { system } from '@nias/shared';
 
 export default function UsersPage() {
+  const [activeUsers, setActiveUsers] = useState<system.User[]>([]);
+  const [deletedUsers, setDeletedUsers] = useState<system.User[]>([]);
+  const [isBusy, setIsBusy] = useState(false);
+
+  useEffect(() => {
+    const fetchActiveUsers = async () => {
+      try {
+        setIsBusy(true);
+        const activeResponse = await window.electronAPI.userListActive();
+        if (activeResponse.success) {
+          setActiveUsers(activeResponse.data || []);
+        } else {
+          console.error('Failed to fetch active users:', activeResponse.message);
+        }
+      } catch (error) {
+        console.error('Error fetching active users:', error);
+      } finally {
+        setIsBusy(false);
+      }
+    };
+
+    const fetchDeletedUsers = async () => {
+      try {
+        setIsBusy(true);
+        const deletedResponse = await window.electronAPI.userListDeleted();
+        if (deletedResponse.success) {
+          setDeletedUsers(deletedResponse.data || []);
+        } else {
+          console.error('Failed to fetch deleted users:', deletedResponse.message);
+        }
+      } catch (error) {
+        console.error('Error fetching deleted users:', error);
+      } finally {
+        setIsBusy(false);
+      }
+    };
+
+    fetchActiveUsers();
+    fetchDeletedUsers();
+  }, []);
+
+  if (isBusy) {
+    return (
+      <section id="usersScreen" className="card panel app-screen">
+        <h2>Users</h2>
+        <p className="muted">Loading users...</p>
+      </section>
+    );
+  }
+
   return (
     <section id="usersScreen" className="card panel app-screen">
       <h2>Users</h2>
@@ -49,116 +59,50 @@ export default function UsersPage() {
         Manage users you are allowed to control, and review archived or inactive records when
         permitted.
       </p>
-
-      <section id="userManagementSection">
-        <div className="actions" style={{ marginTop: 0, marginBottom: '10px' }}>
-          <button id="createUserBtn" className="primary" type="button">
-            Create User
-          </button>
-        </div>
-
-        <div className="grid user-filter-grid">
-          <div className="wide-col">
-            <label htmlFor="userSearch">Search Users</label>
-            <input
-              id="userSearch"
-              placeholder="Search username or display name"
-              autoComplete="off"
-            />
-          </div>
-          <div className="narrow-col">
-            <label htmlFor="userRoleFilter">Filter By Role</label>
-            <select id="userRoleFilter" defaultValue="">
-              <option value="">All roles</option>
-              <option value="admin">Admin</option>
-              <option value="procurement">Procurement</option>
-              <option value="viewer">Viewer</option>
-            </select>
-          </div>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>Display Name</th>
-              <th>Role</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="usersTableBody">
-            {activeUsers.map((user) => {
-              const actions: string[] = [];
-              if (user.canModify) {
-                actions.push('Modify');
-              }
-              if (user.canAssignProjects) {
-                actions.push('Assign Projects');
-              }
-              if (user.canSetInactive) {
-                actions.push('Set Inactive');
-              }
-
-              return (
-                <tr key={user.id}>
-                  <td>{user.username}</td>
-                  <td>{user.displayName}</td>
-                  <td>{user.role}</td>
-                  <td>
-                    <div className="inline-actions">
-                      {actions.length > 0 ? (
-                        actions.map((action) => (
-                          <button key={`${user.id}-${action}`} className="secondary" type="button">
-                            {action}
-                          </button>
-                        ))
-                      ) : (
-                        <span className="muted">Read-only</span>
-                      )}
-                    </div>
-                  </td>
+      <div className="user-lists">
+        <div className="user-list">
+          {activeUsers.length > 0 && <h3>Active Users</h3>}
+          {activeUsers.length > 0 ? (
+            <table>
+              <thead>
+                <tr>
+                  <th>Display Name</th>
+                  <th>Email</th>
+                  <th>Actions</th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </section>
-
-      <section id="inactiveUsersPanel" className="panel" style={{ marginTop: '18px' }}>
-        <h2>Inactive Users</h2>
-        <p className="muted">Visible according to your inactive-user privileges.</p>
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Display Name</th>
-                <th>Role</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="inactiveUsersTableBody">
-              {inactiveUsers.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.username}</td>
-                  <td>{user.displayName}</td>
-                  <td>{user.role}</td>
-                  <td>
-                    <div className="inline-actions">
-                      <button className="secondary" type="button">
-                        Restore
+              </thead>
+              <tbody>
+                {activeUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td>{user.displayName}</td>
+                    <td>{user.email}</td>
+                    <td>
+                      <button onClick={() => console.log(`Edit user ${user.id}`)}>Edit</button>
+                      <button onClick={() => console.log(`Delete user ${user.id}`)}>
+                        Delete
                       </button>
-                      <button className="danger" type="button">
-                        Permanently Remove
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="muted">No active users found.</p>
+          )}
+        </div>
+        <div className="user-list">
+          {deletedUsers.length > 0 && <h3>Deleted Users</h3>}
+          {deletedUsers.length > 0 ? (
+            <ul>
+              {deletedUsers.map((user) => (
+                <li key={user.id}>
+                  <strong>{user.displayName}</strong> ({user.email})
+                </li>
               ))}
-            </tbody>
-          </table>
+            </ul>
+          ) : null}
         </div>
-      </section>
+      </div>
     </section>
   );
 }

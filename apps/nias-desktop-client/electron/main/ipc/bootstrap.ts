@@ -5,7 +5,6 @@ import {
   handleResponse,
   isSuccess,
   logger,
-  slugify,
   type Envelope,
 } from '@nias/shared/server';
 import { SYNC_SERVER_URL } from '../config.js';

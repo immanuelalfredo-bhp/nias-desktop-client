@@ -9,9 +9,9 @@ export class UserQueries {
     const stmt = this.db.prepare(`
       SELECT
         id,
-        password_hash AS passwordHash,
         display_name AS displayName,
         email,
+        password_hash AS passwordHash,
         is_managed_by AS isManagedBy,
         created_at AS createdAt,
         updated_at AS updatedAt,
@@ -29,9 +29,9 @@ export class UserQueries {
     const stmt = this.db.prepare(`
       SELECT
         id,
-        password_hash AS passwordHash,
         display_name AS displayName,
         email,
+        password_hash AS passwordHash,
         is_managed_by AS isManagedBy,
         created_at AS createdAt,
         updated_at AS updatedAt,
@@ -49,9 +49,9 @@ export class UserQueries {
     const stmt = this.db.prepare(`
       SELECT
         id,
-        password_hash AS passwordHash,
         display_name AS displayName,
         email,
+        password_hash AS passwordHash,
         is_managed_by AS isManagedBy,
         created_at AS createdAt,
         updated_at AS updatedAt,
@@ -72,9 +72,9 @@ export class UserQueries {
     const stmt = this.db.prepare(`
       SELECT
         id,
-        password_hash AS passwordHash,
         display_name AS displayName,
         email,
+        password_hash AS passwordHash,
         is_managed_by AS isManagedBy,
         created_at AS createdAt,
         updated_at AS updatedAt,
@@ -95,18 +95,18 @@ export class UserQueries {
     const stmt = this.db.prepare(`
       INSERT INTO users (
         id,
-        password_hash,
         display_name,
         email,
+        password_hash,
         is_managed_by
-        ) VALUES (?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?)
     `);
 
     stmt.run(
       params.id,
-      params.passwordHash,
       params.displayName,
       params.email,
+      params.passwordHash,
       params.isManagedBy ?? null,
     );
     logger.debug(
@@ -130,17 +130,17 @@ export class UserQueries {
     const stmt = this.db.prepare(`
       UPDATE users
       SET
-        password_hash = ?,
         display_name = ?,
         email = ?,
+        password_hash = ?,
         is_managed_by = ?
       WHERE id = ?
     `);
 
     stmt.run(
-      params.passwordHash ?? existingUser.passwordHash,
       params.displayName ?? existingUser.displayName,
       params.email ?? existingUser.email,
+      params.passwordHash ?? existingUser.passwordHash,
       params.isManagedBy ?? existingUser.isManagedBy,
       params.id,
     );
@@ -177,45 +177,22 @@ export class UserQueries {
   }
 
   syncUsers(params: system.User): void {
-    const conflictingUser = this.db
-      .prepare(
-        `
-      SELECT id FROM users
-      WHERE id <> ?
-      LIMIT 1
-    `,
-      )
-      .get(params.id) as { id: string } | undefined;
-
-    if (conflictingUser) {
-      // Keep server identity authoritative by removing the stale local row that collides on id.
-      this.db.prepare(`DELETE FROM users WHERE id = ?`).run(conflictingUser.id);
-      logger.warn(
-        {
-          scope: 'UserQueries',
-          userId: params.id,
-          conflictingUserId: conflictingUser.id,
-        },
-        'Removed conflicting local user row before sync upsert',
-      );
-    }
-
     const stmt = this.db.prepare(`
       INSERT INTO users (
         id,
-        password_hash,
         display_name,
         email,
+        password_hash,
         is_managed_by,
         created_at,
         updated_at,
         deleted_at,
         is_synced,
         sync_version
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET
-        password_hash = excluded.password_hash,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET
         display_name = excluded.display_name,
         email = excluded.email,
+        password_hash = excluded.password_hash,
         is_managed_by = excluded.is_managed_by,
         created_at = excluded.created_at,
         updated_at = excluded.updated_at,
@@ -226,9 +203,9 @@ export class UserQueries {
 
     stmt.run(
       params.id,
-      params.passwordHash,
       params.displayName,
       params.email,
+      params.passwordHash,
       params.isManagedBy ?? null,
       params.createdAt,
       params.updatedAt,

@@ -11,6 +11,8 @@ export interface ElectronAPI {
     payload: auth.BootstrapInput,
   ) => Promise<common.SuccessResponse>;
   syncPull: () => Promise<Envelope<sync.PullManifest>>;
+  userListActive: () => Promise<Envelope<system.User[]>>;
+  userListDeleted: () => Promise<Envelope<system.User[]>>;
 }
 
 declare global {

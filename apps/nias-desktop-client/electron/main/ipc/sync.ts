@@ -30,117 +30,90 @@ export const registerSyncIpcHandlers = (userDb: UserDatabase, jwtToken?: string)
     }
   });
 
-  ipcMain.handle(
-    'sync:pull',
-    async (_event): Promise<Envelope<sync.PullManifest>> => {
-      try {
-        if (!jwtToken) {
-          logger.error({ scope: 'sync' }, 'Sync pull failed: missing JWT token');
-          return { success: false, message: 'Sync pull failed: missing JWT token' };
+  ipcMain.handle('sync:pull', async (_event): Promise<Envelope<sync.PullManifest>> => {
+    try {
+      if (!jwtToken) {
+        logger.error({ scope: 'sync' }, 'Sync pull failed: missing JWT token');
+        return { success: false, message: 'Sync pull failed: missing JWT token' };
+      }
+
+      let cursor = userDb.sync.fetchSyncVersion();
+      let hasMore = false;
+      let page = 0;
+      const mergedManifest: sync.PullManifest = {
+        latestVersions: { ...cursor },
+        hasMore: false,
+        changes: { users: [] },
+      };
+
+      do {
+        page += 1;
+        logger.info({ scope: 'sync', page, cursor }, 'Sync pull requested');
+
+        const response = await fetch(`${SYNC_SERVER_URL}/api/sync/pull`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            authorization: `Bearer ${jwtToken}`,
+          },
+          body: JSON.stringify(cursor),
+        });
+
+        const data = await handleResponse(response, sync.PullManifestSchema, 'sync');
+        if (!isSuccess(data)) {
+          return { success: false, message: 'Sync pull failed' };
         }
 
-        let cursor = userDb.sync.fetchSyncVersion();
-        let hasMore = false;
-        let page = 0;
-        const mergedManifest: sync.PullManifest = {
-          latestVersions: { ...cursor },
-          hasMore: false,
-          changes: { users: [] },
-        };
+        const previousCursor = { ...cursor };
+        cursor = userDb.sync.applyChanges(data);
+        hasMore = data.hasMore;
 
-        do {
-          page += 1;
-          logger.info({ scope: 'sync', page, cursor }, 'Sync pull requested');
+        mergedManifest.changes.users.push(...data.changes.users);
+        mergedManifest.latestVersions = { ...cursor };
+        mergedManifest.hasMore = hasMore;
 
-          const response = await fetch(`${SYNC_SERVER_URL}/api/sync/pull`, {
-            method: 'POST',
-            headers: {
-              'content-type': 'application/json',
-              authorization: `Bearer ${jwtToken}`,
-            },
-            body: JSON.stringify(cursor),
-          });
-
-          // DEBUG: inspect envelope payload without consuming the response used by handleResponse.
-          const rawData = await response.clone().json();
-          logger.info({ scope: 'sync', page, rawSyncData: rawData }, 'RAW_SYNC_DATA');
-
-          const manifestValidation = sync.PullManifestSchema.safeParse(
-            (rawData as { data?: unknown }).data,
-          );
-          if (!manifestValidation.success) {
-            logger.error(
-              { scope: 'sync', page, zodValidationError: manifestValidation.error.format() },
-              'ZOD_VALIDATION_ERROR',
-            );
-          }
-
-          const data = await handleResponse(response, sync.PullManifestSchema, 'sync');
-          if (!isSuccess(data)) {
-            return { success: false, message: 'Sync pull failed' };
-          }
-
-          // Temporary diagnostic log to validate pull payload while integrating sync flow.
-          logger.info(
+        if (hasMore && cursor.users <= previousCursor.users) {
+          logger.error(
             {
               scope: 'sync',
               page,
-              manifest: data,
+              previousCursor,
+              cursor,
             },
-            'Temporary pull manifest log',
+            'Sync pull pagination stalled: cursor did not advance',
           );
+          return {
+            success: false,
+            message: 'Sync pull failed: pagination stalled without version progress',
+          };
+        }
+      } while (hasMore);
 
-          const previousCursor = { ...cursor };
-          cursor = userDb.sync.applyChanges(data);
-          hasMore = data.hasMore;
+      logger.info(
+        {
+          scope: 'sync',
+          pages: page,
+          totalUsers: mergedManifest.changes.users.length,
+          finalVersions: mergedManifest.latestVersions,
+        },
+        'Sync pull completed successfully',
+      );
 
-          mergedManifest.changes.users.push(...data.changes.users);
-          mergedManifest.latestVersions = { ...cursor };
-          mergedManifest.hasMore = hasMore;
-
-          if (hasMore && cursor.users <= previousCursor.users) {
-            logger.error(
-              {
-                scope: 'sync',
-                page,
-                previousCursor,
-                cursor,
-              },
-              'Sync pull pagination stalled: cursor did not advance',
-            );
-            return {
-              success: false,
-              message: 'Sync pull failed: pagination stalled without version progress',
-            };
-          }
-        } while (hasMore);
-
-        logger.info(
-          {
-            scope: 'sync',
-            pages: page,
-            totalUsers: mergedManifest.changes.users.length,
-            finalVersions: mergedManifest.latestVersions,
-          },
-          'Sync pull completed successfully',
-        );
-
-        return {
-          success: true,
-          message: 'Sync pull completed successfully',
-          data: mergedManifest,
-        };
-      } catch (error) {
-        logger.error(
-          {
-            scope: 'sync',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
-          },
-          'Sync pull failed',
-        );
-        return { success: false, message: 'Sync pull failed' };
-      }
-    },
-  );
+      return {
+        success: true,
+        message: 'Sync pull completed successfully',
+        data: mergedManifest,
+      };
+    } catch (error) {
+      logger.error(
+        {
+          scope: 'sync',
+          err: error,
+          errorMessage: error instanceof Error ? error.message : String(error),
+        },
+        'Sync pull failed',
+      );
+      return { success: false, message: 'Sync pull failed' };
+    }
+  });
 };
