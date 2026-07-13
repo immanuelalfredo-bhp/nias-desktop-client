@@ -3,11 +3,11 @@ import ModalTemplate from './ModalTemplate';
 import type { StatusState } from '../../types';
 
 interface BootstrapModalProps {
-  onClose: () => void;
-  onExecute: () => void;
+  handleClose: () => void;
+  handleBootstrap: () => void;
 }
 
-export default function BootstrapModal({ onClose, onExecute }: BootstrapModalProps) {
+export default function BootstrapModal({ handleClose, handleBootstrap }: BootstrapModalProps) {
   const [isBusy, setIsBusy] = useState(false);
   const [status, setStatus] = useState<StatusState>({
     text: '',
@@ -25,7 +25,7 @@ export default function BootstrapModal({ onClose, onExecute }: BootstrapModalPro
       if (!result.success) {
         setStatus({ text: 'Incorrect token', isError: true });
       } else if (result.data.isEmpty) {
-        onExecute();
+        handleBootstrap();
       } else {
         setStatus({ text: 'System already initialized', isError: true });
       }
@@ -37,7 +37,7 @@ export default function BootstrapModal({ onClose, onExecute }: BootstrapModalPro
   };
 
   return (
-    <ModalTemplate title="Bootstrap Secret" onClose={onClose}>
+    <ModalTemplate title="Bootstrap Secret" handleClose={handleClose}>
       <input 
         id="input"
         type="password"
@@ -47,7 +47,7 @@ export default function BootstrapModal({ onClose, onExecute }: BootstrapModalPro
       />
 
       <div className="actions">
-        <button className="secondary" onClick={onClose} disabled={isBusy}>
+        <button className="secondary" onClick={handleClose} disabled={isBusy}>
           Cancel
         </button>
         <button className="primary" onClick={handleConfirm} disabled={isBusy}>

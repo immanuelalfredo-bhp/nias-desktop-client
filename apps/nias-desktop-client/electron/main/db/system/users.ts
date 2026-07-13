@@ -91,23 +91,32 @@ export class UserQueries {
     return stmt.get(email) as system.User | null;
   }
 
-  createUser(params: system.CreateUser): void {
+  createUser(params: system.User): void {
     const stmt = this.db.prepare(`
       INSERT INTO users (
         id,
         display_name,
         email,
         password_hash,
-        is_managed_by
-        ) VALUES (?, ?, ?, ?, ?)
+        is_managed_by,
+        created_at,
+        updated_at,
+        deleted_at,
+        is_synced,
+        sync_version
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-
     stmt.run(
       params.id,
       params.displayName,
       params.email,
       params.passwordHash,
       params.isManagedBy ?? null,
+      params.createdAt,
+      params.updatedAt,
+      params.deletedAt,
+      params.isSynced ? 1 : 0,
+      params.syncVersion,
     );
     logger.debug(
       { scope: 'UserQueries', userId: params.id },

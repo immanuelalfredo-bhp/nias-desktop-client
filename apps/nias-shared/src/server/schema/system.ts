@@ -11,9 +11,9 @@ export const systemSchema = pgSchema('system');
 
 export const users = systemSchema.table('users', {
   id: uuid('id').primaryKey().defaultRandom(),
-  passwordHash: text('password_hash').notNull(),
   displayName: text('display_name').notNull(),
   email: text('email').notNull(),
+  passwordHash: text('password_hash').notNull(),
   isManagedBy: uuid('is_managed_by'),
   createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
@@ -23,9 +23,9 @@ export const users = systemSchema.table('users', {
 });
 
 export const UserSchema = createSelectSchema(users, {
-  passwordHash: schemas.passwordHash,
   displayName: schemas.displayName,
   email: schemas.email,
+  passwordHash: schemas.passwordHash,
   createdAt: schemas.dateTime,
   updatedAt: schemas.dateTime,
   deletedAt: schemas.dateTime.nullable(),

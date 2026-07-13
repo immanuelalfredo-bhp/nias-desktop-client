@@ -69,14 +69,14 @@ app.post(
 
 app.post('/api/database/new-user',
   userAuthenticate,
-  validate(system.CreateUserSchema),
+  validate(system.CreateUserPayloadSchema),
   (req, res, next) => {
     const context = {
       log: req.log,
       ...(req.user?.id ? { userId: req.user.id } : {}),
     };
 
-    return handleCreateUser(req.validatedBody as system.CreateUser, context)
+    return handleCreateUser(req.validatedBody as system.CreateUserPayload, context)
       .then((result) => res.status(result.success ? 200 : 400).json(result))
       .catch(next);
   },

@@ -13,16 +13,6 @@ export const HardDeleteUserSchema = EntityIdSchema;
 
 export type User = DrizzleUser;
 
-export const CreateUserSchema = UserSchema.extend({
-  password: schemas.password,
-}).omit({
-  createdAt: true,
-  updatedAt: true,
-  deletedAt: true,
-  isSynced: true,
-  syncVersion: true,
-});
-
 export const UpdateUserSchema = UserSchema.partial().omit({
   createdAt: true,
   updatedAt: true,
@@ -35,8 +25,28 @@ export const UpdateSelfSchema = UpdateUserSchema.omit({
   isManagedBy: true,
 });
 
-export const CreateUserInputSchema = CreateUserSchema.omit({
+export const CreateUserPayloadSchema = UserSchema.extend({
+  password: schemas.password,
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+  isSynced: true,
+  syncVersion: true,
+});
+
+export const CreateUserInputSchema = CreateUserPayloadSchema.omit({
   passwordHash: true,
+});
+
+export const CreateUserResponseSchema = UserSchema.omit({
+  displayName: true,
+  email: true,
+  passwordHash: true,
+  isManagedBy: true,
+  deletedAt: true,
+  isSynced: true,
 });
 
 export const UpdateUserInputSchema = UpdateUserSchema.extend({
@@ -51,7 +61,7 @@ export const UpdateSelfInputSchema = UpdateSelfSchema.extend({
   passwordHash: true,
 });
 
-export type CreateUser = z.infer<typeof CreateUserSchema>;
+export type CreateUserPayload = z.infer<typeof CreateUserPayloadSchema>;
 export type UpdateUser = z.infer<typeof UpdateUserSchema>;
 export type UpdateSelf = z.infer<typeof UpdateSelfSchema>;
 export type DeleteUser = z.infer<typeof EntityIdSchema>;
@@ -60,3 +70,4 @@ export type HardDeleteUser = z.infer<typeof EntityIdSchema>;
 export type CreateUserInput = z.infer<typeof CreateUserInputSchema>;
 export type UpdateUserInput = z.infer<typeof UpdateUserInputSchema>;
 export type UpdateSelfInput = z.infer<typeof UpdateSelfInputSchema>;
+export type CreateUserResponse = z.infer<typeof CreateUserResponseSchema>;

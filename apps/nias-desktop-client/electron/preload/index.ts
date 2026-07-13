@@ -1,6 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { auth } from '@nias/shared';
-import type { UpdateUserInput } from '../../../nias-shared/dist/common/system';
+import { auth, system } from '@nias/shared';
 
 contextBridge.exposeInMainWorld('electronAPI', {
   // Authentication IPC handlers
@@ -20,4 +19,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // User IPC handlers
   userListActive: () => ipcRenderer.invoke('user:list-active'),
   userListDeleted: () => ipcRenderer.invoke('user:list-deleted'),
+  userCreate: (payload: system.CreateUserInput) => ipcRenderer.invoke('user:create', payload),
 });

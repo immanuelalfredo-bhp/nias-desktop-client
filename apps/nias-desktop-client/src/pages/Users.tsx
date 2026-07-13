@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import type { system } from '@nias/shared';
+import CreateUserModal from '../components/modals/CreateUserModal';
 
 export default function UsersPage() {
   const [activeUsers, setActiveUsers] = useState<system.User[]>([]);
   const [deletedUsers, setDeletedUsers] = useState<system.User[]>([]);
   const [isBusy, setIsBusy] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const fetchActiveUsers = async () => {
@@ -52,6 +54,7 @@ export default function UsersPage() {
     );
   }
 
+
   return (
     <section id="usersScreen" className="card panel app-screen">
       <h2>Users</h2>
@@ -59,6 +62,12 @@ export default function UsersPage() {
         Manage users you are allowed to control, and review archived or inactive records when
         permitted.
       </p>
+      <button className="primary" onClick={() => setShowModal(true)}>
+        Create New User
+      </button>
+      <div className="spacer" />
+      <div className="divider" />
+      <div className="spacer" />
       <div className="user-lists">
         <div className="user-list">
           {activeUsers.length > 0 && <h3>Active Users</h3>}
@@ -103,6 +112,11 @@ export default function UsersPage() {
           ) : null}
         </div>
       </div>
+      {showModal && (
+        <CreateUserModal
+          handleClose={() => setShowModal(false)}
+        />
+      )}
     </section>
   );
 }

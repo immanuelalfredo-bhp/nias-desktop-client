@@ -1,16 +1,14 @@
-import { count } from 'drizzle-orm';
 import type { Logger } from 'pino';
-import { type Request, type Response } from 'express';
 import { eq } from 'drizzle-orm';
-import { system, sync } from '@nias/shared';
+import { system } from '@nias/shared';
 import { users, type Envelope } from '@nias/shared/server';
 import { db } from '../db.js';
 import { supabaseAdmin } from '../supabase.js';
 
 export async function handleCreateUser(
-  payload: system.CreateUser,
+  payload: system.CreateUserPayload,
   context?: { log?: Logger; userId?: string },
-): Promise<Envelope<sync.UserSyncVersion>> {
+): Promise<Envelope<system.CreateUserResponse>> {
   const existingUser = await db.query.users.findFirst({
     where: eq(users.email, payload.email),
   });
@@ -48,14 +46,19 @@ export async function handleCreateUser(
       const [newUser] = await tx
         .insert(users)
         .values(userData)
-        .returning({ id: users.id, syncVersion: users.syncVersion });
+        .returning({
+          id: users.id,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+          syncVersion: users.syncVersion,
+        });
 
       if (!newUser) {
         context?.log?.error(
           { scope: 'create-user', userId: data.user.id },
           'Failed to retrieve newly created user from the database',
         );
-				throw new Error('Failed to retrieve newly created user from the database');
+        throw new Error('Failed to retrieve newly created user from the database');
       }
 
       context?.log?.info(
@@ -63,10 +66,17 @@ export async function handleCreateUser(
         'User created successfully in the database',
       );
 
+      const newUserResponse: system.CreateUserResponse = {
+        id: newUser.id,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.updatedAt,
+        syncVersion: newUser.syncVersion,
+      };
+
       return {
         success: true,
         message: 'User created successfully',
-        data: { userId: newUser.id, syncVersion: newUser.syncVersion },
+        data: newUserResponse,
       };
     } catch (err) {
       context?.log?.error(

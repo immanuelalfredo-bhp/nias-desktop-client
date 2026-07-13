@@ -3,12 +3,12 @@ import type { ReactNode } from 'react';
 interface ModalTemplateProps {
   title: string;
   children: ReactNode;
-  onClose: () => void;
+  handleClose: () => void;
 }
 
-export default function ModalTemplate({ title, children, onClose }: ModalTemplateProps) {
+export default function ModalTemplate({ title, children, handleClose }: ModalTemplateProps) {
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" onClick={handleClose}>
       <section
         className="modal-card"
         onClick={(event) => event.stopPropagation()}

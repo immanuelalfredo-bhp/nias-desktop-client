@@ -13,6 +13,7 @@ export interface ElectronAPI {
   syncPull: () => Promise<Envelope<sync.PullManifest>>;
   userListActive: () => Promise<Envelope<system.User[]>>;
   userListDeleted: () => Promise<Envelope<system.User[]>>;
+  userCreate: (payload: system.CreateUserInput) => Promise<common.SuccessResponse>;
 }
 
 declare global {

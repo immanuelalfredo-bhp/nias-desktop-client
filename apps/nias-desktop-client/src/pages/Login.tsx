@@ -142,8 +142,8 @@ export default function Login() {
       </section>
       {showModal && (
         <BootstrapModal
-          onClose={() => setShowModal(false)}
-          onExecute={() => {
+          handleClose={() => setShowModal(false)}
+          handleBootstrap={() => {
             handleBootstrap();
             setShowModal(false);
           }}
