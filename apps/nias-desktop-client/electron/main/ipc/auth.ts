@@ -131,7 +131,7 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
         logger.info({ scope: 'auth', userId: user.id }, 'User database initialized successfully');
 
         registerSyncIpcHandlers(userDb, jwtToken);
-        registerUserIpcHandlers(userDb);
+        registerUserIpcHandlers(userDb, jwtToken);
 
         logger.info({ scope: 'auth', userId: user.id }, 'Login successful for local user');
         return { success: true, message: 'Login successful' };

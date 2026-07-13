@@ -186,6 +186,7 @@ async function fetchLocalUser(
         syncVersion: users.syncVersion,
       })
       .from(users)
+      .where(eq(users.email, payload.email))
       .limit(1)
       // Drizzle returns an array, so we explicitly extract the first
       // match to treat the result as a single record.
