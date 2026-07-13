@@ -43,7 +43,7 @@ export default function CreateUserModal({ handleClose }: CreateUserModalProps) {
       const payload: system.CreateUserInput = {
         email,
         displayName,
-        isManagedBy,
+        isManagedBy: null, // TODO: Implement isManagedBy selection in the UI
         password,
       };
 
@@ -73,14 +73,6 @@ export default function CreateUserModal({ handleClose }: CreateUserModalProps) {
         placeholder="Display Name"
         value={displayName}
         onChange={(e) => setDisplayName(e.target.value)}
-        disabled={isBusy}
-      />
-      <input
-        id="isManagedBy"
-        type="text"
-        placeholder="Managed By (optional)"
-        value={isManagedBy ?? ''}
-        onChange={(e) => setIsManagedBy(e.target.value || null)}
         disabled={isBusy}
       />
       <input

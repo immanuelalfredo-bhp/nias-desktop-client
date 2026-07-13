@@ -10,7 +10,7 @@ import {
 import { UserDatabase } from '../../db/database';
 import { SYNC_SERVER_URL } from '../../config';
 
-export function registerUserIpcHandlers(userDb: UserDatabase, jwtToken?: string): void {
+export function registerUserIpcHandlers(userDb: UserDatabase, userId: string, jwtToken?: string): void {
   ipcMain.handle('user:list-active', async (_event): Promise<Envelope<system.User[]>> => {
     try {
       const users = userDb.user.listUsers();
@@ -112,6 +112,19 @@ export function registerUserIpcHandlers(userDb: UserDatabase, jwtToken?: string)
           { scope: 'users', userId: data.id },
           'User created successfully and stored locally',
         );
+
+        const actor = userDb.user.findUserById(userId);
+        userDb.audit.createAuditLog({
+          id: crypto.randomUUID(),
+          userId: userId,
+          action: 'create',
+          tableName: 'user',
+          recordId: data.id,
+          timestamp: new Date().toISOString(),
+          details: `User ${data.id} created by ${actor?.displayName || 'Unknown User'}`,
+          isSynced: false,
+          syncVersion: 0,
+        });
       } catch (error) {
         logger.error(
           {

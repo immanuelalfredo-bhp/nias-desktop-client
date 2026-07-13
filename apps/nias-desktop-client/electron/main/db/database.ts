@@ -7,6 +7,9 @@ import { logger } from '@nias/shared/server';
 import { AuthQueries } from './auth.js';
 import { SyncQueries } from './sync.js';
 import { UserQueries } from './system/users.js';
+import { BrandQueries } from './attributes/brands.js';
+import { AuditQueries } from './system/audit.js';
+import { ModeQueries } from './attributes/modes.js';
 
 export class AuthDatabase {
   private readonly db: Database.Database;
@@ -23,6 +26,9 @@ export class AuthDatabase {
 
 export class UserDatabase {
   private readonly db: Database.Database;
+  readonly audit: AuditQueries;
+  readonly brand: BrandQueries;
+  readonly mode: ModeQueries;
   readonly sync: SyncQueries;
   readonly user: UserQueries;
 
@@ -31,6 +37,9 @@ export class UserDatabase {
     this.db.pragma(`key = '${key}'`);
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('foreign_keys = ON');
+    this.audit = new AuditQueries(this.db);
+    this.brand = new BrandQueries(this.db);
+    this.mode = new ModeQueries(this.db);
     this.sync = new SyncQueries(this.db);
     this.user = new UserQueries(this.db);
   }

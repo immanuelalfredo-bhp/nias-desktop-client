@@ -38,8 +38,8 @@ export const PullManifestSchema = z.object({
 export const PushResponseSchema = z.object({
   syncedItems: z.array(
     z.object({
-      table: schemas.genericString,
-      data: schemas.genericBlob,
+      table: schemas.string,
+      data: schemas.blob,
     }),
   ),
 });

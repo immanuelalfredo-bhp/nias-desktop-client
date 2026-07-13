@@ -11,6 +11,9 @@ import {
 import { APP_ID, SYNC_SERVER_URL } from '../config.js';
 import { registerSyncIpcHandlers } from '../ipc/sync.js';
 import { registerUserIpcHandlers } from '../ipc/system/users.js';
+import { registerAuditIpcHandlers } from './system/audit.js';
+import { registerBrandIpcHandlers } from './attribute/brand.js';
+import { registerModeIpcHandlers } from './attribute/mode.js';
 
 export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
   ipcMain.handle('auth:status', async (_event): Promise<Envelope<auth.StatusResponse>> => {
@@ -130,8 +133,11 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
         const userDb = initializeUserDatabase(user.id);
         logger.info({ scope: 'auth', userId: user.id }, 'User database initialized successfully');
 
+        registerAuditIpcHandlers(userDb);
         registerSyncIpcHandlers(userDb, jwtToken);
-        registerUserIpcHandlers(userDb, jwtToken);
+        registerUserIpcHandlers(userDb, user.id, jwtToken);
+        registerBrandIpcHandlers(userDb, user.id);
+        registerModeIpcHandlers(userDb, user.id);
 
         logger.info({ scope: 'auth', userId: user.id }, 'Login successful for local user');
         return { success: true, message: 'Login successful' };

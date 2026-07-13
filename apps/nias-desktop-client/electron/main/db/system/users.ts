@@ -68,29 +68,6 @@ export class UserQueries {
     return stmt.get(id) as system.User | null;
   }
 
-  findUserByEmail(email: string): system.User | null {
-    const stmt = this.db.prepare(`
-      SELECT
-        id,
-        display_name AS displayName,
-        email,
-        password_hash AS passwordHash,
-        is_managed_by AS isManagedBy,
-        created_at AS createdAt,
-        updated_at AS updatedAt,
-        deleted_at AS deletedAt,
-        is_synced AS isSynced,
-        sync_version AS syncVersion
-      FROM users u
-      WHERE u.email = ?
-    `);
-    logger.debug(
-      { scope: 'UserQueries', email },
-      `findUserByEmail: SQL query executed successfully for email: ${email}.`,
-    );
-    return stmt.get(email) as system.User | null;
-  }
-
   createUser(params: system.User): void {
     const stmt = this.db.prepare(`
       INSERT INTO users (
