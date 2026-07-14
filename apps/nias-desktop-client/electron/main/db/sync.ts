@@ -4,6 +4,13 @@ import { logger } from '@nias/shared/server';
 import { UserQueries } from './system/users.js';
 import { BrandQueries } from './attributes/brands.js';
 import { ModeQueries } from './attributes/modes.js';
+import { UomQueries } from './attributes/uoms.js';
+import { DimensionQueries } from './attributes/dimensions.js';
+import { DimensionValuesQueries } from './attributes/dimension-values.js';
+import { SystemQueries } from './attributes/systems.js';
+import { CategoryQueries } from './attributes/categories.js';
+import { VendorQueries } from './attributes/vendors.js';
+import { TagQueries } from './attributes/tags.js';
 
 export class SyncQueries {
   constructor(private readonly db: Database.Database) {}
@@ -25,9 +32,25 @@ export class SyncQueries {
         const userQueries = new UserQueries(this.db);
         const brandQueries = new BrandQueries(this.db);
         const modeQueries = new ModeQueries(this.db);
+        const uomQueries = new UomQueries(this.db);
+        const dimensionQueries = new DimensionQueries(this.db);
+        const dimensionValueQueries = new DimensionValuesQueries(this.db);
+        const systemQueries = new SystemQueries(this.db);
+        const categoryQueries = new CategoryQueries(this.db);
+        const vendorQueries = new VendorQueries(this.db);
+        const tagQueries = new TagQueries(this.db);
 
         for (const user of manifest.changes.users) {
           userQueries.upsertSynced(user);
+          // brandQueries.upsertSynced(user.brands);
+          // modeQueries.upsertSynced(user.modes);
+          // uomQueries.upsertSynced(user.uoms);
+          // dimensionQueries.upsertSynced(user.dimensions);
+          // dimensionValueQueries.upsertSynced(user.dimensionValues);
+          // systemQueries.upsertSynced(user.systems);
+          // categoryQueries.upsertSynced(user.categories);
+          // vendorQueries.upsertSynced(user.vendors);
+          // tagQueries.upsertSynced(user.tags);
         }
 
         const maxPulledUserVersion = manifest.changes.users.reduce(

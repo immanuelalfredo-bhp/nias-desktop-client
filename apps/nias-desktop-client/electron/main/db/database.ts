@@ -13,6 +13,9 @@ import { UomQueries } from './attributes/uoms.js';
 import { DimensionQueries } from './attributes/dimensions.js';
 import { DimensionValuesQueries } from './attributes/dimension-values.js';
 import { SystemQueries } from './attributes/systems.js';
+import { CategoryQueries } from './attributes/categories.js';
+import { VendorQueries } from './attributes/vendors.js';
+import { TagQueries } from './attributes/tags.js';
 import { openEncryptedDatabase } from './connection.js';
 import { backupArtifacts, ensureAuthDbSchema, runMigrations, setupNewDb } from './migrations.js';
 import { getOrGenerateKey } from './keyring.js';
@@ -37,6 +40,9 @@ export class UserDatabase {
   readonly dimension: DimensionQueries;
   readonly dimensionValue: DimensionValuesQueries;
   readonly system: SystemQueries;
+  readonly category: CategoryQueries;
+  readonly vendor: VendorQueries;
+  readonly tag: TagQueries;
 
   // System queries
   readonly audit: AuditQueries;
@@ -55,6 +61,9 @@ export class UserDatabase {
     this.dimension = new DimensionQueries(this.db);
     this.dimensionValue = new DimensionValuesQueries(this.db);
     this.system = new SystemQueries(this.db);
+    this.category = new CategoryQueries(this.db);
+    this.vendor = new VendorQueries(this.db);
+    this.tag = new TagQueries(this.db);
 
     // System queries
     this.audit = new AuditQueries(this.db);

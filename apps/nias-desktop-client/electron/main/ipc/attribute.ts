@@ -2,6 +2,18 @@ import { attribute } from '@nias/shared';
 import { UserDatabase } from '../db/database';
 import { createAuditLog, registerGenericIpcHandlers } from '../utils';
 
+export function registerAttributeIpcHandlers(userDb: UserDatabase, userId: string): void {
+  registerBrandIpcHandlers(userDb, userId);
+  registerModeIpcHandlers(userDb, userId);
+  registerUomIpcHandlers(userDb, userId);
+  registerDimensionIpcHandlers(userDb, userId);
+  registerDimensionValueIpcHandlers(userDb, userId);
+  registerSystemIpcHandlers(userDb, userId);
+  registerCategoryIpcHandlers(userDb, userId);
+  registerVendorIpcHandlers(userDb, userId);
+  registerTagIpcHandlers(userDb, userId);
+}
+
 export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): void {
   registerGenericIpcHandlers(
     'brand',
@@ -136,6 +148,75 @@ export function registerSystemIpcHandlers(userDb: UserDatabase, userId: string):
     },
     (action: string, id: string, details: string) => {
       createAuditLog(userDb, userId, { action, tableName: 'systems', recordId: id, details });
+    },
+  );
+}
+
+export function registerCategoryIpcHandlers(userDb: UserDatabase, userId: string): void {
+  registerGenericIpcHandlers(
+    'category',
+    userDb.category,
+    {
+      create: attribute.CreateCategoryInputSchema,
+      update: attribute.UpdateCategoryInputSchema,
+      id: attribute.CategoryIdSchema,
+    },
+    (id: string) => {
+      const category = userDb.category.getById(id);
+      return category ? category.name : 'Unknown Category';
+    },
+    () => {
+      const user = userDb.user.getById(userId);
+      return user ? user.displayName : 'Unknown User';
+    },
+    (action: string, id: string, details: string) => {
+      createAuditLog(userDb, userId, { action, tableName: 'categories', recordId: id, details });
+    },
+  );
+}
+
+export function registerVendorIpcHandlers(userDb: UserDatabase, userId: string): void {
+  registerGenericIpcHandlers(
+    'vendor',
+    userDb.vendor,
+    {
+      create: attribute.CreateVendorInputSchema,
+      update: attribute.UpdateVendorInputSchema,
+      id: attribute.VendorIdSchema,
+    },
+    (id: string) => {
+      const vendor = userDb.vendor.getById(id);
+      return vendor ? vendor.name : 'Unknown Vendor';
+    },
+    () => {
+      const user = userDb.user.getById(userId);
+      return user ? user.displayName : 'Unknown User';
+    },
+    (action: string, id: string, details: string) => {
+      createAuditLog(userDb, userId, { action, tableName: 'vendors', recordId: id, details });
+    },
+  );
+}
+
+export function registerTagIpcHandlers(userDb: UserDatabase, userId: string): void {
+  registerGenericIpcHandlers(
+    'tag',
+    userDb.tag,
+    {
+      create: attribute.CreateTagInputSchema,
+      update: attribute.UpdateTagInputSchema,
+      id: attribute.TagIdSchema,
+    },
+    (id: string) => {
+      const tag = userDb.tag.getById(id);
+      return tag ? tag.name : 'Unknown Tag';
+    },
+    () => {
+      const user = userDb.user.getById(userId);
+      return user ? user.displayName : 'Unknown User';
+    },
+    (action: string, id: string, details: string) => {
+      createAuditLog(userDb, userId, { action, tableName: 'tags', recordId: id, details });
     },
   );
 }
