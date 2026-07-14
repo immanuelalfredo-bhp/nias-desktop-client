@@ -1,10 +1,15 @@
 import { ipcMain } from 'electron';
 import { sync } from '@nias/shared';
 import { handleResponse, isSuccess, logger, type Envelope } from '@nias/shared/server';
-import { UserDatabase } from '../db/database';
+import { AuthDatabase, UserDatabase } from '../db/database';
 import { SYNC_SERVER_URL } from '../config';
+import { resolveUserJwtToken } from './auth-session.js';
 
-export const registerSyncIpcHandlers = (userDb: UserDatabase, jwtToken?: string): void => {
+export const registerSyncIpcHandlers = (
+  authDb: AuthDatabase,
+  userDb: UserDatabase,
+  userId: string,
+): void => {
   ipcMain.handle('sync:fetch-version', async (_event): Promise<Envelope<sync.SyncMetadata>> => {
     try {
       const syncVersion = userDb.sync.fetchSyncVersion();
@@ -32,6 +37,7 @@ export const registerSyncIpcHandlers = (userDb: UserDatabase, jwtToken?: string)
 
   ipcMain.handle('sync:pull', async (_event): Promise<Envelope<sync.PullManifest>> => {
     try {
+      const jwtToken = await resolveUserJwtToken(authDb, userId);
       if (!jwtToken) {
         logger.error({ scope: 'sync' }, 'Sync pull failed: missing JWT token');
         return { success: false, message: 'Sync pull failed: missing JWT token' };

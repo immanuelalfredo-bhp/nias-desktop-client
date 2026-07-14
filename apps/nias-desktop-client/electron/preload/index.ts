@@ -36,4 +36,36 @@ contextBridge.exposeInMainWorld('electronAPI', {
   modeUpdate: (payload: attribute.UpdateModeInput) => ipcRenderer.invoke('mode:update', payload),
   modeDelete: (payload: attribute.ModeId) => ipcRenderer.invoke('mode:delete', payload),
   modeRestore: (payload: attribute.ModeId) => ipcRenderer.invoke('mode:restore', payload),
+
+  // UoM IPC handlers
+  uomListActive: () => ipcRenderer.invoke('uom:list-active'),
+  uomListDeleted: () => ipcRenderer.invoke('uom:list-deleted'),
+  uomCreate: (payload: attribute.CreateUomInput) => ipcRenderer.invoke('uom:create', payload),
+  uomUpdate: (payload: attribute.UpdateUomInput) => ipcRenderer.invoke('uom:update', payload),
+  uomDelete: (payload: attribute.UomId) => ipcRenderer.invoke('uom:delete', payload),
+  uomRestore: (payload: attribute.UomId) => ipcRenderer.invoke('uom:restore', payload),
+
+  // Dimension IPC handlers
+  dimensionListActive: () => ipcRenderer.invoke('dimension:list-active'),
+  dimensionListDeleted: () => ipcRenderer.invoke('dimension:list-deleted'),
+  dimensionCreate: (payload: attribute.CreateDimensionInput) =>
+    ipcRenderer.invoke('dimension:create', payload),
+  dimensionUpdate: (payload: attribute.UpdateDimensionInput) =>
+    ipcRenderer.invoke('dimension:update', payload),
+  dimensionDelete: (payload: attribute.DimensionId) =>
+    ipcRenderer.invoke('dimension:delete', payload),
+  dimensionRestore: (payload: attribute.DimensionId) =>
+    ipcRenderer.invoke('dimension:restore', payload),
+
+  // Dimension Value IPC handlers
+  dimensionValueListActive: () => ipcRenderer.invoke('dimension-value:list-active'),
+  dimensionValueListDeleted: () => ipcRenderer.invoke('dimension-value:list-deleted'),
+  dimensionValueCreate: (payload: attribute.CreateDimensionValue) =>
+    ipcRenderer.invoke('dimension-value:create', payload),
+  dimensionValueUpdate: (payload: attribute.UpdateDimensionValue) =>
+    ipcRenderer.invoke('dimension-value:update', payload),
+  dimensionValueDelete: (payload: attribute.DimensionValueId) =>
+    ipcRenderer.invoke('dimension-value:delete', payload),
+  dimensionValueRestore: (payload: attribute.DimensionValueId) =>
+    ipcRenderer.invoke('dimension-value:restore', payload),
 });

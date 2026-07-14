@@ -9,11 +9,7 @@ import {
   type Envelope,
 } from '@nias/shared/server';
 import { APP_ID, SYNC_SERVER_URL } from '../config.js';
-import { registerSyncIpcHandlers } from '../ipc/sync.js';
-import { registerUserIpcHandlers } from '../ipc/system/users.js';
-import { registerAuditIpcHandlers } from './system/audit.js';
-import { registerBrandIpcHandlers } from './attribute/brand.js';
-import { registerModeIpcHandlers } from './attribute/mode.js';
+import { registerUserSessionIpcHandlers } from './session.js';
 
 export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
   ipcMain.handle('auth:status', async (_event): Promise<Envelope<auth.StatusResponse>> => {
@@ -73,7 +69,7 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
           logger.info({ scope: 'auth', userId: data.id }, 'User fetched and stored successfully');
 
           const userDb = initializeUserDatabase(data.id);
-          registerSyncIpcHandlers(userDb, data.jwtToken);
+          registerUserSessionIpcHandlers(authDb, userDb, data.id);
           logger.info({ scope: 'auth', userId: data.id }, 'User database initialized successfully');
 
           return { success: true, message: 'User fetched and stored successfully' };
@@ -84,60 +80,10 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
           logger.warn({ scope: 'auth', userId: user.id }, 'Login failed: Invalid password');
           return { success: false, message: 'Invalid password' };
         }
-
-        const refreshThresholdMs = 60_000;
-        const isTokenMissingOrExpired =
-          !user.jwtToken ||
-          !user.jwtTokenExpiration ||
-          user.jwtTokenExpiration <= Date.now() + refreshThresholdMs;
-
-        let jwtToken = user.jwtToken;
-        if (isTokenMissingOrExpired) {
-          logger.info(
-            { scope: 'auth', userId: user.id, jwtTokenExpiration: user.jwtTokenExpiration },
-            'Refreshing JWT token for local user before registering sync handlers',
-          );
-
-          const refreshResponse = await fetch(`${SYNC_SERVER_URL}/api/login/initial`, {
-            method: 'POST',
-            headers: {
-              'content-type': 'application/json',
-              'app-id': `${APP_ID}`,
-            },
-            body: JSON.stringify(loginCredentials.data),
-          });
-
-          const refreshData = await handleResponse(refreshResponse, auth.LoginDataSchema, 'auth');
-          if (!isSuccess(refreshData)) {
-            logger.error(
-              { scope: 'auth', userId: user.id, message: refreshData.message },
-              'Failed to refresh JWT token for local user',
-            );
-            return { success: false, message: 'Failed to refresh authentication token' };
-          }
-
-          authDb.main.runInTransaction(() => {
-            authDb.main.upsertLocalUser({
-              id: refreshData.id,
-              email: refreshData.email,
-              passwordHash: refreshData.passwordHash,
-              syncVersion: refreshData.syncVersion,
-              jwtToken: refreshData.jwtToken,
-              jwtTokenExpiration: refreshData.jwtTokenExpiration,
-            });
-          });
-
-          jwtToken = refreshData.jwtToken;
-        }
-
         const userDb = initializeUserDatabase(user.id);
         logger.info({ scope: 'auth', userId: user.id }, 'User database initialized successfully');
 
-        registerAuditIpcHandlers(userDb);
-        registerSyncIpcHandlers(userDb, jwtToken);
-        registerUserIpcHandlers(userDb, user.id, jwtToken);
-        registerBrandIpcHandlers(userDb, user.id);
-        registerModeIpcHandlers(userDb, user.id);
+        registerUserSessionIpcHandlers(authDb, userDb, user.id);
 
         logger.info({ scope: 'auth', userId: user.id }, 'Login successful for local user');
         return { success: true, message: 'Login successful' };

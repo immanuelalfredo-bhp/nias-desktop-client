@@ -46,6 +46,25 @@ export class AuthQueries {
     return result || null;
   }
 
+  getLocalUserById(id: string): auth.LocalUser | null {
+    const result = this.db
+      .prepare(
+        `SELECT
+          id,
+          email,
+          password_hash AS passwordHash,
+          jwt_token AS jwtToken,
+          jwt_token_expiration AS jwtTokenExpiration,
+          sync_version AS syncVersion
+        FROM users WHERE id = ?
+      `,
+      )
+      .get(id) as auth.LocalUser | undefined;
+
+    logger.info({ scope: 'auth', userId: id, found: !!result }, 'Fetched local user by id');
+    return result || null;
+  }
+
   upsertLocalUser(params: auth.LocalUser): void {
     const stmt = this.db.prepare(`
       INSERT INTO users (

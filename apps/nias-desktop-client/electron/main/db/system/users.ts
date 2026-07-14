@@ -1,75 +1,45 @@
 import Database from 'better-sqlite3-multiple-ciphers';
 import { type system } from '@nias/shared';
 import { logger } from '@nias/shared/server';
+import { BaseQueries } from '../../utils.js';
 
-export class UserQueries {
-  constructor(private readonly db: Database.Database) {}
+const COLUMNS = `
+  id,
+  display_name AS displayName,
+  email,
+  password_hash AS passwordHash,
+  is_managed_by AS isManagedBy,
+  created_at AS createdAt,
+  updated_at AS updatedAt,
+  deleted_at AS deletedAt,
+  is_synced AS isSynced,
+  sync_version AS syncVersion`;
+
+export class UserQueries extends BaseQueries<system.User, system.User, system.UpdateUser> {
+  constructor(db: Database.Database) {
+    super(db, 'users', COLUMNS);
+  }
 
   listUsers(): system.User[] {
-    const stmt = this.db.prepare(`
-      SELECT
-        id,
-        display_name AS displayName,
-        email,
-        password_hash AS passwordHash,
-        is_managed_by AS isManagedBy,
-        created_at AS createdAt,
-        updated_at AS updatedAt,
-        deleted_at AS deletedAt,
-        is_synced AS isSynced,
-        sync_version AS syncVersion
-      FROM users u
-      WHERE u.deleted_at IS NULL
-    `);
     logger.debug({ scope: 'UserQueries' }, 'listUsers: SQL query executed successfully.');
-    return stmt.all() as system.User[];
+    return this.listActive();
   }
 
   listDeletedUsers(): system.User[] {
-    const stmt = this.db.prepare(`
-      SELECT
-        id,
-        display_name AS displayName,
-        email,
-        password_hash AS passwordHash,
-        is_managed_by AS isManagedBy,
-        created_at AS createdAt,
-        updated_at AS updatedAt,
-        deleted_at AS deletedAt,
-        is_synced AS isSynced,
-        sync_version AS syncVersion
-      FROM users u
-      WHERE u.deleted_at IS NOT NULL
-    `);
     logger.debug({ scope: 'UserQueries' }, 'listDeletedUsers: SQL query executed successfully.');
-    return stmt.all() as system.User[];
+    return this.listDeleted();
   }
 
   getUserById(id: string): system.User | null {
-    const stmt = this.db.prepare(`
-      SELECT
-        id,
-        display_name AS displayName,
-        email,
-        password_hash AS passwordHash,
-        is_managed_by AS isManagedBy,
-        created_at AS createdAt,
-        updated_at AS updatedAt,
-        deleted_at AS deletedAt,
-        is_synced AS isSynced,
-        sync_version AS syncVersion
-      FROM users u
-      WHERE u.id = ?
-    `);
     logger.debug(
       { scope: 'UserQueries', userId: id },
       `getUserById: SQL query executed successfully for id: ${id}.`,
     );
-    return stmt.get(id) as system.User | null;
+    return this.getById(id);
   }
 
-  createUser(params: system.User): void {
-    const stmt = this.db.prepare(`
+  create(params: system.User): void {
+    this.db.prepare(`
       INSERT INTO users (
         id,
         display_name,
@@ -82,8 +52,7 @@ export class UserQueries {
         is_synced,
         sync_version
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    stmt.run(
+      `).run(
       params.id,
       params.displayName,
       params.email,
@@ -97,11 +66,11 @@ export class UserQueries {
     );
     logger.debug(
       { scope: 'UserQueries', userId: params.id },
-      `createUser: SQL query executed successfully for id: ${params.id}.`,
+      `create: SQL query executed successfully for id: ${params.id}.`,
     );
   }
 
-  updateUser(params: system.UpdateUser): void {
+  update(params: system.UpdateUser): void {
     const existingUser = this.getUserById(params.id!);
 
     // Should not happen, but just in case, we check if the user exists before updating
@@ -132,17 +101,20 @@ export class UserQueries {
     );
     logger.debug(
       { scope: 'UserQueries', userId: params.id },
-      `updateUser: SQL query executed successfully for id: ${params.id}.`,
+      `update: SQL query executed successfully for id: ${params.id}.`,
     );
   }
 
+  createUser(params: system.User): void {
+    this.create(params);
+  }
+
+  updateUser(params: system.UpdateUser): void {
+    this.update(params);
+  }
+
   deleteUser(id: string): void {
-    const stmt = this.db.prepare(`
-      UPDATE users
-      SET deleted_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `);
-    stmt.run(id);
+    this.delete(id);
     logger.debug(
       { scope: 'UserQueries', userId: id },
       `deleteUser: SQL query executed successfully for id: ${id}.`,
@@ -150,20 +122,15 @@ export class UserQueries {
   }
 
   restoreUser(id: string): void {
-    const stmt = this.db.prepare(`
-      UPDATE users
-        SET deleted_at = NULL
-        WHERE id = ?
-    `);
-    stmt.run(id);
+    this.restore(id);
     logger.debug(
       { scope: 'UserQueries', userId: id },
       `restoreUser: SQL query executed successfully for id: ${id}.`,
     );
   }
 
-  syncUsers(params: system.User): void {
-    const stmt = this.db.prepare(`
+  upsertSynced(params: system.User): void {
+    this.db.prepare(`
       INSERT INTO users (
         id,
         display_name,
@@ -185,9 +152,7 @@ export class UserQueries {
         deleted_at = excluded.deleted_at,
         is_synced = excluded.is_synced,
         sync_version = excluded.sync_version
-    `);
-
-    stmt.run(
+      `).run(
       params.id,
       params.displayName,
       params.email,
@@ -201,7 +166,11 @@ export class UserQueries {
     );
     logger.debug(
       { scope: 'UserQueries', userId: params.id },
-      `syncUser: SQL query executed successfully for id: ${params.id}.`,
+      `upsertSynced: SQL query executed successfully for id: ${params.id}.`,
     );
+  }
+
+  syncUsers(params: system.User): void {
+    this.upsertSynced(params);
   }
 }

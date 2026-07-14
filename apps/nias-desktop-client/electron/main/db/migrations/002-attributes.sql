@@ -1,13 +1,13 @@
 CREATE TABLE IF NOT EXISTS brands (
-	id TEXT PRIMARY KEY,
-	name TEXT NOT NULL,
-	normalized_name TEXT NOT NULL,
-	sku_code TEXT,
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	deleted_at TEXT DEFAULT NULL,
-	is_synced BOOLEAN DEFAULT FALSE,
-	sync_version INTEGER NOT NULL DEFAULT 0
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  normalized_name TEXT NOT NULL,
+  sku_code TEXT,
+  created_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  deleted_at TEXT DEFAULT NULL,
+  is_synced BOOLEAN DEFAULT FALSE,
+  sync_version INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_brands_normalized_name ON brands (normalized_name);
@@ -16,15 +16,15 @@ CREATE INDEX IF NOT EXISTS idx_brands_sync_version ON brands (sync_version);
 CREATE INDEX IF NOT EXISTS idx_brands_deleted_at ON brands (deleted_at);
 
 CREATE TABLE IF NOT EXISTS modes (
-	id TEXT PRIMARY KEY,
-	name TEXT NOT NULL,
-	normalized_name TEXT NOT NULL,
-	sort_order NUMERIC NOT NULL DEFAULT 0,
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	deleted_at TEXT DEFAULT NULL,
-	is_synced BOOLEAN DEFAULT FALSE,
-	sync_version INTEGER NOT NULL DEFAULT 0
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  normalized_name TEXT NOT NULL,
+  sort_order NUMERIC NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  deleted_at TEXT DEFAULT NULL,
+  is_synced BOOLEAN DEFAULT FALSE,
+  sync_version INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_modes_normalized_name ON modes (normalized_name);
@@ -34,16 +34,16 @@ CREATE INDEX IF NOT EXISTS idx_modes_sync_version ON modes (sync_version);
 CREATE INDEX IF NOT EXISTS idx_modes_deleted_at ON modes (deleted_at);
 
 CREATE TABLE IF NOT EXISTS uoms (
-	id TEXT PRIMARY KEY,
-	name TEXT NOT NULL,
-	normalized_name TEXT NOT NULL,
-	symbol TEXT NOT NULL,
-	sort_order NUMERIC NOT NULL DEFAULT 0,
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	deleted_at TEXT DEFAULT NULL,
-	is_synced BOOLEAN DEFAULT FALSE,
-	sync_version INTEGER NOT NULL DEFAULT 0
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  normalized_name TEXT NOT NULL,
+  symbol TEXT NOT NULL,
+  sort_order NUMERIC NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  deleted_at TEXT DEFAULT NULL,
+  is_synced BOOLEAN DEFAULT FALSE,
+  sync_version INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_uoms_normalized_name ON uoms (normalized_name);
@@ -53,18 +53,18 @@ CREATE INDEX IF NOT EXISTS idx_uoms_sync_version ON uoms (sync_version);
 CREATE INDEX IF NOT EXISTS idx_uoms_deleted_at ON uoms (deleted_at);
 
 CREATE TABLE IF NOT EXISTS dimensions (
-	id TEXT PRIMARY KEY,
-	scope TEXT NOT NULL,
-	name TEXT NOT NULL,
-	normalized_name TEXT NOT NULL,
-	form_name TEXT NOT NULL,
-	position TEXT NOT NULL,
-	sort_order NUMERIC NOT NULL DEFAULT 0,
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	deleted_at TEXT DEFAULT NULL,
-	is_synced BOOLEAN DEFAULT FALSE,
-	sync_version INTEGER NOT NULL DEFAULT 0
+  id TEXT PRIMARY KEY,
+  scope TEXT NOT NULL,
+  name TEXT NOT NULL,
+  normalized_name TEXT NOT NULL,
+  form_name TEXT NOT NULL,
+  position TEXT NOT NULL,
+  sort_order NUMERIC NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  deleted_at TEXT DEFAULT NULL,
+  is_synced BOOLEAN DEFAULT FALSE,
+  sync_version INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_dimensions_scope ON dimensions (scope);
@@ -75,17 +75,17 @@ CREATE INDEX IF NOT EXISTS idx_dimensions_sync_version ON dimensions (sync_versi
 CREATE INDEX IF NOT EXISTS idx_dimensions_deleted_at ON dimensions (deleted_at);
 
 CREATE TABLE IF NOT EXISTS dimension_values (
-	id TEXT PRIMARY KEY,
-	dimension_id TEXT NOT NULL,
-	name TEXT NOT NULL,
-	sku_code TEXT NOT NULL,
-	numeric_value NUMERIC,
-	sort_order NUMERIC NOT NULL DEFAULT 0,
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	deleted_at TEXT DEFAULT NULL,
-	is_synced BOOLEAN DEFAULT FALSE,
-	sync_version INTEGER NOT NULL DEFAULT 0
+  id TEXT PRIMARY KEY,
+  dimension_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  sku_code TEXT NOT NULL,
+  numeric_value NUMERIC,
+  sort_order NUMERIC NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  deleted_at TEXT DEFAULT NULL,
+  is_synced BOOLEAN DEFAULT FALSE,
+  sync_version INTEGER NOT NULL DEFAULT 0 FOREIGN KEY (dimension_id) REFERENCES dimensions (id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_dimension_values_dimension_id ON dimension_values (dimension_id);
@@ -97,15 +97,15 @@ CREATE INDEX IF NOT EXISTS idx_dimension_values_sync_version ON dimension_values
 CREATE INDEX IF NOT EXISTS idx_dimension_values_deleted_at ON dimension_values (deleted_at);
 
 CREATE TABLE IF NOT EXISTS systems (
-	id TEXT PRIMARY KEY,
-	name TEXT NOT NULL,
-	normalized_name TEXT NOT NULL,
-	sort_order NUMERIC NOT NULL DEFAULT 0,
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	deleted_at TEXT DEFAULT NULL,
-	is_synced BOOLEAN DEFAULT FALSE,
-	sync_version INTEGER NOT NULL DEFAULT 0
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  normalized_name TEXT NOT NULL,
+  sort_order NUMERIC NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  deleted_at TEXT DEFAULT NULL,
+  is_synced BOOLEAN DEFAULT FALSE,
+  sync_version INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_systems_normalized_name ON systems (normalized_name);
@@ -115,15 +115,15 @@ CREATE INDEX IF NOT EXISTS idx_systems_sync_version ON systems (sync_version);
 CREATE INDEX IF NOT EXISTS idx_systems_deleted_at ON systems (deleted_at);
 
 CREATE TABLE IF NOT EXISTS categories (
-	id TEXT PRIMARY KEY,
-	name TEXT NOT NULL,
-	normalized_name TEXT NOT NULL,
-	sort_order NUMERIC NOT NULL DEFAULT 0,
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	deleted_at TEXT DEFAULT NULL,
-	is_synced BOOLEAN DEFAULT FALSE,
-	sync_version INTEGER NOT NULL DEFAULT 0
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  normalized_name TEXT NOT NULL,
+  sort_order NUMERIC NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  deleted_at TEXT DEFAULT NULL,
+  is_synced BOOLEAN DEFAULT FALSE,
+  sync_version INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_categories_normalized_name ON categories (normalized_name);
@@ -133,16 +133,16 @@ CREATE INDEX IF NOT EXISTS idx_categories_sync_version ON categories (sync_versi
 CREATE INDEX IF NOT EXISTS idx_categories_deleted_at ON categories (deleted_at);
 
 CREATE TABLE IF NOT EXISTS vendors (
-	id TEXT PRIMARY KEY,
-	name TEXT NOT NULL,
-	normalized_name TEXT NOT NULL,
-	sku_code TEXT NOT NULL,
-	sort_order NUMERIC NOT NULL DEFAULT 0,
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	deleted_at TEXT DEFAULT NULL,
-	is_synced BOOLEAN DEFAULT FALSE,
-	sync_version INTEGER NOT NULL DEFAULT 0
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  normalized_name TEXT NOT NULL,
+  sku_code TEXT NOT NULL,
+  sort_order NUMERIC NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  deleted_at TEXT DEFAULT NULL,
+  is_synced BOOLEAN DEFAULT FALSE,
+  sync_version INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_vendors_normalized_name ON vendors (normalized_name);
@@ -153,15 +153,15 @@ CREATE INDEX IF NOT EXISTS idx_vendors_sync_version ON vendors (sync_version);
 CREATE INDEX IF NOT EXISTS idx_vendors_deleted_at ON vendors (deleted_at);
 
 CREATE TABLE IF NOT EXISTS tags (
-	id TEXT PRIMARY KEY,
-	name TEXT NOT NULL,
-	normalized_name TEXT NOT NULL,
-	sort_order NUMERIC NOT NULL DEFAULT 0,
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	deleted_at TEXT DEFAULT NULL,
-	is_synced BOOLEAN DEFAULT FALSE,
-	sync_version INTEGER NOT NULL DEFAULT 0
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  normalized_name TEXT NOT NULL,
+  sort_order NUMERIC NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  deleted_at TEXT DEFAULT NULL,
+  is_synced BOOLEAN DEFAULT FALSE,
+  sync_version INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_tags_normalized_name ON tags (normalized_name);
@@ -170,12 +170,29 @@ CREATE INDEX IF NOT EXISTS idx_tags_is_synced ON tags (is_synced);
 CREATE INDEX IF NOT EXISTS idx_tags_sync_version ON tags (sync_version);
 CREATE INDEX IF NOT EXISTS idx_tags_deleted_at ON tags (deleted_at);
 
-ALTER TABLE sync_metadata ADD COLUMN IF NOT EXISTS brands INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE sync_metadata ADD COLUMN IF NOT EXISTS modes INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE sync_metadata ADD COLUMN IF NOT EXISTS uoms INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE sync_metadata ADD COLUMN IF NOT EXISTS dimensions INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE sync_metadata ADD COLUMN IF NOT EXISTS dimension_values INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE sync_metadata ADD COLUMN IF NOT EXISTS systems INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE sync_metadata ADD COLUMN IF NOT EXISTS categories INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE sync_metadata ADD COLUMN IF NOT EXISTS vendors INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE sync_metadata ADD COLUMN IF NOT EXISTS tags INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE sync_metadata
+ADD COLUMN IF NOT EXISTS brands INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE sync_metadata
+ADD COLUMN IF NOT EXISTS modes INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE sync_metadata
+ADD COLUMN IF NOT EXISTS uoms INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE sync_metadata
+ADD COLUMN IF NOT EXISTS dimensions INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE sync_metadata
+ADD COLUMN IF NOT EXISTS dimension_values INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE sync_metadata
+ADD COLUMN IF NOT EXISTS systems INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE sync_metadata
+ADD COLUMN IF NOT EXISTS categories INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE sync_metadata
+ADD COLUMN IF NOT EXISTS vendors INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE sync_metadata
+ADD COLUMN IF NOT EXISTS tags INTEGER NOT NULL DEFAULT 0;

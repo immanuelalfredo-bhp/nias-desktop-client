@@ -1,142 +1,112 @@
-import { ipcMain } from 'electron';
 import { system, common } from '@nias/shared';
 import {
   hashPassword,
   isSuccess,
   handleResponse,
   logger,
-  type Envelope,
 } from '@nias/shared/server';
-import { UserDatabase } from '../../db/database';
+import { AuthDatabase, UserDatabase } from '../../db/database';
 import { SYNC_SERVER_URL } from '../../config';
+import { createAuditLog, registerGenericIpcHandlers } from '../../utils.js';
+import { resolveUserJwtToken } from '../auth-session.js';
 
-export function registerUserIpcHandlers(userDb: UserDatabase, userId: string, jwtToken?: string): void {
-  ipcMain.handle('user:list-active', async (_event): Promise<Envelope<system.User[]>> => {
-    try {
-      const users = userDb.user.listUsers();
-      logger.info(
-        { scope: 'users', userCount: users.length },
-        'Active users retrieved successfully',
-      );
-      return {
-        success: true,
-        message: 'Active users retrieved successfully',
-        data: users,
-      };
-    } catch (error) {
-      logger.error(
-        {
-          scope: 'users',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
-        },
-        'Failed to retrieve active users',
-      );
-      return {
-        success: false,
-        message: 'Failed to retrieve active users',
-      };
-    }
-  });
-
-  ipcMain.handle('user:list-deleted', async (_event): Promise<Envelope<system.User[]>> => {
-    try {
-      const users = userDb.user.listDeletedUsers();
-      logger.info(
-        { scope: 'users', userCount: users.length },
-        'Deleted users retrieved successfully',
-      );
-      return {
-        success: true,
-        message: 'Deleted users retrieved successfully',
-        data: users,
-      };
-    } catch (error) {
-      logger.error(
-        {
-          scope: 'users',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
-        },
-        'Failed to retrieve deleted users',
-      );
-      return {
-        success: false,
-        message: 'Failed to retrieve deleted users',
-      };
-    }
-  });
-
-  ipcMain.handle(
-    'user:create',
-    async (_event, payload: system.CreateUserPayload): Promise<common.SuccessResponse> => {
-      const hashedPassword = await hashPassword(payload.password);
-      const serverPayload: system.CreateUserPayload = {
-        ...payload,
-        passwordHash: hashedPassword,
-      };
-
-      if (!jwtToken) {
-        logger.error({ scope: 'users' }, 'User creation failed: missing JWT token');
-        return { success: false, message: 'User creation failed: missing JWT token' };
-      }
-
-      const respose = await fetch(`${SYNC_SERVER_URL}/api/database/new-user`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          authorization: `Bearer ${jwtToken}`,
-        },
-        body: JSON.stringify(serverPayload),
-      });
-
-      const data = await handleResponse(respose, system.CreateUserResponseSchema, 'users');
-      if (!isSuccess(data)) {
-        return { success: false, message: 'User creation failed' };
-      }
-
-      try {
-        userDb.user.createUser({
-          id: data.id,
-          displayName: payload.displayName,
-          email: payload.email,
+export function registerUserIpcHandlers(
+  authDb: AuthDatabase,
+  userDb: UserDatabase,
+  userId: string,
+): void {
+  registerGenericIpcHandlers(
+    'user',
+    userDb.user,
+    {
+      create: system.CreateUserInputSchema,
+      update: system.UpdateUserInputSchema,
+      id: system.DeleteUserSchema,
+    },
+    (id: string) => {
+      const user = userDb.user.getById(id);
+      return user ? user.displayName : 'Unknown User';
+    },
+    () => {
+      const user = userDb.user.getUserById(userId);
+      return user ? user.displayName : 'Unknown User';
+    },
+    (action: string, id: string, details: string) => {
+      createAuditLog(userDb, userId, { action, tableName: 'users', recordId: id, details });
+    },
+    {
+      actions: {
+        getById: true,
+        create: true,
+        update: false,
+        delete: false,
+        restore: false,
+        listActive: true,
+        listDeleted: true,
+      },
+      create: async (payload): Promise<common.SuccessResponse> => {
+        const hashedPassword = await hashPassword(payload.password);
+        const serverPayload: system.CreateUserPayload = {
+          ...payload,
           passwordHash: hashedPassword,
-          isManagedBy: payload.isManagedBy ?? null,
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt,
-          deletedAt: null,
-          isSynced: true,
-          syncVersion: data.syncVersion,
-        });
-        logger.info(
-          { scope: 'users', userId: data.id },
-          'User created successfully and stored locally',
-        );
+        };
 
-        const actor = userDb.user.getUserById(userId);
-        userDb.audit.createAuditLog({
-          id: crypto.randomUUID(),
-          userId: userId,
-          action: 'create',
-          tableName: 'user',
-          recordId: data.id,
-          timestamp: new Date().toISOString(),
-          details: `User ${data.id} created by ${actor?.displayName || 'Unknown User'}`,
-          isSynced: false,
-          syncVersion: 0,
-        });
-      } catch (error) {
-        logger.error(
-          {
-            scope: 'users',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+        const jwtToken = await resolveUserJwtToken(authDb, userId);
+        if (!jwtToken) {
+          logger.error({ scope: 'users' }, 'User creation failed: missing JWT token');
+          return { success: false, message: 'User creation failed: missing JWT token' };
+        }
+
+        const respose = await fetch(`${SYNC_SERVER_URL}/api/database/new-user`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            authorization: `Bearer ${jwtToken}`,
           },
-          'Failed to create user locally',
-        );
-      }
+          body: JSON.stringify(serverPayload),
+        });
 
-      return { success: true, message: 'User created successfully' };
+        const data = await handleResponse(respose, system.CreateUserResponseSchema, 'users');
+        if (!isSuccess(data)) {
+          return { success: false, message: 'User creation failed' };
+        }
+
+        try {
+          userDb.user.create({
+            id: data.id,
+            displayName: payload.displayName,
+            email: payload.email,
+            passwordHash: hashedPassword,
+            isManagedBy: payload.isManagedBy ?? null,
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt,
+            deletedAt: null,
+            isSynced: true,
+            syncVersion: data.syncVersion,
+          });
+          logger.info(
+            { scope: 'users', userId: data.id },
+            'User created successfully and stored locally',
+          );
+          createAuditLog(userDb, userId, {
+            action: 'create',
+            tableName: 'users',
+            recordId: data.id,
+            details: `${payload.displayName} created`,
+          });
+        } catch (error) {
+          logger.error(
+            {
+              scope: 'users',
+              err: error,
+              errorMessage: error instanceof Error ? error.message : String(error),
+            },
+            'Failed to create user locally',
+          );
+        }
+
+        return { success: true, message: 'User created successfully' };
+      },
     },
   );
 }

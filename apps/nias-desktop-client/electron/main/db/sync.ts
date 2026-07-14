@@ -27,7 +27,7 @@ export class SyncQueries {
         const modeQueries = new ModeQueries(this.db);
 
         for (const user of manifest.changes.users) {
-          userQueries.syncUsers(user);
+          userQueries.upsertSynced(user);
         }
 
         const maxPulledUserVersion = manifest.changes.users.reduce(

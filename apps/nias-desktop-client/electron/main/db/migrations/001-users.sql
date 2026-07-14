@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT,
   password_hash TEXT NOT NULL,
   is_managed_by TEXT,
-  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-  updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  created_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
   deleted_at TEXT DEFAULT NULL,
   is_synced BOOLEAN DEFAULT FALSE,
   sync_version INTEGER NOT NULL DEFAULT 0
@@ -23,10 +23,9 @@ CREATE TABLE IF NOT EXISTS audit (
   action TEXT NOT NULL,
   table_name TEXT NOT NULL,
   record_id TEXT NOT NULL,
-  timestamp TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  timestamp TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
   details TEXT,
-
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_user_id ON audit (user_id);
@@ -40,4 +39,7 @@ CREATE TABLE IF NOT EXISTS sync_metadata (
   audit INTEGER NOT NULL DEFAULT 0
 );
 
-INSERT INTO sync_metadata (id, users, audit) VALUES (1, 0, 0) ON CONFLICT DO NOTHING;
+INSERT INTO
+  sync_metadata (id, users, audit)
+VALUES
+  (1, 0, 0) ON CONFLICT DO NOTHING;

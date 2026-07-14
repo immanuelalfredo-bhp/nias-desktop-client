@@ -8,5 +8,12 @@
   "bracketSpacing": true,
   "arrowParens": "always",
   "endOfLine": "lf",
-  "plugins": ["prettier-plugin-jsdoc"]
+  "embeddedLanguageFormatting": "auto",
+  "plugins": [
+    "prettier-plugin-sql",
+    "prettier-plugin-embed",
+    "prettier-plugin-jsdoc"
+],
+  "embeddedSqlTags": ["sql", "db", "query"],
+  "embeddedSqlFunctionNames": ["prepare"]
 }
