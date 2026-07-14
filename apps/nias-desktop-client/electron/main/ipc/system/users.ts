@@ -21,14 +21,14 @@ export function registerUserIpcHandlers(
     {
       create: system.CreateUserInputSchema,
       update: system.UpdateUserInputSchema,
-      id: system.DeleteUserSchema,
+      id: system.UserIdSchema,
     },
     (id: string) => {
       const user = userDb.user.getById(id);
       return user ? user.displayName : 'Unknown User';
     },
     () => {
-      const user = userDb.user.getUserById(userId);
+      const user = userDb.user.getById(userId);
       return user ? user.displayName : 'Unknown User';
     },
     (action: string, id: string, details: string) => {

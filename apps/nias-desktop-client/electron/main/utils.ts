@@ -47,16 +47,6 @@ export abstract class BaseQueries<T, CreateParams, UpdateParams> {
   abstract update(params: UpdateParams): void;
 }
 
-interface GenericCrudRepository<TCreate, TUpdate> {
-  listActive: () => unknown[];
-  listDeleted: () => unknown[];
-  getById: (id: string) => unknown;
-  create: (params: TCreate) => void;
-  update: (params: TUpdate) => void;
-  delete: (id: string) => void;
-  restore: (id: string) => void;
-}
-
 interface GenericIpcActions {
   listActive?: boolean;
   listDeleted?: boolean;
@@ -97,7 +87,7 @@ export function registerGenericIpcHandlers<
   TId extends { id: string },
 >(
   namespace: string,
-  repo: GenericCrudRepository<TCreate, TUpdate>,
+  repo: any,
   schemas: {
     create: z.ZodSchema<TCreate>;
     update: z.ZodSchema<TUpdate>;
@@ -216,7 +206,7 @@ export function createAuditLog(
   payload: system.CreateAuditInput,
 ): common.SuccessResponse {
   try {
-    const actor = userDb.user.getUserById(userId);
+    const actor = userDb.user.getById(userId);
     if (!actor) {
       logger.error(
         {

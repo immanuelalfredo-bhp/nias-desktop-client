@@ -16,7 +16,7 @@ export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): 
       return brand ? brand.name : 'Unknown Brand';
     },
     () => {
-      const user = userDb.user.getUserById(userId);
+      const user = userDb.user.getById(userId);
       return user ? user.displayName : 'Unknown User';
     },
     (action: string, id: string, details: string) => {
@@ -39,7 +39,7 @@ export function registerModeIpcHandlers(userDb: UserDatabase, userId: string): v
       return mode ? mode.name : 'Unknown Mode';
     },
     () => {
-      const user = userDb.user.getUserById(userId);
+      const user = userDb.user.getById(userId);
       return user ? user.displayName : 'Unknown User';
     },
     (action: string, id: string, details: string) => {
@@ -62,7 +62,7 @@ export function registerUomIpcHandlers(userDb: UserDatabase, userId: string): vo
       return uom ? uom.name : 'Unknown UOM';
     },
     () => {
-      const user = userDb.user.getUserById(userId);
+      const user = userDb.user.getById(userId);
       return user ? user.displayName : 'Unknown User';
     },
     (action: string, id: string, details: string) => {
@@ -85,7 +85,7 @@ export function registerDimensionIpcHandlers(userDb: UserDatabase, userId: strin
       return dimension ? dimension.name : 'Unknown Dimension';
     },
     () => {
-      const user = userDb.user.getUserById(userId);
+      const user = userDb.user.getById(userId);
       return user ? user.displayName : 'Unknown User';
     },
     (action: string, id: string, details: string) => {
@@ -108,7 +108,7 @@ export function registerDimensionValueIpcHandlers(userDb: UserDatabase, userId: 
       return dimensionValue ? dimensionValue.name : 'Unknown Dimension Value';
     },
     () => {
-      const user = userDb.user.getUserById(userId);
+      const user = userDb.user.getById(userId);
       return user ? user.displayName : 'Unknown User';
     },
     (action: string, id: string, details: string) => {
@@ -131,7 +131,7 @@ export function registerSystemIpcHandlers(userDb: UserDatabase, userId: string):
       return system ? system.name : 'Unknown System';
     },
     () => {
-      const user = userDb.user.getUserById(userId);
+      const user = userDb.user.getById(userId);
       return user ? user.displayName : 'Unknown User';
     },
     (action: string, id: string, details: string) => {
