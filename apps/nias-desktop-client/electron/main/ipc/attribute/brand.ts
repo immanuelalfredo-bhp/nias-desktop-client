@@ -2,6 +2,7 @@ import { ipcMain } from 'electron';
 import { attribute, common } from '@nias/shared';
 import { slugify, logger, type Envelope } from '@nias/shared/server';
 import { UserDatabase } from '../../db/database';
+import { createAuditLog } from '../../utils';
 
 export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): void {
   ipcMain.handle('brand:list-active', async (_event): Promise<Envelope<attribute.Brand[]>> => {
@@ -64,32 +65,40 @@ export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): 
     'brand:create',
     async (_event, payload: attribute.CreateBrandInput): Promise<common.SuccessResponse> => {
       try {
-        const newBrand: attribute.Brand = {
+        const parsed = attribute.CreateBrandInputSchema.safeParse(payload);
+        if (!parsed.success) {
+          logger.error(
+            {
+              scope: 'brands',
+              err: parsed.error,
+              errorMessage: parsed.error.message,
+            },
+            'Invalid brand creation payload',
+          );
+          return { success: false, message: 'Invalid brand creation payload' };
+        }
+
+        const newBrand: attribute.CreateBrand = {
           id: crypto.randomUUID(),
-          name: payload.name,
-          normalizedName: slugify(payload.name),
-          skuCode: payload.skuCode,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          deletedAt: null,
-          isSynced: false,
-          syncVersion: 0,
+          name: parsed.data.name,
+          normalizedName: slugify(parsed.data.name),
+          skuCode: parsed.data.skuCode,
         };
         userDb.brand.createBrand(newBrand);
         logger.info({ scope: 'brands', brandId: newBrand.id }, 'Brand created successfully');
 
-        const actor = userDb.user.findUserById(userId);
-        userDb.audit.createAuditLog({
-          id: crypto.randomUUID(),
-          userId: userId,
+        createAuditLog(userDb, userId, {
           action: 'create',
           tableName: 'brands',
           recordId: newBrand.id,
-          timestamp: new Date().toISOString(),
-          details: `Brand ${newBrand.name} created by ${actor?.displayName || 'Unknown User'}`,
-          isSynced: false,
-          syncVersion: 0,
+          details: `Brand ${newBrand.name} created by ${
+            userDb.user.getUserById(userId)?.displayName || 'Unknown User'
+          }`,
         });
+        logger.info(
+          { scope: 'audit', brandId: newBrand.id },
+          'Audit log created for brand creation',
+        );
 
         return { success: true, message: 'Brand created successfully' };
       } catch (error) {
@@ -110,28 +119,45 @@ export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): 
     'brand:update',
     async (_event, payload: attribute.UpdateBrandInput): Promise<common.SuccessResponse> => {
       try {
+        // should be impossible to reach here without an id, but just in case
+        if (!payload.id) {
+          return { success: false, message: 'Brand id is required for updates' };
+        }
+
+        const parsed = attribute.UpdateBrandInputSchema.safeParse(payload);
+        if (!parsed.success) {
+          logger.error(
+            {
+              scope: 'brands',
+              err: parsed.error,
+              errorMessage: parsed.error.message,
+            },
+            'Invalid brand update payload',
+          );
+          return { success: false, message: 'Invalid brand update payload' };
+        }
+
         const updatedBrand: attribute.UpdateBrand = {
-          id: crypto.randomUUID(),
-          name: payload.name,
-          normalizedName: slugify(payload.name!),
-          skuCode: payload.skuCode,
-          updatedAt: new Date().toISOString(),
+          id: parsed.data.id,
+          name: parsed.data.name,
+          normalizedName: parsed.data.name ? slugify(parsed.data.name) : undefined,
+          skuCode: parsed.data.skuCode,
         };
         userDb.brand.updateBrand(updatedBrand);
         logger.info({ scope: 'brands', brandId: updatedBrand.id }, 'Brand updated successfully');
 
-        const actor = userDb.user.findUserById(userId);
-        userDb.audit.createAuditLog({
-          id: crypto.randomUUID(),
-          userId: userId,
+        createAuditLog(userDb, userId, {
           action: 'update',
           tableName: 'brands',
-          recordId: updatedBrand.id!,
-          timestamp: new Date().toISOString(),
-          details: `Brand ${updatedBrand.name} updated by ${actor?.displayName || 'Unknown User'}`,
-          isSynced: false,
-          syncVersion: 0,
+          recordId: updatedBrand.id,
+          details: `Brand ${updatedBrand.name} updated by ${
+            userDb.user.getUserById(userId)?.displayName || 'Unknown User'
+          }`,
         });
+        logger.info(
+          { scope: 'audit', brandId: updatedBrand.id },
+          'Audit log created for brand update',
+        );
 
         return { success: true, message: 'Brand updated successfully' };
       } catch (error) {
@@ -152,21 +178,34 @@ export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): 
     'brand:delete',
     async (_event, payload: attribute.BrandId): Promise<common.SuccessResponse> => {
       try {
-        userDb.brand.deleteBrand(payload);
-        logger.info({ scope: 'brands', brandId: payload.id }, 'Brand deleted successfully');
+        const parsed = attribute.BrandIdSchema.safeParse(payload);
+        if (!parsed.success) {
+          logger.error(
+            {
+              scope: 'brands',
+              err: parsed.error,
+              errorMessage: parsed.error.message,
+            },
+            'Invalid brand deletion payload',
+          );
+          return { success: false, message: 'Invalid brand deletion payload' };
+        }
 
-        const actor = userDb.user.findUserById(userId);
-        userDb.audit.createAuditLog({
-          id: crypto.randomUUID(),
-          userId: userId,
+        userDb.brand.deleteBrand(parsed.data);
+        logger.info({ scope: 'brands', brandId: parsed.data.id }, 'Brand deleted successfully');
+
+        createAuditLog(userDb, userId, {
           action: 'delete',
           tableName: 'brands',
-          recordId: payload.id,
-          timestamp: new Date().toISOString(),
-          details: `Brand ${payload.id} deleted by ${actor?.displayName || 'Unknown User'}`,
-          isSynced: false,
-          syncVersion: 0,
+          recordId: parsed.data.id,
+          details: `Brand ${parsed.data.id} deleted by ${
+            userDb.user.getUserById(userId)?.displayName || 'Unknown User'
+          }`,
         });
+        logger.info(
+          { scope: 'audit', brandId: parsed.data.id },
+          'Audit log created for brand deletion',
+        );
 
         return { success: true, message: 'Brand deleted successfully' };
       } catch (error) {
@@ -187,21 +226,34 @@ export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): 
     'brand:restore',
     async (_event, payload: attribute.BrandId): Promise<common.SuccessResponse> => {
       try {
-        userDb.brand.restoreBrand(payload);
-        logger.info({ scope: 'brands', brandId: payload.id }, 'Brand restored successfully');
+        const parsed = attribute.BrandIdSchema.safeParse(payload);
+        if (!parsed.success) {
+          logger.error(
+            {
+              scope: 'brands',
+              err: parsed.error,
+              errorMessage: parsed.error.message,
+            },
+            'Invalid brand restoration payload',
+          );
+          return { success: false, message: 'Invalid brand restoration payload' };
+        }
 
-        const actor = userDb.user.findUserById(userId);
-        userDb.audit.createAuditLog({
-          id: crypto.randomUUID(),
-          userId: userId,
+        userDb.brand.restoreBrand(parsed.data);
+        logger.info({ scope: 'brands', brandId: parsed.data.id }, 'Brand restored successfully');
+
+        createAuditLog(userDb, userId, {
           action: 'restore',
           tableName: 'brands',
-          recordId: payload.id,
-          timestamp: new Date().toISOString(),
-          details: `Brand ${payload.id} restored by ${actor?.displayName || 'Unknown User'}`,
-          isSynced: false,
-          syncVersion: 0,
+          recordId: parsed.data.id,
+          details: `Brand ${parsed.data.id} restored by ${
+            userDb.user.getUserById(userId)?.displayName || 'Unknown User'
+          }`,
         });
+        logger.info(
+          { scope: 'audit', brandId: parsed.data.id },
+          'Audit log created for brand restoration',
+        );
 
         return { success: true, message: 'Brand restored successfully' };
       } catch (error) {

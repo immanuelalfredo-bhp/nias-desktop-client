@@ -1,6 +1,4 @@
 import { z } from 'zod';
-import { EntityIdSchema } from '../common.js';
-import * as schemas from '../defines.js';
 import {
   AuditSchema as DrizzleAuditSchema,
   type Audit as DrizzleAudit,
@@ -16,6 +14,8 @@ export const CreateAuditSchema = AuditSchema.omit({
 
 export const CreateAuditInputSchema = CreateAuditSchema.omit({
   id: true,
+  userId: true,
+  timestamp: true,
 });
 
 export type CreateAudit = z.infer<typeof CreateAuditSchema>;

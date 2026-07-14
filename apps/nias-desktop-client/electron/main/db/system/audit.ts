@@ -15,16 +15,16 @@ export class AuditQueries {
         record_id AS recordId,
         timestamp,
         details
-        FROM audit_logs
+        FROM audit
         ORDER BY timestamp DESC
     `);
     logger.debug({ scope: 'AuditQueries' }, 'listAuditLogs: SQL query executed successfully.');
     return stmt.all() as system.Audit[];
   }
 
-  createAuditLog(params: system.Audit): void {
+  createAuditLog(params: system.CreateAudit): void {
     const stmt = this.db.prepare(`
-      INSERT INTO audit_logs (
+      INSERT INTO audit (
         id,
         user_id,
         action,

@@ -19,9 +19,7 @@ export const syncVersion = z.number().int().nonnegative().default(0);
 export const jwtToken = z.string();
 export const jwtTokenExpiration = z.number().int().nonnegative();
 
-
 export const sortOrder = z.number().nonnegative().max(100).default(0);
-
 
 // Enumerations
 export const scope = z.enum(['global', 'contextual']);
@@ -33,9 +31,27 @@ export const skuVendor = z.string().regex(/^[A-Z0-9]{3}$/);
 
 // Generic types
 export const string = z.string().trim().min(1).max(100);
-export const slug = z.string().trim().min(1).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 export const blob = z.string().trim().min(1).max(1000);
 export const boolean = z.boolean();
 export const integer = z.number().int();
 export const float = z.number();
 export const dateTime = dateTransformer;
+export const slug = z
+  .string()
+  .trim()
+  .min(1)
+  .max(100)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+
+export const CreateOmissions = {
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+  isSynced: true,
+  syncVersion: true,
+} as const;
+
+export const UpdateOmissions = {
+  id: true,
+  ...CreateOmissions,
+} as const;

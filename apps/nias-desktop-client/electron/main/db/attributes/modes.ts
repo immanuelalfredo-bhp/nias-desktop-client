@@ -85,8 +85,8 @@ export class ModeQueries {
       name: params.name,
       normalizedName: params.normalizedName,
       sortOrder: params.sortOrder,
-      createdAt: params.createdAt,
-      updatedAt: params.updatedAt,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
     logger.debug({ scope: 'ModeQueries' }, 'createMode: SQL query executed successfully.');
   }
@@ -110,7 +110,7 @@ export class ModeQueries {
       name: params.name ?? modeData.name,
       normalizedName: params.normalizedName ?? modeData.normalizedName,
       sortOrder: params.sortOrder ?? modeData.sortOrder,
-      updatedAt: params.updatedAt ?? modeData.updatedAt,
+      updatedAt: new Date().toISOString(),
     });
     logger.debug({ scope: 'ModeQueries' }, 'updateMode: SQL query executed successfully.');
   }
@@ -138,5 +138,46 @@ export class ModeQueries {
       id: params.id,
     });
     logger.debug({ scope: 'ModeQueries' }, 'restoreMode: SQL query executed successfully.');
+  }
+
+  syncMode(params: attribute.Mode): void {
+    const stmt = this.db.prepare(`
+			INSERT INTO modes (
+				id,
+				name,
+				normalized_name,
+				sort_order,
+				created_at,
+				updated_at,
+				deleted_at,
+				is_synced,
+				sync_version
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+			ON CONFLICT(id) DO UPDATE SET
+				name = excluded.name,
+				normalized_name = excluded.normalized_name,
+				sort_order = excluded.sort_order,
+				created_at = excluded.created_at,
+				updated_at = excluded.updated_at,
+				deleted_at = excluded.deleted_at,
+				is_synced = excluded.is_synced,
+				sync_version = excluded.sync_version
+		`);
+
+    stmt.run(
+      params.id,
+      params.name,
+      params.normalizedName,
+      params.sortOrder,
+      params.createdAt,
+      params.updatedAt,
+      params.deletedAt,
+      params.isSynced ? 1 : 0,
+      params.syncVersion,
+    );
+    logger.debug(
+      { scope: 'ModeQueries', modeId: params.id },
+      `syncMode: SQL query executed successfully for id: ${params.id}.`,
+    );
   }
 }

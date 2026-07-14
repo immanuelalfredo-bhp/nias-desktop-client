@@ -8,12 +8,10 @@ export type DBTransaction = PgTransaction<any, any, any>;
 export const TABLE_MAP: {
   key: keyof sync.SyncMetadata;
   table: any;
-  responseKey: keyof sync.SyncMetadata;
 }[] = [
   {
     key: 'users' as const,
     table: users,
-    responseKey: 'users' as const,
   },
 ];
 

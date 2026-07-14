@@ -45,7 +45,7 @@ export class UserQueries {
     return stmt.all() as system.User[];
   }
 
-  findUserById(id: string): system.User | null {
+  getUserById(id: string): system.User | null {
     const stmt = this.db.prepare(`
       SELECT
         id,
@@ -63,7 +63,7 @@ export class UserQueries {
     `);
     logger.debug(
       { scope: 'UserQueries', userId: id },
-      `findUserById: SQL query executed successfully for id: ${id}.`,
+      `getUserById: SQL query executed successfully for id: ${id}.`,
     );
     return stmt.get(id) as system.User | null;
   }
@@ -102,7 +102,7 @@ export class UserQueries {
   }
 
   updateUser(params: system.UpdateUser): void {
-    const existingUser = this.findUserById(params.id!);
+    const existingUser = this.getUserById(params.id!);
 
     // Should not happen, but just in case, we check if the user exists before updating
     if (!existingUser) {

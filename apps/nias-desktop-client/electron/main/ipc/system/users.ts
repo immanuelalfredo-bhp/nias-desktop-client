@@ -113,7 +113,7 @@ export function registerUserIpcHandlers(userDb: UserDatabase, userId: string, jw
           'User created successfully and stored locally',
         );
 
-        const actor = userDb.user.findUserById(userId);
+        const actor = userDb.user.getUserById(userId);
         userDb.audit.createAuditLog({
           id: crypto.randomUUID(),
           userId: userId,

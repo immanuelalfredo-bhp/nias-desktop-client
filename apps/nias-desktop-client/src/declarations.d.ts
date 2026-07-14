@@ -1,4 +1,4 @@
-import { auth, common, sync } from '@nias/shared';
+import { attribute, auth, common, sync, system } from '@nias/shared';
 import type { Envelope } from '@nias/shared/server';
 
 export interface ElectronAPI {
@@ -18,14 +18,14 @@ export interface ElectronAPI {
   brandListDeleted: () => Promise<Envelope<attribute.Brand[]>>;
   brandCreate: (payload: attribute.CreateBrandInput) => Promise<common.SuccessResponse>;
   brandUpdate: (payload: attribute.UpdateBrandInput) => Promise<common.SuccessResponse>;
-  brandDelete: (payload: attribute.DeleteBrandInput) => Promise<common.SuccessResponse>;
-  brandRestore: (payload: attribute.RestoreBrandInput) => Promise<common.SuccessResponse>;
+  brandDelete: (payload: attribute.BrandId) => Promise<common.SuccessResponse>;
+  brandRestore: (payload: attribute.BrandId) => Promise<common.SuccessResponse>;
   modeListActive: () => Promise<Envelope<attribute.Mode[]>>;
   modeListDeleted: () => Promise<Envelope<attribute.Mode[]>>;
   modeCreate: (payload: attribute.CreateModeInput) => Promise<common.SuccessResponse>;
   modeUpdate: (payload: attribute.UpdateModeInput) => Promise<common.SuccessResponse>;
-  modeDelete: (payload: attribute.DeleteModeInput) => Promise<common.SuccessResponse>;
-  modeRestore: (payload: attribute.RestoreModeInput) => Promise<common.SuccessResponse>;
+  modeDelete: (payload: attribute.ModeId) => Promise<common.SuccessResponse>;
+  modeRestore: (payload: attribute.ModeId) => Promise<common.SuccessResponse>;
 }
 
 declare global {

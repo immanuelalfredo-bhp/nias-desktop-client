@@ -2,12 +2,16 @@ import Database from 'better-sqlite3-multiple-ciphers';
 import { sync } from '@nias/shared';
 import { logger } from '@nias/shared/server';
 import { UserQueries } from './system/users.js';
+import { BrandQueries } from './attributes/brands.js';
+import { ModeQueries } from './attributes/modes.js';
 
 export class SyncQueries {
   constructor(private readonly db: Database.Database) {}
 
   fetchSyncVersion(): sync.SyncMetadata {
-    const result = this.db.prepare('SELECT * FROM sync_metadata').get() as sync.SyncMetadata;
+    const result = this.db.prepare(
+      'SELECT users, brands, modes FROM sync_metadata WHERE id = 1',
+    ).get() as sync.SyncMetadata;
     logger.debug({ scope: 'sync', version: result }, 'Fetched sync version from database');
     return result;
   }
@@ -19,6 +23,8 @@ export class SyncQueries {
 
       const tx = this.db.transaction(() => {
         const userQueries = new UserQueries(this.db);
+        const brandQueries = new BrandQueries(this.db);
+        const modeQueries = new ModeQueries(this.db);
 
         for (const user of manifest.changes.users) {
           userQueries.syncUsers(user);

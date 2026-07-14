@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
-import { system, common } from '@nias/shared';
-import { slugify, logger, type Envelope } from '@nias/shared/server';
+import { system } from '@nias/shared';
+import { logger, type Envelope } from '@nias/shared/server';
 import { UserDatabase } from '../../db/database';
 
 export function registerAuditIpcHandlers(userDb: UserDatabase): void {
@@ -31,36 +31,4 @@ export function registerAuditIpcHandlers(userDb: UserDatabase): void {
       };
     }
   });
-
-  ipcMain.handle(
-    'audit:create',
-    async (_event, payload: system.CreateAuditInput): Promise<common.SuccessResponse> => {
-      try {
-        const newAuditLog: system.Audit = {
-          id: crypto.randomUUID(),
-          userId: payload.userId,
-            action: payload.action,
-            tableName: payload.tableName,
-            recordId: payload.recordId,
-            timestamp: new Date().toISOString(),
-            details: payload.details,
-            isSynced: false,
-            syncVersion: 0,
-        };
-        userDb.audit.createAuditLog(newAuditLog);
-        logger.info({ scope: 'audit', auditLogId: newAuditLog.id }, 'Audit log created successfully');
-        return { success: true, message: 'Audit log created successfully' };
-      } catch (error) {
-        logger.error(
-          {
-            scope: 'audit',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
-          },
-          'Failed to create audit log',
-        );
-        return { success: false, message: 'Failed to create audit log' };
-      }
-    },
-  );
 }

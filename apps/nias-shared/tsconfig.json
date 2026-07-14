@@ -8,11 +8,11 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "target": "esnext",
-    
+
     // 3. Library/Type settings
     "lib": ["esnext"],
     "types": ["node"],
-    
+
     // 4. Outputs for consumers (Keep these!)
     "sourceMap": true,
     "declaration": true,
@@ -24,6 +24,6 @@
     "exactOptionalPropertyTypes": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
-    "skipLibCheck": true,
+    "skipLibCheck": true
   }
 }

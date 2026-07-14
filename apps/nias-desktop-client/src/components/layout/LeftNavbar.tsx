@@ -17,6 +17,13 @@ export default function LeftNavbar() {
       >
         U
       </NavLink>
+      <NavLink
+        to="/attributes"
+        className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+        title="Attributes"
+      >
+        A
+      </NavLink>
       <button className="nav-item" type="button" title="Projects" disabled aria-disabled="true">
         P
       </button>

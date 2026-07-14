@@ -70,14 +70,14 @@ export class BrandQueries {
 				normalized_name,
 				sku_code,
 				created_at,
-				updated_at,
+				updated_at
 			) VALUES (
 				@id,
 				@name,
 				@normalizedName,
 				@skuCode,
 				@createdAt,
-				@updatedAt,
+				@updatedAt
 			)
 		`);
     stmt.run({
@@ -85,8 +85,8 @@ export class BrandQueries {
       name: params.name,
       normalizedName: params.normalizedName,
       skuCode: params.skuCode,
-      createdAt: params.createdAt,
-      updatedAt: params.updatedAt,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
     logger.debug({ scope: 'BrandQueries' }, 'createBrand: SQL query executed successfully.');
   }
@@ -111,7 +111,7 @@ export class BrandQueries {
       name: params.name ?? brandData.name,
       normalizedName: params.normalizedName ?? brandData.normalizedName,
       skuCode: params.skuCode ?? brandData.skuCode,
-      updatedAt: params.updatedAt ?? brandData.updatedAt,
+      updatedAt: new Date().toISOString(),
     });
     logger.debug({ scope: 'BrandQueries' }, 'updateBrand: SQL query executed successfully.');
   }
@@ -139,5 +139,46 @@ export class BrandQueries {
       id: params.id,
     });
     logger.debug({ scope: 'BrandQueries' }, 'restoreBrand: SQL query executed successfully.');
+  }
+
+  syncBrand(params: attribute.Brand): void {
+    const stmt = this.db.prepare(`
+			INSERT INTO brands (
+				id,
+				name,
+				normalized_name,
+				sku_code,
+				created_at,
+				updated_at,
+				deleted_at,
+				is_synced,
+				sync_version
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+			ON CONFLICT(id) DO UPDATE SET
+				name = excluded.name,
+				normalized_name = excluded.normalized_name,
+				sku_code = excluded.sku_code,
+				created_at = excluded.created_at,
+				updated_at = excluded.updated_at,
+				deleted_at = excluded.deleted_at,
+				is_synced = excluded.is_synced,
+				sync_version = excluded.sync_version
+		`);
+
+    stmt.run(
+      params.id,
+      params.name,
+      params.normalizedName,
+      params.skuCode,
+      params.createdAt,
+      params.updatedAt,
+      params.deletedAt,
+      params.isSynced ? 1 : 0,
+      params.syncVersion,
+    );
+    logger.debug(
+      { scope: 'BrandQueries', brandId: params.id },
+      `syncBrand: SQL query executed successfully for id: ${params.id}.`,
+    );
   }
 }

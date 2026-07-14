@@ -51,7 +51,7 @@ async function getSyncDelta(
     );
 
     const changes = Object.fromEntries(
-      TABLE_MAP.map((t, idx) => [t.responseKey, entries[idx] ?? []]),
+      TABLE_MAP.map((t, idx) => [t.key, entries[idx] ?? []]),
     ) as sync.PullManifest['changes'];
 
     context?.log?.info(

@@ -45,17 +45,17 @@ export default function LoggedInLayout() {
 
   return (
     <div id="app" className="app-shell">
+      <LeftNavbar />
       <AppHeader
         email={email}
         onSettingsClick={handleSettingsClick}
         onLogoutClick={handleLogout}
       />
-      <div className="app-body">
-        <LeftNavbar />
-        <main className="content">
+      <main className="content-area">
+        <div className="content">
           <Outlet />
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
