@@ -1,12 +1,11 @@
-import { authUsers } from './server/schema/auth.js';
-import { syncMetadata, changelog } from './server/schema/sync.js';
+import { serverUsers, syncMetadata, syncChanges } from './server/schema/server.js';
 import { users } from './server/schema/system.js';
 
-export { authUsers, syncMetadata, changelog, users };
+export { serverUsers, syncMetadata, syncChanges, users };
 export const schemas = {
-  authUsers,
+  serverUsers,
   syncMetadata,
-  changelog,
+  syncChanges,
   users,
 };
 

@@ -44,8 +44,33 @@ export class DimensionQueries extends BaseQueries<
       .prepare(
         `
         UPDATE dimensions SET name = @name, normalized_name = @normalizedName, form_name = @formName, 
-        position = @position, sort_order = @sortOrder, updated_at = @updatedAt WHERE id = @id`,
+        position = @position, sort_order = @sortOrder, updated_at = @updatedAt, is_synced = @isSynced
+        WHERE id = @id`,
       )
-      .run({ ...existing, ...params, updatedAt: new Date().toISOString() });
+      .run({ ...existing, ...params, updatedAt: new Date().toISOString(), isSynced: 0 });
+  }
+  upsert(params: attribute.Dimension): void {
+    this.db
+      .prepare(
+        `
+        INSERT INTO dimensions (
+          id, scope, name, normalized_name, form_name, position, sort_order, created_at, updated_at,
+          deleted_at, is_synced, sync_version) 
+        VALUES (
+          @id, @scope, @name, @normalizedName, @formName, @position, @sortOrder, @createdAt, @updatedAt,
+          @deletedAt, @isSynced, @syncVersion)
+        ON CONFLICT(id) DO UPDATE SET
+          scope = excluded.scope,
+          name = excluded.name,
+          normalized_name = excluded.normalized_name,
+          form_name = excluded.form_name,
+          position = excluded.position,
+          sort_order = excluded.sort_order,
+          updated_at = excluded.updated_at,
+          deleted_at = excluded.deleted_at,
+          is_synced = excluded.is_synced,
+          sync_version = excluded.sync_version`,
+      )
+      .run(params);
   }
 }

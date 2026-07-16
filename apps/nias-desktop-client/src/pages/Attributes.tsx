@@ -1,324 +1,330 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { attribute } from '@nias/shared';
+import { z } from 'zod';
 import type { StatusState } from '../types';
 import StatusFooter from '../components/layout/StatusFooter';
-import AttributeSection, { type AttributeView } from '../components/attribute/AttributeSection';
-import CreateBrandModal from '../components/modals/CreateBrandModal';
-import EditBrandModal from '../components/modals/EditBrandModal';
-import CreateModeModal from '../components/modals/CreateModeModal';
-import EditModeModal from '../components/modals/EditModeModal';
+import AttributeTabs from '../components/attribute/AttributeTabs';
+import AttributeTable from '../components/attribute/AttributeTable';
+import AttributeModal from '../components/attribute/AttributeModal';
+import {
+  attributeEntityDefinitions,
+  buildAttributeCrudFactories,
+  type AttributeEntityKey,
+} from '../components/attribute/attributeFactory';
+
+interface AttributeRow {
+  id: string;
+  deletedAt?: string | null;
+  [key: string]: unknown;
+}
+
+interface EntityState {
+  active: AttributeRow[];
+  deleted: AttributeRow[];
+  search: string;
+  isLoading: boolean;
+}
+
+interface ModalState {
+  mode: 'create' | 'edit';
+  entity: AttributeEntityKey;
+  row?: AttributeRow;
+}
 
 function normalizeTerm(value: string): string {
   return value.trim().toLowerCase();
 }
 
+function createInitialState(): Record<AttributeEntityKey, EntityState> {
+  return {
+    brand: { active: [], deleted: [], search: '', isLoading: false },
+    category: { active: [], deleted: [], search: '', isLoading: false },
+    dimension: { active: [], deleted: [], search: '', isLoading: false },
+    dimensionValue: { active: [], deleted: [], search: '', isLoading: false },
+    mode: { active: [], deleted: [], search: '', isLoading: false },
+    system: { active: [], deleted: [], search: '', isLoading: false },
+    tag: { active: [], deleted: [], search: '', isLoading: false },
+    uom: { active: [], deleted: [], search: '', isLoading: false },
+    vendor: { active: [], deleted: [], search: '', isLoading: false },
+  };
+}
+
+function unwrapSchema(schema: z.ZodTypeAny): z.ZodTypeAny {
+  let current = schema;
+  while ((current as any)?.unwrap) {
+    current = (current as any).unwrap();
+  }
+  return current;
+}
+
+function createSchemaDefaults(schema: z.ZodObject<any>, row?: AttributeRow): Record<string, unknown> {
+  const defaults: Record<string, unknown> = {};
+  const shape = schema.shape;
+
+  Object.keys(shape).forEach((fieldName) => {
+    if (row && row[fieldName] !== undefined) {
+      defaults[fieldName] = row[fieldName];
+      return;
+    }
+
+    const fieldSchema = unwrapSchema(shape[fieldName]);
+
+    if (fieldSchema instanceof z.ZodNumber) {
+      defaults[fieldName] = 0;
+      return;
+    }
+
+    if (fieldSchema instanceof z.ZodEnum) {
+      defaults[fieldName] = fieldSchema.options[0] ?? '';
+      return;
+    }
+
+    defaults[fieldName] = '';
+  });
+
+  return defaults;
+}
+
 export default function AttributesPage() {
-  const [activeBrands, setActiveBrands] = useState<attribute.Brand[]>([]);
-  const [deletedBrands, setDeletedBrands] = useState<attribute.Brand[]>([]);
-  const [activeModes, setActiveModes] = useState<attribute.Mode[]>([]);
-  const [deletedModes, setDeletedModes] = useState<attribute.Mode[]>([]);
+  const [activeTab, setActiveTab] = useState<AttributeEntityKey>('brand');
+  const [entityState, setEntityState] = useState<Record<AttributeEntityKey, EntityState>>(
+    createInitialState,
+  );
+  const [modalState, setModalState] = useState<ModalState | null>(null);
+  const [status, setStatus] = useState<StatusState>({ text: 'User logged in', isError: false });
 
-  const [brandView, setBrandView] = useState<AttributeView>('active');
-  const [modeView, setModeView] = useState<AttributeView>('active');
-  const [brandSearch, setBrandSearch] = useState('');
-  const [modeSearch, setModeSearch] = useState('');
+  const factories = useMemo(() => buildAttributeCrudFactories(), []);
+  const entityKeys = useMemo(
+    () => Object.keys(attributeEntityDefinitions) as AttributeEntityKey[],
+    [],
+  );
 
-  const [isBusy, setIsBusy] = useState(false);
-  const [status, setStatus] = useState<StatusState>({ text: 'Ready', isError: false });
+  const refreshEntity = async (entityKey: AttributeEntityKey): Promise<boolean> => {
+    setEntityState((prev) => ({
+      ...prev,
+      [entityKey]: {
+        ...prev[entityKey],
+        isLoading: true,
+      },
+    }));
 
-  const [showCreateBrandModal, setShowCreateBrandModal] = useState(false);
-  const [editingBrand, setEditingBrand] = useState<attribute.Brand | null>(null);
-  const [showCreateModeModal, setShowCreateModeModal] = useState(false);
-  const [editingMode, setEditingMode] = useState<attribute.Mode | null>(null);
-
-  const fetchBrands = async (): Promise<boolean> => {
-    const [activeResponse, deletedResponse] = await Promise.all([
-      window.electronAPI.brandListActive(),
-      window.electronAPI.brandListDeleted(),
-    ]);
-
-    if (!activeResponse.success || !deletedResponse.success) {
-      const message =
-        activeResponse.message || deletedResponse.message || 'Failed to retrieve brands';
-      setStatus({ text: message, isError: true });
-      return false;
-    }
-
-    setActiveBrands(activeResponse.data || []);
-    setDeletedBrands(deletedResponse.data || []);
-    return true;
-  };
-
-  const fetchModes = async (): Promise<boolean> => {
-    const [activeResponse, deletedResponse] = await Promise.all([
-      window.electronAPI.modeListActive(),
-      window.electronAPI.modeListDeleted(),
-    ]);
-
-    if (!activeResponse.success || !deletedResponse.success) {
-      const message = activeResponse.message || deletedResponse.message || 'Failed to retrieve modes';
-      setStatus({ text: message, isError: true });
-      return false;
-    }
-
-    setActiveModes(activeResponse.data || []);
-    setDeletedModes(deletedResponse.data || []);
-    return true;
-  };
-
-  const refreshData = async () => {
-    setIsBusy(true);
     try {
-      await Promise.all([fetchBrands(), fetchModes()]);
+      const [activeResponse, deletedResponse] = await Promise.all([
+        factories[entityKey].listActive(),
+        factories[entityKey].listDeleted(),
+      ]);
+
+      if (!activeResponse.success || !deletedResponse.success) {
+        const message =
+          activeResponse.message ||
+          deletedResponse.message ||
+          `Failed to refresh ${attributeEntityDefinitions[entityKey].label.toLowerCase()}`;
+        setStatus({ text: message, isError: true });
+
+        setEntityState((prev) => ({
+          ...prev,
+          [entityKey]: {
+            ...prev[entityKey],
+            isLoading: false,
+          },
+        }));
+        return false;
+      }
+
+      setEntityState((prev) => ({
+        ...prev,
+        [entityKey]: {
+          ...prev[entityKey],
+          active: (activeResponse.data || []) as AttributeRow[],
+          deleted: (deletedResponse.data || []) as AttributeRow[],
+          isLoading: false,
+        },
+      }));
+      return true;
     } catch {
       setStatus({ text: 'Failed to refresh attributes: Connection error', isError: true });
-    } finally {
-      setIsBusy(false);
+      setEntityState((prev) => ({
+        ...prev,
+        [entityKey]: {
+          ...prev[entityKey],
+          isLoading: false,
+        },
+      }));
+      return false;
     }
   };
 
   useEffect(() => {
-    refreshData();
-  }, []);
+    void Promise.all(entityKeys.map((entityKey) => refreshEntity(entityKey)));
+  }, [entityKeys]);
 
-  const filteredBrands = useMemo(() => {
-    const source = brandView === 'active' ? activeBrands : deletedBrands;
-    const searchTerm = normalizeTerm(brandSearch);
+  const currentDefinition = attributeEntityDefinitions[activeTab];
+  const currentState = entityState[activeTab];
 
+  const searchTerm = normalizeTerm(currentState.search);
+
+  const filteredActive = useMemo(() => {
     if (!searchTerm) {
-      return source;
+      return currentState.active;
     }
 
-    return source.filter((brand) => {
-      const skuCode = brand.skuCode.toLowerCase();
-      const normalizedName = brand.normalizedName.toLowerCase();
-      return skuCode.includes(searchTerm) || normalizedName.includes(searchTerm);
+    return currentState.active.filter((row) =>
+      currentDefinition.searchKeys.some((key) =>
+        String(row[key] ?? '')
+          .toLowerCase()
+          .includes(searchTerm),
+      ),
+    );
+  }, [currentDefinition.searchKeys, currentState.active, searchTerm]);
+
+  const filteredDeleted = useMemo(() => {
+    if (!searchTerm) {
+      return currentState.deleted;
+    }
+
+    return currentState.deleted.filter((row) =>
+      currentDefinition.searchKeys.some((key) =>
+        String(row[key] ?? '')
+          .toLowerCase()
+          .includes(searchTerm),
+      ),
+    );
+  }, [currentDefinition.searchKeys, currentState.deleted, searchTerm]);
+
+  const rows = useMemo(() => [...filteredActive, ...filteredDeleted], [filteredActive, filteredDeleted]);
+
+  const runMutation = async (
+    entityKey: AttributeEntityKey,
+    action: 'delete' | 'restore',
+    row: AttributeRow,
+  ) => {
+    const definition = attributeEntityDefinitions[entityKey];
+    const rowName = String(row.name ?? row.id);
+
+    setStatus({
+      text: `${action === 'delete' ? 'Deleting' : 'Restoring'} ${definition.label.slice(0, -1)} ${rowName}...`,
+      isError: false,
     });
-  }, [activeBrands, deletedBrands, brandSearch, brandView]);
-
-  const totalBrands = useMemo(
-    () => (brandView === 'active' ? activeBrands.length : deletedBrands.length),
-    [activeBrands.length, deletedBrands.length, brandView],
-  );
-
-  const filteredModes = useMemo(() => {
-    const source = modeView === 'active' ? activeModes : deletedModes;
-    const searchTerm = normalizeTerm(modeSearch);
-
-    if (!searchTerm) {
-      return source;
-    }
-
-    return source.filter((mode) => mode.normalizedName.toLowerCase().includes(searchTerm));
-  }, [activeModes, deletedModes, modeSearch, modeView]);
-
-  const totalModes = useMemo(
-    () => (modeView === 'active' ? activeModes.length : deletedModes.length),
-    [activeModes.length, deletedModes.length, modeView],
-  );
-
-  const handleDeleteBrand = async (brand: attribute.Brand) => {
-    setStatus({ text: `Deleting brand ${brand.name}...`, isError: false });
 
     try {
-      const result = await window.electronAPI.brandDelete({ id: brand.id });
+      const result = await factories[entityKey][action]({ id: row.id });
       if (!result.success) {
-        setStatus({ text: result.message || 'Failed to delete brand', isError: true });
+        setStatus({
+          text:
+            result.message ||
+            `Failed to ${action} ${definition.label.slice(0, -1).toLowerCase()}`,
+          isError: true,
+        });
         return;
       }
 
-      await fetchBrands();
-      setStatus({ text: result.message || 'Brand deleted successfully', isError: false });
+      await refreshEntity(entityKey);
+      setStatus({
+        text:
+          result.message ||
+          `${definition.label.slice(0, -1)} ${action === 'delete' ? 'deleted' : 'restored'} successfully`,
+        isError: false,
+      });
     } catch {
-      setStatus({ text: 'Delete brand failed: Connection error', isError: true });
+      setStatus({ text: `Failed to ${action}: Connection error`, isError: true });
     }
   };
 
-  const handleRestoreBrand = async (brand: attribute.Brand) => {
-    setStatus({ text: `Restoring brand ${brand.name}...`, isError: false });
-
-    try {
-      const result = await window.electronAPI.brandRestore({ id: brand.id });
-      if (!result.success) {
-        setStatus({ text: result.message || 'Failed to restore brand', isError: true });
-        return;
-      }
-
-      await fetchBrands();
-      setStatus({ text: result.message || 'Brand restored successfully', isError: false });
-    } catch {
-      setStatus({ text: 'Restore brand failed: Connection error', isError: true });
+  const modalDefinition = modalState ? attributeEntityDefinitions[modalState.entity] : null;
+  const modalSchema = useMemo(() => {
+    if (!modalState || !modalDefinition) {
+      return null;
     }
-  };
 
-  const handleDeleteMode = async (mode: attribute.Mode) => {
-    setStatus({ text: `Deleting mode ${mode.name}...`, isError: false });
-
-    try {
-      const result = await window.electronAPI.modeDelete({ id: mode.id });
-      if (!result.success) {
-        setStatus({ text: result.message || 'Failed to delete mode', isError: true });
-        return;
-      }
-
-      await fetchModes();
-      setStatus({ text: result.message || 'Mode deleted successfully', isError: false });
-    } catch {
-      setStatus({ text: 'Delete mode failed: Connection error', isError: true });
+    if (modalState.mode === 'create') {
+      return modalDefinition.createSchema;
     }
-  };
 
-  const handleRestoreMode = async (mode: attribute.Mode) => {
-    setStatus({ text: `Restoring mode ${mode.name}...`, isError: false });
+    return modalDefinition.updateSchema.omit({ id: true });
+  }, [modalDefinition, modalState]);
 
-    try {
-      const result = await window.electronAPI.modeRestore({ id: mode.id });
-      if (!result.success) {
-        setStatus({ text: result.message || 'Failed to restore mode', isError: true });
-        return;
-      }
-
-      await fetchModes();
-      setStatus({ text: result.message || 'Mode restored successfully', isError: false });
-    } catch {
-      setStatus({ text: 'Restore mode failed: Connection error', isError: true });
+  const modalDefaults = useMemo(() => {
+    if (!modalSchema) {
+      return {};
     }
-  };
 
-  const handleModalSuccess = async (message: string) => {
-    await refreshData();
-    setStatus({ text: message, isError: false });
-  };
-
-  const handleModalError = (message: string) => {
-    setStatus({ text: message, isError: true });
-  };
+    return createSchemaDefaults(modalSchema, modalState?.row);
+  }, [modalSchema, modalState?.row]);
 
   return (
     <section id="attributesScreen" className="card panel app-screen attributes-page fluid-card">
       <h1>Attributes</h1>
-      <p className="muted subtitle-tight">Manage brand and mode records used across the system.</p>
+      <p className="muted subtitle-tight">Manage all attribute entities in one tabbed workspace.</p>
 
-      {isBusy ? <p className="muted">Loading attributes...</p> : null}
+      <AttributeTabs
+        tabs={entityKeys.map((entityKey) => ({
+          key: entityKey,
+          label: attributeEntityDefinitions[entityKey].label,
+        }))}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+      />
 
-      <div className="attributes-grid">
-        <AttributeSection<attribute.Brand>
-          title="Brands"
-          addLabel="Add Brand"
-          onAdd={() => setShowCreateBrandModal(true)}
-          view={brandView}
-          onViewChange={setBrandView}
-          searchValue={brandSearch}
-          onSearchChange={setBrandSearch}
-          searchPlaceholder="Search by SKU or name"
-          columns={['SKU', 'Name', 'Actions']}
-          rows={filteredBrands}
-          rowKey={(brand) => brand.id}
-          renderRowCells={(brand, isDeletedView) => (
-            <>
-              <td>{brand.skuCode}</td>
-              <td>{brand.name}</td>
-              <td>
-                <div className="inline-actions">
-                  {isDeletedView ? (
-                    <button className="secondary" type="button" onClick={() => handleRestoreBrand(brand)}>
-                      Restore
-                    </button>
-                  ) : (
-                    <>
-                      <button className="secondary" type="button" onClick={() => setEditingBrand(brand)}>
-                        Edit
-                      </button>
-                      <button className="danger" type="button" onClick={() => handleDeleteBrand(brand)}>
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </div>
-              </td>
-            </>
-          )}
-          emptyText={
-            brandView === 'active' ? 'No active brands found.' : 'No deleted brands found.'
+      <div className="attribute-toolbar unified">
+        <button
+          className="primary"
+          type="button"
+          onClick={() => setModalState({ mode: 'create', entity: activeTab })}
+        >
+          {currentDefinition.createLabel}
+        </button>
+        <input
+          type="text"
+          placeholder={currentDefinition.searchPlaceholder}
+          value={currentState.search}
+          onChange={(event) =>
+            setEntityState((prev) => ({
+              ...prev,
+              [activeTab]: {
+                ...prev[activeTab],
+                search: event.target.value,
+              },
+            }))
           }
-          countLabel={`Showing ${filteredBrands.length} of ${totalBrands} Brands`}
-        />
-
-        <AttributeSection<attribute.Mode>
-          title="Modes"
-          addLabel="Add Mode"
-          onAdd={() => setShowCreateModeModal(true)}
-          view={modeView}
-          onViewChange={setModeView}
-          searchValue={modeSearch}
-          onSearchChange={setModeSearch}
-          searchPlaceholder="Search by name"
-          columns={['Name', 'Actions']}
-          rows={filteredModes}
-          rowKey={(mode) => mode.id}
-          renderRowCells={(mode, isDeletedView) => (
-            <>
-              <td>{mode.name}</td>
-              <td>
-                <div className="inline-actions">
-                  {isDeletedView ? (
-                    <button className="secondary" type="button" onClick={() => handleRestoreMode(mode)}>
-                      Restore
-                    </button>
-                  ) : (
-                    <>
-                      <button className="secondary" type="button" onClick={() => setEditingMode(mode)}>
-                        Edit
-                      </button>
-                      <button className="danger" type="button" onClick={() => handleDeleteMode(mode)}>
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </div>
-              </td>
-            </>
-          )}
-          emptyText={modeView === 'active' ? 'No active modes found.' : 'No deleted modes found.'}
-          countLabel={`Showing ${filteredModes.length} of ${totalModes} Modes`}
         />
       </div>
 
-      <div className="status-row">
-        <StatusFooter status={status} />
-      </div>
+      {currentState.isLoading ? <p className="muted">Loading {currentDefinition.label.toLowerCase()}...</p> : null}
 
-      {showCreateBrandModal ? (
-        <CreateBrandModal
-          handleClose={() => setShowCreateBrandModal(false)}
-          onSuccess={handleModalSuccess}
-          onError={handleModalError}
-        />
-      ) : null}
+      <AttributeTable
+        definition={currentDefinition}
+        rows={rows}
+        totalActive={currentState.active.length}
+        totalDeleted={currentState.deleted.length}
+        onEdit={(row) => setModalState({ mode: 'edit', entity: activeTab, row })}
+        onDelete={(row) => void runMutation(activeTab, 'delete', row)}
+        onRestore={(row) => void runMutation(activeTab, 'restore', row)}
+      />
 
-      {editingBrand ? (
-        <EditBrandModal
-          brand={editingBrand}
-          handleClose={() => setEditingBrand(null)}
-          onSuccess={handleModalSuccess}
-          onError={handleModalError}
-        />
-      ) : null}
+      <StatusFooter status={status} />
 
-      {showCreateModeModal ? (
-        <CreateModeModal
-          handleClose={() => setShowCreateModeModal(false)}
-          onSuccess={handleModalSuccess}
-          onError={handleModalError}
-        />
-      ) : null}
+      {modalState && modalDefinition && modalSchema ? (
+        <AttributeModal
+          title={modalState.mode === 'create' ? modalDefinition.createLabel : modalDefinition.updateLabel}
+          submitLabel={modalState.mode === 'create' ? 'Create' : 'Save Changes'}
+          schema={modalSchema}
+          defaultValues={modalDefaults}
+          fieldOverrides={modalDefinition.fieldOverrides}
+          handleClose={() => setModalState(null)}
+          onSuccess={async (message) => {
+            setModalState(null);
+            await refreshEntity(modalState.entity);
+            setStatus({ text: message, isError: false });
+          }}
+          onError={(message) => setStatus({ text: message, isError: true })}
+          onSubmitValues={async (values) => {
+            if (modalState.mode === 'create') {
+              const payload = modalDefinition.createPayload(values);
+              return factories[modalState.entity].create(payload);
+            }
 
-      {editingMode ? (
-        <EditModeModal
-          mode={editingMode}
-          handleClose={() => setEditingMode(null)}
-          onSuccess={handleModalSuccess}
-          onError={handleModalError}
+            const payload = modalDefinition.updatePayload(modalState.row?.id || '', values);
+            return factories[modalState.entity].update(payload);
+          }}
         />
       ) : null}
     </section>

@@ -54,6 +54,38 @@ export interface ElectronAPI {
   dimensionValueUpdate: (payload: attribute.UpdateDimensionValue) => Promise<common.SuccessResponse>;
   dimensionValueDelete: (payload: attribute.DimensionValueId) => Promise<common.SuccessResponse>;
   dimensionValueRestore: (payload: attribute.DimensionValueId) => Promise<common.SuccessResponse>;
+
+  // System IPC handlers
+  systemListActive: () => Promise<Envelope<attribute.System[]>>;
+  systemListDeleted: () => Promise<Envelope<attribute.System[]>>;
+  systemCreate: (payload: attribute.CreateSystemInput) => Promise<common.SuccessResponse>;
+  systemUpdate: (payload: attribute.UpdateSystemInput) => Promise<common.SuccessResponse>;
+  systemDelete: (payload: attribute.SystemId) => Promise<common.SuccessResponse>;
+  systemRestore: (payload: attribute.SystemId) => Promise<common.SuccessResponse>;
+
+  // Category IPC handlers
+  categoryListActive: () => Promise<Envelope<attribute.Category[]>>;
+  categoryListDeleted: () => Promise<Envelope<attribute.Category[]>>;
+  categoryCreate: (payload: attribute.CreateCategoryInput) => Promise<common.SuccessResponse>;
+  categoryUpdate: (payload: attribute.UpdateCategoryInput) => Promise<common.SuccessResponse>;
+  categoryDelete: (payload: attribute.CategoryId) => Promise<common.SuccessResponse>;
+  categoryRestore: (payload: attribute.CategoryId) => Promise<common.SuccessResponse>;
+
+  // Vendor IPC handlers
+  vendorListActive: () => Promise<Envelope<attribute.Vendor[]>>;
+  vendorListDeleted: () => Promise<Envelope<attribute.Vendor[]>>;
+  vendorCreate: (payload: attribute.CreateVendorInput) => Promise<common.SuccessResponse>;
+  vendorUpdate: (payload: attribute.UpdateVendorInput) => Promise<common.SuccessResponse>;
+  vendorDelete: (payload: attribute.VendorId) => Promise<common.SuccessResponse>;
+  vendorRestore: (payload: attribute.VendorId) => Promise<common.SuccessResponse>;
+
+  // Tag IPC handlers
+  tagListActive: () => Promise<Envelope<attribute.Tag[]>>;
+  tagListDeleted: () => Promise<Envelope<attribute.Tag[]>>;
+  tagCreate: (payload: attribute.CreateTagInput) => Promise<common.SuccessResponse>;
+  tagUpdate: (payload: attribute.UpdateTagInput) => Promise<common.SuccessResponse>;
+  tagDelete: (payload: attribute.TagId) => Promise<common.SuccessResponse>;
+  tagRestore: (payload: attribute.TagId) => Promise<common.SuccessResponse>;
 }
 
 declare global {

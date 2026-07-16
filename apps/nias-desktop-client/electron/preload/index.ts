@@ -58,14 +58,48 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('dimension:restore', payload),
 
   // Dimension Value IPC handlers
-  dimensionValueListActive: () => ipcRenderer.invoke('dimension-value:list-active'),
-  dimensionValueListDeleted: () => ipcRenderer.invoke('dimension-value:list-deleted'),
+  dimensionValueListActive: () => ipcRenderer.invoke('dimensionValue:list-active'),
+  dimensionValueListDeleted: () => ipcRenderer.invoke('dimensionValue:list-deleted'),
   dimensionValueCreate: (payload: attribute.CreateDimensionValue) =>
-    ipcRenderer.invoke('dimension-value:create', payload),
+    ipcRenderer.invoke('dimensionValue:create', payload),
   dimensionValueUpdate: (payload: attribute.UpdateDimensionValue) =>
-    ipcRenderer.invoke('dimension-value:update', payload),
+    ipcRenderer.invoke('dimensionValue:update', payload),
   dimensionValueDelete: (payload: attribute.DimensionValueId) =>
-    ipcRenderer.invoke('dimension-value:delete', payload),
+    ipcRenderer.invoke('dimensionValue:delete', payload),
   dimensionValueRestore: (payload: attribute.DimensionValueId) =>
-    ipcRenderer.invoke('dimension-value:restore', payload),
+    ipcRenderer.invoke('dimensionValue:restore', payload),
+
+  // System IPC handlers
+  systemListActive: () => ipcRenderer.invoke('system:list-active'),
+  systemListDeleted: () => ipcRenderer.invoke('system:list-deleted'),
+  systemCreate: (payload: attribute.CreateSystemInput) => ipcRenderer.invoke('system:create', payload),
+  systemUpdate: (payload: attribute.UpdateSystemInput) => ipcRenderer.invoke('system:update', payload),
+  systemDelete: (payload: attribute.SystemId) => ipcRenderer.invoke('system:delete', payload),
+  systemRestore: (payload: attribute.SystemId) => ipcRenderer.invoke('system:restore', payload),
+
+  // Category IPC handlers
+  categoryListActive: () => ipcRenderer.invoke('category:list-active'),
+  categoryListDeleted: () => ipcRenderer.invoke('category:list-deleted'),
+  categoryCreate: (payload: attribute.CreateCategoryInput) =>
+    ipcRenderer.invoke('category:create', payload),
+  categoryUpdate: (payload: attribute.UpdateCategoryInput) =>
+    ipcRenderer.invoke('category:update', payload),
+  categoryDelete: (payload: attribute.CategoryId) => ipcRenderer.invoke('category:delete', payload),
+  categoryRestore: (payload: attribute.CategoryId) => ipcRenderer.invoke('category:restore', payload),
+
+  // Vendor IPC handlers
+  vendorListActive: () => ipcRenderer.invoke('vendor:list-active'),
+  vendorListDeleted: () => ipcRenderer.invoke('vendor:list-deleted'),
+  vendorCreate: (payload: attribute.CreateVendorInput) => ipcRenderer.invoke('vendor:create', payload),
+  vendorUpdate: (payload: attribute.UpdateVendorInput) => ipcRenderer.invoke('vendor:update', payload),
+  vendorDelete: (payload: attribute.VendorId) => ipcRenderer.invoke('vendor:delete', payload),
+  vendorRestore: (payload: attribute.VendorId) => ipcRenderer.invoke('vendor:restore', payload),
+
+  // Tag IPC handlers
+  tagListActive: () => ipcRenderer.invoke('tag:list-active'),
+  tagListDeleted: () => ipcRenderer.invoke('tag:list-deleted'),
+  tagCreate: (payload: attribute.CreateTagInput) => ipcRenderer.invoke('tag:create', payload),
+  tagUpdate: (payload: attribute.UpdateTagInput) => ipcRenderer.invoke('tag:update', payload),
+  tagDelete: (payload: attribute.TagId) => ipcRenderer.invoke('tag:delete', payload),
+  tagRestore: (payload: attribute.TagId) => ipcRenderer.invoke('tag:restore', payload),
 });

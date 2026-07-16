@@ -1,7 +1,15 @@
-import * as attribute from './common/attribute.js';
-import * as auth from './common/auth.js';
+// Common exports for NIAS shared code
 import * as common from './common/common.js';
-import * as sync from './common/sync.js';
-import * as system from './common/system.js';
 
-export { attribute, auth, common, sync, system };
+// System exports
+import * as system from './common/system.js';
+import * as local from './common/local.js';
+import * as server from './common/server.js';
+
+// Order workflow exports
+import * as attribute from './common/attribute.js';
+import * as item from './common/item.js';
+import * as order from './common/order.js';
+import * as variant from './common/variant.js';
+
+export { common, system, local, server, attribute, item, order, variant };

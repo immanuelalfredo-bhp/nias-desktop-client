@@ -45,6 +45,7 @@ export abstract class BaseQueries<T, CreateParams, UpdateParams> {
   // Abstract methods to be implemented by child classes
   abstract create(params: CreateParams): void;
   abstract update(params: UpdateParams): void;
+  abstract upsert(params: T): void;
 }
 
 interface GenericIpcActions {

@@ -2,15 +2,15 @@ import Database from 'better-sqlite3-multiple-ciphers';
 import { sync } from '@nias/shared';
 import { logger } from '@nias/shared/server';
 import { UserQueries } from './system/users.js';
-import { BrandQueries } from './attributes/brands.js';
-import { ModeQueries } from './attributes/modes.js';
-import { UomQueries } from './attributes/uoms.js';
-import { DimensionQueries } from './attributes/dimensions.js';
-import { DimensionValuesQueries } from './attributes/dimension-values.js';
-import { SystemQueries } from './attributes/systems.js';
-import { CategoryQueries } from './attributes/categories.js';
-import { VendorQueries } from './attributes/vendors.js';
-import { TagQueries } from './attributes/tags.js';
+import { BrandQueries } from './attribute/brands.js';
+import { ModeQueries } from './attribute/modes.js';
+import { UomQueries } from './attribute/uoms.js';
+import { DimensionQueries } from './attribute/dimensions.js';
+import { DimensionValuesQueries } from './attribute/dimension-values.js';
+import { SystemQueries } from './attribute/systems.js';
+import { CategoryQueries } from './attribute/categories.js';
+import { VendorQueries } from './attribute/vendors.js';
+import { TagQueries } from './attribute/tags.js';
 
 export class SyncQueries {
   constructor(private readonly db: Database.Database) {}

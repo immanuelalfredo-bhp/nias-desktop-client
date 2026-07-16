@@ -19,8 +19,8 @@ export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): 
     'brand',
     userDb.brand,
     {
-      create: attribute.CreateBrandInputSchema,
-      update: attribute.UpdateBrandInputSchema,
+      create: attribute.CreateBrandSchema,
+      update: attribute.UpdateBrandSchema,
       id: attribute.BrandIdSchema,
     },
     (id: string) => {
@@ -42,8 +42,8 @@ export function registerModeIpcHandlers(userDb: UserDatabase, userId: string): v
     'mode',
     userDb.mode,
     {
-      create: attribute.CreateModeInputSchema,
-      update: attribute.UpdateModeInputSchema,
+      create: attribute.CreateModeSchema,
+      update: attribute.UpdateModeSchema,
       id: attribute.ModeIdSchema,
     },
     (id: string) => {
@@ -65,8 +65,8 @@ export function registerUomIpcHandlers(userDb: UserDatabase, userId: string): vo
     'uom',
     userDb.uom,
     {
-      create: attribute.CreateUomInputSchema,
-      update: attribute.UpdateUomInputSchema,
+      create: attribute.CreateUomSchema,
+      update: attribute.UpdateUomSchema,
       id: attribute.UomIdSchema,
     },
     (id: string) => {
@@ -88,8 +88,8 @@ export function registerDimensionIpcHandlers(userDb: UserDatabase, userId: strin
     'dimension',
     userDb.dimension,
     {
-      create: attribute.CreateDimensionInputSchema,
-      update: attribute.UpdateDimensionInputSchema,
+      create: attribute.CreateDimensionSchema,
+      update: attribute.UpdateDimensionSchema,
       id: attribute.DimensionIdSchema,
     },
     (id: string) => {
@@ -134,8 +134,8 @@ export function registerSystemIpcHandlers(userDb: UserDatabase, userId: string):
     'system',
     userDb.system,
     {
-      create: attribute.CreateSystemInputSchema,
-      update: attribute.UpdateSystemInputSchema,
+      create: attribute.CreateSystemSchema,
+      update: attribute.UpdateSystemSchema,
       id: attribute.SystemIdSchema,
     },
     (id: string) => {
@@ -157,8 +157,8 @@ export function registerCategoryIpcHandlers(userDb: UserDatabase, userId: string
     'category',
     userDb.category,
     {
-      create: attribute.CreateCategoryInputSchema,
-      update: attribute.UpdateCategoryInputSchema,
+      create: attribute.CreateCategorySchema,
+      update: attribute.UpdateCategorySchema,
       id: attribute.CategoryIdSchema,
     },
     (id: string) => {
@@ -180,8 +180,8 @@ export function registerVendorIpcHandlers(userDb: UserDatabase, userId: string):
     'vendor',
     userDb.vendor,
     {
-      create: attribute.CreateVendorInputSchema,
-      update: attribute.UpdateVendorInputSchema,
+      create: attribute.CreateVendorSchema,
+      update: attribute.UpdateVendorSchema,
       id: attribute.VendorIdSchema,
     },
     (id: string) => {
@@ -203,8 +203,8 @@ export function registerTagIpcHandlers(userDb: UserDatabase, userId: string): vo
     'tag',
     userDb.tag,
     {
-      create: attribute.CreateTagInputSchema,
-      update: attribute.UpdateTagInputSchema,
+      create: attribute.CreateTagSchema,
+      update: attribute.UpdateTagSchema,
       id: attribute.TagIdSchema,
     },
     (id: string) => {

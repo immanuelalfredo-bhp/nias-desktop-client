@@ -12,3 +12,16 @@ export const SuccessResponseSchema = z.object({
 
 export type EntityId = z.infer<typeof EntityIdSchema>;
 export type SuccessResponse = z.infer<typeof SuccessResponseSchema>;
+
+export const CreateOmissions = {
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+  isSynced: true,
+  syncVersion: true,
+} as const;
+
+export const UpdateOmissions = {
+  id: true,
+  ...CreateOmissions,
+} as const;

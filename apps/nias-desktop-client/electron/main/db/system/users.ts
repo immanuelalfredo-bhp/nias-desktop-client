@@ -14,11 +14,11 @@ const COLUMNS = `
   is_synced AS isSynced,
   sync_version AS syncVersion`;
 
-export class UserQueries extends BaseQueries<system.User, system.User, system.UpdateUser> {
+export class UserQueries extends BaseQueries<system.User, system.CreateUser, system.UpdateUser> {
   constructor(db: Database.Database) {
     super(db, 'users', COLUMNS);
   }
-  create(params: system.User): void {
+  create(params: system.CreateUser): void {
     const now = new Date().toISOString();
     this.db
       .prepare(
@@ -38,49 +38,30 @@ export class UserQueries extends BaseQueries<system.User, system.User, system.Up
       .prepare(
         `
         UPDATE users SET display_name = @displayName, email = @email, password_hash = @passwordHash, 
-        is_managed_by = @isManagedBy, updated_at = @updatedAt WHERE id = @id`,
+        is_managed_by = @isManagedBy, updated_at = @updatedAt, is_synced = @isSynced WHERE id = @id`,
       )
-      .run({ ...existing, ...params, updatedAt: new Date().toISOString() });
+      .run({ ...existing, ...params, updatedAt: new Date().toISOString(), isSynced: 0 });
   }
-  
-  upsertSynced(params: system.User): void {
-    this.db.prepare(`
-      INSERT INTO users (
-        id,
-        display_name,
-        email,
-        password_hash,
-        is_managed_by,
-        created_at,
-        updated_at,
-        deleted_at,
-        is_synced,
-        sync_version
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET
-        display_name = excluded.display_name,
-        email = excluded.email,
-        password_hash = excluded.password_hash,
-        is_managed_by = excluded.is_managed_by,
-        created_at = excluded.created_at,
-        updated_at = excluded.updated_at,
-        deleted_at = excluded.deleted_at,
-        is_synced = excluded.is_synced,
-        sync_version = excluded.sync_version
-      `).run(
-      params.id,
-      params.displayName,
-      params.email,
-      params.passwordHash,
-      params.isManagedBy ?? null,
-      params.createdAt,
-      params.updatedAt,
-      params.deletedAt,
-      params.isSynced ? 1 : 0,
-      params.syncVersion,
-    );
-  }
-
-  syncUsers(params: system.User): void {
-    this.upsertSynced(params);
+  upsert(params: system.User): void {
+    this.db
+      .prepare(
+        `
+        INSERT INTO users (
+          id, display_name, email, password_hash, is_managed_by, created_at, updated_at,
+          deleted_at, is_synced, sync_version) 
+        VALUES (
+          @id, @displayName, @email, @passwordHash, @isManagedBy, @createdAt, @updatedAt,
+          @deletedAt, @isSynced, @syncVersion)
+        ON CONFLICT(id) DO UPDATE SET
+          display_name = excluded.display_name,
+          email = excluded.email,
+          password_hash = excluded.password_hash,
+          is_managed_by = excluded.is_managed_by,
+          updated_at = excluded.updated_at,
+          deleted_at = excluded.deleted_at,
+          is_synced = excluded.is_synced,
+          sync_version = excluded.sync_version`,
+      )
+      .run(params);
   }
 }

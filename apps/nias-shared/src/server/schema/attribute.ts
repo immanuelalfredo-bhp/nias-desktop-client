@@ -23,10 +23,6 @@ const attributeOverrides = {
   deletedAt: schemas.dateTime.nullable(),
 };
 
-// ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
-// ║                                         BRAND SCHEMAS                                         ║
-// ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
-
 export const brands = attributeSchema.table('brands', {
   ...attributeBaseFields,
   normalizedName: text('normalized_name').notNull(),
@@ -100,15 +96,16 @@ export const UomSchema = createSelectSchema(uoms, {
 
 export const DimensionSchema = createSelectSchema(dimensions, {
   ...attributeOverrides,
-  scope: schemas.string,
+  scope: schemas.scope,
   normalizedName: schemas.slug,
   formName: schemas.string,
-  position: schemas.string,
+  position: schemas.position,
 });
 
 export const DimensionValueSchema = createSelectSchema(dimensionValues, {
   ...attributeOverrides,
   dimensionId: schemas.uuid,
+  skuCode: schemas.skuGeneric,
   numericValue: schemas.float.nullable(),
 });
 

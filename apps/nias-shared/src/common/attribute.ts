@@ -1,6 +1,5 @@
 import { z } from 'zod';
-import { EntityIdSchema } from './common.js';
-import { CreateOmissions, UpdateOmissions } from './defines.js';
+import { EntityIdSchema, CreateOmissions, UpdateOmissions } from './common.js';
 import {
   BrandSchema as DrizzleBrandSchema,
   ModeSchema as DrizzleModesSchema,
@@ -76,7 +75,7 @@ export const CreateUomSchema = UomSchema.omit(CreateOmissions);
 export const UpdateUomSchema = UomSchema.pick({
   id: true,
 }).extend(UomSchema.omit(UpdateOmissions).partial().shape);
-export const CreateUomInputSchema = CreateUomSchema.omit({ normalizedName: true });
+export const CreateUomInputSchema = CreateUomSchema.omit({ id: true, normalizedName: true });
 export const UpdateUomInputSchema = UpdateUomSchema.omit({ normalizedName: true });
 
 export type UomId = z.infer<typeof UomIdSchema>;
@@ -97,7 +96,10 @@ export const CreateDimensionSchema = DimensionSchema.omit(CreateOmissions);
 export const UpdateDimensionSchema = DimensionSchema.pick({
   id: true,
 }).extend(DimensionSchema.omit(UpdateOmissions).partial().shape);
-export const CreateDimensionInputSchema = CreateDimensionSchema.omit({ normalizedName: true });
+export const CreateDimensionInputSchema = CreateDimensionSchema.omit({
+  id: true,
+  normalizedName: true,
+});
 export const UpdateDimensionInputSchema = UpdateDimensionSchema.omit({ normalizedName: true });
 
 export type DimensionId = z.infer<typeof DimensionIdSchema>;
@@ -118,10 +120,12 @@ export const CreateDimensionValueSchema = DimensionValueSchema.omit(CreateOmissi
 export const UpdateDimensionValueSchema = DimensionValueSchema.pick({
   id: true,
 }).extend(DimensionValueSchema.omit(UpdateOmissions).partial().shape);
+export const CreateDimensionValueInputSchema = CreateDimensionValueSchema.omit({ id: true });
 
 export type DimensionValueId = z.infer<typeof DimensionValueIdSchema>;
 export type CreateDimensionValue = z.infer<typeof CreateDimensionValueSchema>;
 export type UpdateDimensionValue = z.infer<typeof UpdateDimensionValueSchema>;
+export type CreateDimensionValueInput = z.infer<typeof CreateDimensionValueInputSchema>;
 
 // ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 // ║                                         SYSTEM SCHEMAS                                        ║
@@ -135,7 +139,7 @@ export const CreateSystemSchema = SystemSchema.omit(CreateOmissions);
 export const UpdateSystemSchema = SystemSchema.pick({
   id: true,
 }).extend(SystemSchema.omit(UpdateOmissions).partial().shape);
-export const CreateSystemInputSchema = CreateSystemSchema.omit({ normalizedName: true });
+export const CreateSystemInputSchema = CreateSystemSchema.omit({ id: true, normalizedName: true });
 export const UpdateSystemInputSchema = UpdateSystemSchema.omit({ normalizedName: true });
 
 export type SystemId = z.infer<typeof SystemIdSchema>;
@@ -156,7 +160,10 @@ export const CreateCategorySchema = CategorySchema.omit(CreateOmissions);
 export const UpdateCategorySchema = CategorySchema.pick({
   id: true,
 }).extend(CategorySchema.omit(UpdateOmissions).partial().shape);
-export const CreateCategoryInputSchema = CreateCategorySchema.omit({ normalizedName: true });
+export const CreateCategoryInputSchema = CreateCategorySchema.omit({
+  id: true,
+  normalizedName: true,
+});
 export const UpdateCategoryInputSchema = UpdateCategorySchema.omit({ normalizedName: true });
 
 export type CategoryId = z.infer<typeof CategoryIdSchema>;
@@ -177,7 +184,7 @@ export const CreateVendorSchema = VendorSchema.omit(CreateOmissions);
 export const UpdateVendorSchema = VendorSchema.pick({
   id: true,
 }).extend(VendorSchema.omit(UpdateOmissions).partial().shape);
-export const CreateVendorInputSchema = CreateVendorSchema.omit({ normalizedName: true });
+export const CreateVendorInputSchema = CreateVendorSchema.omit({ id: true, normalizedName: true });
 export const UpdateVendorInputSchema = UpdateVendorSchema.omit({ normalizedName: true });
 
 export type VendorId = z.infer<typeof VendorIdSchema>;
@@ -198,7 +205,7 @@ export const CreateTagSchema = TagSchema.omit(CreateOmissions);
 export const UpdateTagSchema = TagSchema.pick({
   id: true,
 }).extend(TagSchema.omit(UpdateOmissions).partial().shape);
-export const CreateTagInputSchema = CreateTagSchema.omit({ normalizedName: true });
+export const CreateTagInputSchema = CreateTagSchema.omit({ id: true, normalizedName: true });
 export const UpdateTagInputSchema = UpdateTagSchema.omit({ normalizedName: true });
 
 export type TagId = z.infer<typeof TagIdSchema>;

@@ -42,8 +42,31 @@ export class VendorQueries extends BaseQueries<
       .prepare(
         `
         UPDATE vendors SET name = @name, normalized_name = @normalizedName, 
-        sku_code = @skuCode, sort_order = @sortOrder, updated_at = @updatedAt WHERE id = @id`,
+        sku_code = @skuCode, sort_order = @sortOrder, updated_at = @updatedAt, is_synced = @isSynced
+        WHERE id = @id`,
       )
       .run({ ...existing, ...params, updatedAt: new Date().toISOString() });
+  }
+  upsert(params: attribute.Vendor): void {
+    this.db
+      .prepare(
+        `
+        INSERT INTO vendors (
+          id, name, normalized_name, sku_code, sort_order, created_at, updated_at,
+          deleted_at, is_synced, sync_version) 
+        VALUES (
+          @id, @name, @normalizedName, @skuCode, @sortOrder, @createdAt, @updatedAt,
+          @deletedAt, @isSynced, @syncVersion)
+        ON CONFLICT(id) DO UPDATE SET
+          name = excluded.name,
+          normalized_name = excluded.normalized_name,
+          sku_code = excluded.sku_code,
+          sort_order = excluded.sort_order,
+          updated_at = excluded.updated_at,
+          deleted_at = excluded.deleted_at,
+          is_synced = excluded.is_synced,
+          sync_version = excluded.sync_version`,
+      )
+      .run(params);
   }
 }
