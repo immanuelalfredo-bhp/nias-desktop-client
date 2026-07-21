@@ -60,6 +60,12 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
                 passwordHash: hashedPassword,
                 syncVersion: data.syncVersion,
               });
+              authDb.main.updateTokens(
+                data.id,
+                data.accessToken,
+                data.refreshToken,
+                data.expiresAt,
+              );
             });
             logger.info({ scope: 'auth', userId: data.id }, 'User fetched and stored successfully');
 

@@ -107,7 +107,8 @@ export async function initialLogin(
     success: true,
     message: 'Initial login successful',
     data: {
-      ...user.data,
+      id: user.data.id,
+      syncVersion: user.data.syncVersion,
       accessToken,
       refreshToken,
       expiresAt,
