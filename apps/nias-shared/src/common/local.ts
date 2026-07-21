@@ -5,8 +5,8 @@ export const UserSchema = z.object({
   id: schemas.uuid,
   email: schemas.email,
   passwordHash: schemas.passwordHash,
-  accessToken: schemas.string,
-  refreshToken: schemas.string,
+  accessToken: schemas.token,
+  refreshToken: schemas.token,
   expiresAt: schemas.dateTime,
   syncVersion: schemas.syncVersion,
 });

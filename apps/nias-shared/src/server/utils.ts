@@ -1,5 +1,5 @@
 import argon2 from 'argon2';
-import { z, safeParse, ZodType } from 'zod';
+import { safeParse, ZodType } from 'zod';
 import { logger } from './logger.js';
 import { common } from '../index.common.js';
 
@@ -76,9 +76,7 @@ export async function handleResponse<T>(
   const json = await response.json();
 
   const envelopeResult = safeParse(
-    z.object({
-      success: z.boolean(),
-      message: z.string(),
+    common.SuccessResponseSchema.extend({
       data: schema.optional(),
     }),
     json,
@@ -98,11 +96,11 @@ export async function handleResponse<T>(
     return envelopeResult.data.data;
   }
 
-  // LOG THE EXACT ZOD PARSE ERROR HERE
-  logger.error(
-    { scope, data: json, zodErrors: envelopeResult.error.format() },
-    'Envelope validation failed',
-  );
-
-  return { success: false, message: 'Invalid response from sync server' };
+  const responseData = safeParse(schema, json);
+  if (!responseData.success) {
+    logger.error({ scope, data: json }, 'Sync request failed: Invalid response from sync server');
+    return { success: false, message: 'Invalid response from sync server' };
+  }
+  const data = responseData.data;
+  return data;
 }
