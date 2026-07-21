@@ -174,7 +174,7 @@ async function getUser(
       .then((rows) => rows[0] ?? null);
     
     if (user) {
-      const isPasswordValid = await verifyPassword(user.passwordHash, payload.password);
+      const isPasswordValid = await verifyPassword(payload.password, user.passwordHash);
 
       if (!isPasswordValid) {
         context?.log?.warn(
@@ -195,13 +195,9 @@ async function getUser(
         ...user
       },
     };
-  } catch (error: any) {
-    context?.log?.error({ 
-      scope: 'login', 
-      errorMessage: error?.message, 
-      errorStack: error?.stack,
-      pgCode: error?.code 
-    }, 'Error fetching user');
-    return { success: false, message: 'Error fetching user' };
+  } 
+  catch (error) {
+    context?.log?.error({ scope: 'login', error }, 'Error getting user');
+    return { success: false, message: 'Error getting user' };
   }
 }
