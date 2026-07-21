@@ -1,7 +1,7 @@
 import { asc, and, eq, isNull, inArray } from 'drizzle-orm';
 import type { Logger } from 'pino';
 import { local, server, common } from '@nias/shared';
-import { serverUsers, users, verifyPassword, type Envelope } from '@nias/shared/server';
+import { logger, serverUsers, users, verifyPassword, type Envelope } from '@nias/shared/server';
 import { db } from '../db.js';
 import { supabase } from '../supabase.js';
 
@@ -159,6 +159,7 @@ async function getUser(
   context?: { log?: Logger; userId?: string },
 ): Promise<Envelope<local.UserData> | null> {
   try {
+    logger.info({ scope: 'login', email: payload.email }, 'Fetching user from local database');
     const user = await db
       .select({
         id: users.id,
@@ -172,6 +173,8 @@ async function getUser(
       // Drizzle returns an array, so we explicitly extract the first
       // match to treat the result as a single record.
       .then((rows) => rows[0] ?? null);
+    
+    logger.info({ scope: 'login', email: payload.email, userId: user?.id }, 'User fetched from local database');
 
     if (user) {
       const isPasswordValid = await verifyPassword(user.passwordHash, payload.password);
