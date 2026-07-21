@@ -15,11 +15,12 @@ export async function hashPassword(plainPassword: string): Promise<string> {
   });
 }
 
-export async function verifyPassword(hash: string, plainPassword: string): Promise<boolean> {
+export async function verifyPassword(plainPassword: string, hash: string): Promise<boolean> {
   return argon2.verify(hash, plainPassword);
 }
 
-export function slugify(input: string): string {
+export function slugify(input: string | undefined): string | undefined {
+  if (!input) return undefined;
   return input
     .toLowerCase()
     .trim()
@@ -32,6 +33,16 @@ export function isSuccess<T>(response: common.SuccessResponse | T): response is 
     (response as common.SuccessResponse).success === undefined ||
     (response as common.SuccessResponse).success === true
   );
+}
+
+export function dateToISOString(date: Date | string | undefined): string | undefined {
+  if (!date) return undefined;
+  if (typeof date === 'string') {
+    // If it's already an ISO string (contains 'T'), just parse it directly
+    const normalized = date.includes('T') ? date : date.replace(' ', 'T') + 'Z';
+    return new Date(normalized).toISOString();
+  }
+  return date.toISOString();
 }
 
 export async function handleResponse<T>(

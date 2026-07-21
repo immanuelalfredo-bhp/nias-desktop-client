@@ -1,73 +1,78 @@
 import { z } from 'zod';
-import {
-  ServerUserSchema as DrizzleServerUserSchema,
-  type ServerUser as DrizzleServerUser,
-} from '../server/schema/server.js';
 import * as schemas from './defines.js';
 
-// ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
-// ║                                       LOCAL USER SCHEMAS                                      ║
-// ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
-
-export const ServerUserSchema = DrizzleServerUserSchema;
-export type ServerUser = DrizzleServerUser;
-
-// Local User Schemas
-export const LocalUserSchema = ServerUserSchema.extend({
+export const UserSchema = z.object({
+  id: schemas.uuid,
+  email: schemas.email,
   passwordHash: schemas.passwordHash,
+  accessToken: schemas.string,
+  refreshToken: schemas.string,
+  expiresAt: schemas.dateTime,
   syncVersion: schemas.syncVersion,
 });
-export const LocalUserStatusSchema = z.object({
-  isEmpty: z.boolean(),
+
+export const UserSyncSchema = z.object({
+  id: z.array(schemas.uuid),
+  syncVersion: z.array(schemas.syncVersion),
 });
 
-// Login Schemas
-export const LoginSchema = LocalUserSchema.pick({
-  email: true,
-  passwordHash: true,
-}).extend({
-  password: schemas.password,
-});
-export const LoginInputSchema = LoginSchema.omit({
-  passwordHash: true,
-});
-export const SupabaseSessionSchema = LocalUserSchema.pick({
-  accessToken: true,
-  expiresAt: true,
+export const UserSyncDeltaSchema = z.object({
+  upsert: z.array(UserSchema.omit({ accessToken: true, refreshToken: true, expiresAt: true })),
+  delete: z.array(schemas.uuid),
 });
 
-// Local User Sync Schemas
-export const LocalUserSyncSchema = LocalUserSchema.pick({
-  id: true,
-  syncVersion: true,
-}).array();
-export const LocalUserSyncResponseSchema = z.object({
-  users: z.array(LocalUserSchema),
-  deletedUserIds: z.array(schemas.uuid),
-});
-
-export type LocalUser = z.infer<typeof LocalUserSchema>;
-export type LocalUserStatus = z.infer<typeof LocalUserStatusSchema>;
-export type Login = z.infer<typeof LoginSchema>;
-export type LoginInput = z.infer<typeof LoginInputSchema>;
-export type SupabaseSession = z.infer<typeof SupabaseSessionSchema>;
-export type LocalUserSync = z.infer<typeof LocalUserSyncSchema>;
-export type LocalUserSyncResponse = z.infer<typeof LocalUserSyncResponseSchema>;
+export type User = z.infer<typeof UserSchema>;
+export type UserSync = z.infer<typeof UserSyncSchema>;
+export type UserSyncDelta = z.infer<typeof UserSyncDeltaSchema>;
 
 // ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 // ║                                        BOOTSTRAP SCHEMAS                                      ║
 // ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
 
-export const BootstrapSchema = z.object({
+export const BootstrapStatusSchema = z.object({
+  isEmpty: z.boolean(),
+});
+
+export const BootstrapSchema = UserSchema.omit({
+  id: true,
+  accessToken: true,
+  expiresAt: true,
+  syncVersion: true,
+  refreshToken: true,
+}).extend({
   displayName: schemas.displayName,
-  email: schemas.email,
   password: schemas.password,
-  passwordHash: schemas.passwordHash,
 });
 
 export const BootstrapInputSchema = BootstrapSchema.omit({
   passwordHash: true,
+}).extend({
+  bootstrapKey: schemas.string,
+});
+
+export const BootstrapResponseSchema = UserSchema.pick({
+  id: true,
+  accessToken: true,
+  expiresAt: true,
+  refreshToken: true,
+  syncVersion: true,
 });
 
 export type Bootstrap = z.infer<typeof BootstrapSchema>;
+export type BootstrapStatus = z.infer<typeof BootstrapStatusSchema>;
 export type BootstrapInput = z.infer<typeof BootstrapInputSchema>;
+export type BootstrapResponse = z.infer<typeof BootstrapResponseSchema>;
+
+// ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
+// ║                                         LOGIN SCHEMAS                                         ║
+// ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
+
+export const LoginSchema = BootstrapSchema.pick({
+  email: true,
+  password: true,
+});
+
+export const LoginResponseSchema = BootstrapResponseSchema
+
+export type Login = z.infer<typeof LoginSchema>;
+export type LoginResponse = z.infer<typeof LoginResponseSchema>;

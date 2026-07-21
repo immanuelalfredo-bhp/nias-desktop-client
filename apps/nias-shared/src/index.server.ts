@@ -1,12 +1,19 @@
-import { serverUsers, syncMetadata, syncChanges } from './server/schema/server.js';
+import {
+  serverUsers,
+  syncMetadata,
+  syncChanges,
+  SYNC_TABLE_MAP,
+} from './server/schema/server.js';
 import { users } from './server/schema/system.js';
 
-export { serverUsers, syncMetadata, syncChanges, users };
+const syncedSchemas = Object.fromEntries(SYNC_TABLE_MAP.map(({ key, table }) => [key, table]));
+
+export { serverUsers, syncMetadata, syncChanges, SYNC_TABLE_MAP, users };
 export const schemas = {
   serverUsers,
   syncMetadata,
   syncChanges,
-  users,
+  ...syncedSchemas,
 };
 
 export * from './server/utils.js';

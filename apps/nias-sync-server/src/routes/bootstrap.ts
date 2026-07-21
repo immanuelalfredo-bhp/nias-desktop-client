@@ -1,15 +1,15 @@
 import { count } from 'drizzle-orm';
 import type { Logger } from 'pino';
 import { type Request, type Response } from 'express';
-import { auth, common } from '@nias/shared';
-import { users, type Envelope } from '@nias/shared/server';
+import { local, common } from '@nias/shared';
+import { hashPassword, users, type Envelope } from '@nias/shared/server';
 import { db } from '../db.js';
 import { supabaseAdmin } from '../supabase.js';
 
 export async function getBootstrapStatus(
   _req: Request,
-  res: Response<Envelope<auth.StatusResponse>>,
-): Promise<Response<Envelope<auth.StatusResponse>>> {
+  res: Response<Envelope<local.BootstrapStatus>>,
+): Promise<Response<Envelope<local.BootstrapStatus>>> {
   const result = await db.select({ value: count() }).from(users);
   const userCount = result[0]?.value ?? 0;
 
@@ -21,7 +21,7 @@ export async function getBootstrapStatus(
 }
 
 export async function handleBootstrap(
-  payload: auth.BootstrapPayload,
+  payload: local.Bootstrap,
   context?: { log?: Logger; userId?: string },
 ): Promise<Envelope<common.EntityId>> {
   return await db.transaction(async (tx) => {

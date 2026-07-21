@@ -94,8 +94,8 @@ export const ProjectSchema = createSelectSchema(projects, {
   ...systemOverrides,
   name: schemas.string,
   normalizedName: schemas.slug,
-  soNumber: schemas.string.optional(),
-  poNumber: schemas.string.optional(),
+  soNumber: schemas.string.nullable(),
+  poNumber: schemas.string.nullable(),
 });
 
 export const RoleCapabilitiesSchema = createSelectSchema(roleCapabilities, {

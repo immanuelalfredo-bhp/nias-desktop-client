@@ -1,24 +1,16 @@
 import { type PgTransaction } from 'drizzle-orm/pg-core';
-import { sync } from '@nias/shared';
-import { users } from '@nias/shared/server';
+import { server } from '@nias/shared';
+import { SYNC_TABLE_MAP } from '@nias/shared/server';
 
 /** Database transaction type used by sync write operations. */
 export type DBTransaction = PgTransaction<any, any, any>;
 
-export const TABLE_MAP: {
-  key: keyof sync.SyncMetadata;
-  table: any;
-}[] = [
-  {
-    key: 'users' as const,
-    table: users,
-  },
-];
+export const TABLE_MAP = SYNC_TABLE_MAP;
 
 export const defaultRegistry = TABLE_MAP.reduce((acc, t) => {
   acc[t.key] = 0;
   return acc;
-}, {} as sync.SyncMetadata);
+}, {} as server.SyncMetadata);
 
 export async function upsertSyncRecords(
   tx: DBTransaction,
@@ -26,12 +18,22 @@ export async function upsertSyncRecords(
   payloads: any[],
   version: number,
 ) {
-  return await tx
-    .insert(table)
-    .values(payloads.map((p) => ({ ...p, syncVersion: version })))
-    .onConflictDoUpdate({
-      target: table.id,
-      set: { ...payloads[0], syncVersion: version },
-    })
-    .returning();
+  const results = [];
+
+  for (const payload of payloads) {
+    const [row] = await tx
+      .insert(table)
+      .values({ ...payload, syncVersion: version })
+      .onConflictDoUpdate({
+        target: table.id,
+        set: { ...payload, syncVersion: version },
+      })
+      .returning();
+
+    if (row) {
+      results.push(row);
+    }
+  }
+
+  return results;
 }

@@ -6,8 +6,11 @@ const argon2Regex = new RegExp(
 );
 
 const dateTransformer = z.string().transform((val) => {
-  // SQLite "YYYY-MM-DD HH:MM:SS" -> ISO 8601 "YYYY-MM-DDTHH:MM:SS.sssZ"
-  return new Date(val.replace(' ', 'T') + 'Z').toISOString();
+  const date = new Date(val);
+  if (isNaN(date.getTime())) {
+    throw new Error('Invalid date-time string');
+  }
+  return date.toISOString();
 });
 
 export const uuid = z.uuid();
@@ -27,7 +30,7 @@ export const position = z.enum(['prefix', 'suffix', 'parenthesis', 'append']);
 export const skuSource = z.enum(['internal', 'external']);
 export const materialType = z.enum(['component', 'assembly']);
 export const materialClass = z.enum(['main', 'installation', 'support']);
-export const creationSource = z.enum(['pregenerated', 'manual']);
+export const creationSource = z.enum(['system', 'user']);
 export const delimiterType = z.enum(['cross', 'pipe']);
 
 // SKU codes

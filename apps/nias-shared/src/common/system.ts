@@ -31,27 +31,49 @@ export type User = DrizzleUser;
 export const CreateUserSchema = UserSchema.omit(CreateOmissions);
 export const UpdateUserSchema = UserSchema.pick({
   id: true,
-}).extend(UserSchema.omit(UpdateOmissions).partial().shape);
-export const UpdateSelfSchema = UpdateUserSchema.omit({ isManagedBy: true });
+}).extend(UserSchema.omit({ passwordHash: true, ...UpdateOmissions }).partial().shape);
 export const CreateUserInputSchema = CreateUserSchema.omit({ id: true, passwordHash: true }).extend(
   {
     password: schemas.password,
   },
 );
-export const UpdateUserInputSchema = UpdateUserSchema.omit({ passwordHash: true }).extend({
-  password: schemas.password.optional(),
+export const UpdateSelfInputSchema = UpdateUserSchema.omit({
+  isManagedBy: true,
 });
-export const UpdateSelfInputSchema = UpdateSelfSchema.omit({ passwordHash: true }).extend({
-  password: schemas.password.optional(),
+
+export const CreateUserPayloadSchema = CreateUserSchema.omit({ id: true }).extend({
+  password: schemas.password,
+});
+export const CreateUserResponseSchema = UserSchema.pick({ id: true, ...CreateOmissions }).omit({
+  deletedAt: true,
+  isSynced: true,
+});
+
+export const UpdateUserPasswordSchema = UserSchema.pick({ passwordHash: true, ...UpdateOmissions }).omit({
+  createdAt: true,
+  deletedAt: true,
+});
+export const UpdateUserPasswordPayloadSchema = UserSchema.pick({ id: true, passwordHash: true }).extend({
+  password: schemas.password,
+});
+export const UpdateUserPasswordInputSchema = UpdateUserPasswordPayloadSchema.omit({
+  passwordHash: true,
+});
+export const UpdateUserPasswordResponseSchema = UpdateUserPasswordSchema.omit({
+  passwordHash: true,
 });
 
 export type UserId = z.infer<typeof UserIdSchema>;
 export type CreateUser = z.infer<typeof CreateUserSchema>;
 export type UpdateUser = z.infer<typeof UpdateUserSchema>;
-export type UpdateSelf = z.infer<typeof UpdateSelfSchema>;
 export type CreateUserInput = z.infer<typeof CreateUserInputSchema>;
-export type UpdateUserInput = z.infer<typeof UpdateUserInputSchema>;
 export type UpdateSelfInput = z.infer<typeof UpdateSelfInputSchema>;
+export type CreateUserPayload = z.infer<typeof CreateUserPayloadSchema>;
+export type CreateUserResponse = z.infer<typeof CreateUserResponseSchema>;
+export type UpdateUserPassword = z.infer<typeof UpdateUserPasswordSchema>;
+export type UpdateUserPasswordInput = z.infer<typeof UpdateUserPasswordInputSchema>;
+export type UpdateUserPasswordPayload = z.infer<typeof UpdateUserPasswordPayloadSchema>;
+export type UpdateUserPasswordResponse = z.infer<typeof UpdateUserPasswordResponseSchema>;
 
 // ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 // ║                                          ROLE SCHEMAS                                         ║
@@ -190,17 +212,15 @@ export const CreateAuditSchema = AuditSchema.omit({
   isSynced: true,
   syncVersion: true,
 });
-export const UpdateAuditSchema = AuditSchema.pick({
+export const CreateAuditInputSchema = CreateAuditSchema.omit({
   id: true,
-}).extend(AuditSchema.omit({
-  id: true,
-  isSynced: true,
-  syncVersion: true,
-}).partial().shape);
-export const CreateAuditInputSchema = CreateAuditSchema.omit({ id: true });
-
+  timestamp: true,
+  userId: true,
+  details: true,
+}).extend({
+  recordName: schemas.string,
+});
 
 export type AuditId = z.infer<typeof AuditIdSchema>;
 export type CreateAudit = z.infer<typeof CreateAuditSchema>;
-export type UpdateAudit = z.infer<typeof UpdateAuditSchema>;
 export type CreateAuditInput = z.infer<typeof CreateAuditInputSchema>;

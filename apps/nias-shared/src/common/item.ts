@@ -35,12 +35,10 @@ export const CreateItemRecordInputSchema = CreateItemRecordSchema.omit({
   id: true,
   normalizedBaseName: true,
   normalizedDisplayName: true,
-  creationSource: true,
 });
 export const UpdateItemRecordInputSchema = UpdateItemRecordSchema.omit({
   normalizedBaseName: true,
   normalizedDisplayName: true,
-  creationSource: true,
 });
 
 export type ItemRecordId = z.infer<typeof ItemRecordIdSchema>;
@@ -192,7 +190,11 @@ export const CreateGenerationRuleSchema = GenerationRulesSchema.omit(CreateOmiss
 export const UpdateGenerationRuleSchema = GenerationRulesSchema.pick({
   id: true,
 }).extend(GenerationRulesSchema.omit(UpdateOmissions).partial().shape);
+export const CreateGenerationRuleInputSchema = CreateGenerationRuleSchema.omit({
+  id: true,
+});
 
 export type GenerationRulesId = z.infer<typeof GenerationRulesIdSchema>;
 export type CreateGenerationRule = z.infer<typeof CreateGenerationRuleSchema>;
 export type UpdateGenerationRule = z.infer<typeof UpdateGenerationRuleSchema>;
+export type CreateGenerationRuleInput = z.infer<typeof CreateGenerationRuleInputSchema>;

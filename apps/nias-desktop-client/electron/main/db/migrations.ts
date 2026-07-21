@@ -26,8 +26,9 @@ export function ensureAuthDbSchema(db: Database.Database): void {
       id TEXT PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
-      jwt_token TEXT,
-      jwt_token_expiration INTEGER,
+      access_token TEXT,
+      refresh_token TEXT,
+      expires_at INTEGER,
       sync_version INTEGER NOT NULL
     );
   `);

@@ -106,6 +106,7 @@ export const VendorPriceSchema = DrizzleVendorPriceSchema;
 export type VendorPrice = DrizzleVendorPrice;
 
 export const CreateVendorPriceSchema = VendorPriceSchema.omit({
+  discountRate: true,
   effectiveDate: true,
   expirationDate: true,
   isSynced: true,
@@ -116,6 +117,7 @@ export const UpdateVendorPriceSchema = VendorPriceSchema.pick({
 }).extend(
   VendorPriceSchema.omit({
     id: true,
+    discountRate: true,
     effectiveDate: true,
     expirationDate: true,
     isSynced: true,

@@ -3,35 +3,82 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { app } from 'electron';
 import { logger } from '@nias/shared/server';
-import { AuthQueries } from './auth.js';
-import { SyncQueries } from './sync.js';
-import { UserQueries } from './system/users.js';
-import { BrandQueries } from './attribute/brands.js';
-import { AuditQueries } from './system/audit.js';
-import { ModeQueries } from './attribute/modes.js';
-import { UomQueries } from './attribute/uoms.js';
-import { DimensionQueries } from './attribute/dimensions.js';
-import { DimensionValuesQueries } from './attribute/dimension-values.js';
-import { SystemQueries } from './attribute/systems.js';
-import { CategoryQueries } from './attribute/categories.js';
-import { VendorQueries } from './attribute/vendors.js';
-import { TagQueries } from './attribute/tags.js';
+import {
+  // System queries
+  UserQueries,
+  RoleQueries,
+  ProjectQueries,
+  RoleCapabilityQueries,
+  RoleManagementQueries,
+  RoleMapQueries,
+  ProjectMapQueries,
+  AuditQueries,
+
+  // Attribute queries
+  BrandQueries,
+  ModeQueries,
+  UomQueries,
+  DimensionQueries,
+  DimensionValuesQueries,
+  SystemQueries,
+  CategoryQueries,
+  VendorQueries,
+  TagQueries,
+  
+  // Item queries
+  ItemRecordQueries,
+  AliasQueries,
+  BrandlineMapQueries,
+  VendorMapQueries,
+  DimensionMapQueries,
+  SystemMapQueries,
+  TagMapQueries,
+  GenerationRulesQueries,
+  
+  // Variant queries
+  VariantRecordQueries,
+  ComponentMapQueries,
+  DimensionValueMapQueries,
+  SwitchMapQueries,
+  VendorPriceQueries,
+
+  // Order queries
+  RequestQueries,
+  RequestItemQueries,
+
+  // Other queries
+  SyncQueries,
+  LocalQueries
+} from './queries/index.js';
 import { openEncryptedDatabase } from './connection.js';
 import { backupArtifacts, ensureAuthDbSchema, runMigrations, setupNewDb } from './migrations.js';
 import { getOrGenerateKey } from './keyring.js';
 
 export class AuthDatabase {
   private readonly db: Database.Database;
-  readonly main: AuthQueries;
+  readonly main: LocalQueries;
 
   constructor(dbPath: string, key: string) {
     this.db = openEncryptedDatabase(dbPath, key);
-    this.main = new AuthQueries(this.db);
+    this.main = new LocalQueries(this.db);
   }
 }
 
 export class UserDatabase {
   private readonly db: Database.Database;
+
+  // System queries
+  readonly user: UserQueries;
+  readonly role: RoleQueries;
+  readonly project: ProjectQueries;
+  readonly roleCapability: RoleCapabilityQueries;
+  readonly roleManagement: RoleManagementQueries
+  readonly roleMap: RoleMapQueries;
+  readonly projectMap: ProjectMapQueries
+  readonly audit: AuditQueries;
+
+  // Sync queries
+  readonly sync: SyncQueries;
 
   // Attribute queries
   readonly brand: BrandQueries;
@@ -44,15 +91,42 @@ export class UserDatabase {
   readonly vendor: VendorQueries;
   readonly tag: TagQueries;
 
-  // System queries
-  readonly audit: AuditQueries;
-  readonly user: UserQueries;
+  // Item queries
+  readonly item: ItemRecordQueries;
+  readonly alias: AliasQueries;
+  readonly brandlineMap: BrandlineMapQueries;
+  readonly vendorMap: VendorMapQueries;
+  readonly dimensionMap: DimensionMapQueries;
+  readonly systemMap: SystemMapQueries;
+  readonly tagMap: TagMapQueries;
+  readonly generationRules: GenerationRulesQueries;
 
-  // Sync queries
-  readonly sync: SyncQueries;
+  // Order queries
+  readonly request: RequestQueries;
+  readonly requestItem: RequestItemQueries;
+
+  // Variant queries
+  readonly variant: VariantRecordQueries;
+  readonly componentMap: ComponentMapQueries;
+  readonly dimensionValueMap: DimensionValueMapQueries;
+  readonly switchMap: SwitchMapQueries;
+  readonly vendorPrice: VendorPriceQueries;
 
   constructor(dbPath: string, key: string) {
     this.db = openEncryptedDatabase(dbPath, key);
+
+    // System queries
+    this.user = new UserQueries(this.db);
+    this.role = new RoleQueries(this.db);
+    this.project = new ProjectQueries(this.db);
+    this.roleCapability = new RoleCapabilityQueries(this.db);
+    this.roleManagement = new RoleManagementQueries(this.db);
+    this.roleMap = new RoleMapQueries(this.db);
+    this.projectMap = new ProjectMapQueries(this.db);
+    this.audit = new AuditQueries(this.db);
+
+    // Sync queries
+    this.sync = new SyncQueries(this.db);
 
     // Attribute queries
     this.brand = new BrandQueries(this.db);
@@ -65,12 +139,26 @@ export class UserDatabase {
     this.vendor = new VendorQueries(this.db);
     this.tag = new TagQueries(this.db);
 
-    // System queries
-    this.audit = new AuditQueries(this.db);
-    this.user = new UserQueries(this.db);
+    // Item queries
+    this.item = new ItemRecordQueries(this.db);
+    this.alias = new AliasQueries(this.db);
+    this.brandlineMap = new BrandlineMapQueries(this.db);
+    this.vendorMap = new VendorMapQueries(this.db);
+    this.dimensionMap = new DimensionMapQueries(this.db);
+    this.systemMap = new SystemMapQueries(this.db);
+    this.tagMap = new TagMapQueries(this.db);
+    this.generationRules = new GenerationRulesQueries(this.db);
 
-    // Sync queries
-    this.sync = new SyncQueries(this.db);
+    // Order queries
+    this.request = new RequestQueries(this.db);
+    this.requestItem = new RequestItemQueries(this.db);
+
+    // Variant queries
+    this.variant = new VariantRecordQueries(this.db);
+    this.componentMap = new ComponentMapQueries(this.db);
+    this.dimensionValueMap = new DimensionValueMapQueries(this.db);
+    this.switchMap = new SwitchMapQueries(this.db);
+    this.vendorPrice = new VendorPriceQueries(this.db);
   }
 }
 const authDbPath = path.join(app.getPath('userData'), 'auth.db');
@@ -146,11 +234,11 @@ export function initializeUserDatabase(uuid: string): UserDatabase {
       { scope: 'user', uuid, error },
       `Key incorrect or user DB corrupted for UUID ${uuid}, backing up user data...`,
     );
-    backupArtifacts('user', authDbPath, uuid);
+    backupArtifacts('user', userDbPath, uuid);
 
     key = getOrGenerateKey('user', uuid);
     db = new Database(userDbPath);
-    runMigrations(db);
+    setupNewDb('user', db, key);
     logger.info(
       { scope: 'user', uuid },
       `User database for UUID ${uuid} re-initialized successfully after backup.`,
