@@ -5,14 +5,6 @@ const argon2Regex = new RegExp(
     '\\$[A-Za-z0-9+/]+={0,2}\\$[A-Za-z0-9+/]+={0,2}$',
 );
 
-const dateTransformer = z.string().transform((val) => {
-  const date = new Date(val);
-  if (isNaN(date.getTime())) {
-    throw new Error('Invalid date-time string');
-  }
-  return date.toISOString();
-});
-
 export const uuid = z.uuid();
 export const displayName = z.string().trim().max(100).default('');
 export const email = z.email();
@@ -45,7 +37,7 @@ export const jsonb = z.any()
 export const boolean = z.boolean();
 export const integer = z.number().int();
 export const float = z.number();
-export const dateTime = dateTransformer;
+export const dateTime = z.iso.datetime();
 export const slug = z
   .string()
   .trim()
