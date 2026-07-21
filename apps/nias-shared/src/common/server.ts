@@ -102,9 +102,9 @@ const PullChangesShape = Object.fromEntries(
 // ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
 
 export const TokenSchema = z.object({
-  accessToken: schemas.string,
-  refreshToken: schemas.string,
-  expiresAt: z.iso.datetime(),
+  accessToken: schemas.token,
+  refreshToken: schemas.token,
+  expiresAt: schemas.dateTime,
 });
 
 export const RefreshTokenSchema = TokenSchema.pick({

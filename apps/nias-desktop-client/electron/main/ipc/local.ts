@@ -42,6 +42,23 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
               body: JSON.stringify(parsed),
             });
 
+            logger.info({ scope: 'auth', email: parsed.email }, 'Fetching user from sync server');
+            logger.debug(
+              { scope: 'auth', email: parsed.email, responseStatus: response.status },
+              'Received response from sync server',
+            );
+            logger.debug(
+              { scope: 'auth', email: parsed.email, responseBody: await response.clone().text() },
+              'Response body from sync server',
+            );
+            logger.debug(
+              { scope: 'auth', email: parsed.email, responseHeaders: response.headers },
+              'Response headers from sync server',
+            );
+            logger.debug(
+              { scope: 'auth', email: parsed.email, responseOk: response.ok },
+              'Response ok status from sync server',
+            );
             const data = await handleResponse(response, local.LoginResponseSchema, 'auth');
             if (!isSuccess(data)) {
               return data;

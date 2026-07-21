@@ -11,8 +11,7 @@ export const email = z.email();
 export const password = z.string().min(1);
 export const passwordHash = z.string().regex(argon2Regex);
 export const syncVersion = z.number().int().nonnegative().default(0);
-export const jwtToken = z.string();
-export const jwtTokenExpiration = z.number().int().nonnegative();
+export const token = z.string();
 
 export const sortOrder = z.number().nonnegative().max(100).default(0);
 
