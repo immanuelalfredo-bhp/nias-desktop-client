@@ -4,8 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { initializeAuthDatabase } from './db/database.js';
-import { registerBootstrapIpcHandlers } from './ipc/bootstrap.js';
-import { registerAuthIpcHandlers } from './ipc/auth.js';
+import { registerBootstrapIpcHandlers, registerAuthIpcHandlers } from './ipc/local.js';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -79,7 +78,7 @@ app.whenReady()
   .then(() => {
     const authDb = initializeAuthDatabase();
     registerAuthIpcHandlers(authDb);
-    if (authDb.main.countLocalUsers() === 0) {
+    if (authDb.main.count() === 0) {
       registerBootstrapIpcHandlers();
     }
     createMainWindow();

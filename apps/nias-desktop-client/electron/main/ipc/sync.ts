@@ -9,31 +9,6 @@ export const registerSyncIpcHandlers = (
   userDb: UserDatabase,
   userId: string,
 ): void => {
-  ipcMain.handle('sync:get-version', async (_event): Promise<Envelope<server.SyncMetadata>> => {
-    try {
-      const syncVersion = userDb.sync.getSyncVersion();
-      logger.info({ scope: 'sync', version: syncVersion }, 'Sync version fetched successfully');
-      return {
-        success: true,
-        message: 'Sync version fetched successfully',
-        data: syncVersion,
-      };
-    } catch (error) {
-      logger.error(
-        {
-          scope: 'sync',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
-        },
-        'Failed to fetch sync version',
-      );
-      return {
-        success: false,
-        message: 'Failed to fetch sync version',
-      };
-    }
-  });
-
   ipcMain.handle('sync:pull', async (_event): Promise<Envelope<server.PullResponse>> => {
     try {
       const accessToken = await resolveUserAccessToken(authDb, userId);

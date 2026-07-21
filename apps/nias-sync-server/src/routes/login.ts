@@ -88,9 +88,9 @@ export async function initialLogin(
   }
 
   const { accessToken, refreshToken, expiresAt } = supabaseSession.data;
-  const localUser = await getUser(payload, context);
+  const user = await getUser(payload, context);
 
-  if (!localUser?.success) {
+  if (!user?.success) {
     context?.log?.warn(
       { scope: 'login', email: payload.email },
       'Initial login failed: Local user verification failed',
@@ -107,7 +107,7 @@ export async function initialLogin(
     success: true,
     message: 'Initial login successful',
     data: {
-      ...localUser.data,
+      ...user.data,
       accessToken,
       refreshToken,
       expiresAt,
@@ -157,7 +157,7 @@ async function signIntoSupabase(
 async function getUser(
   payload: local.Login,
   context?: { log?: Logger; userId?: string },
-): Promise<Envelope<local.User> | null> {
+): Promise<Envelope<local.UserData> | null> {
   try {
     const user = await db
       .select({
@@ -188,28 +188,11 @@ async function getUser(
       return { success: false, message: 'User not found' };
     }
 
-    const session = await supabase.auth.getSession();
-
-    if (!session.data.session) {
-      context?.log?.error(
-        { scope: 'login', email: user.email },
-        'Supabase session retrieval failed after user verification',
-      );
-      return { success: false, message: 'Supabase session retrieval failed' };
-    }
-
-    const accessToken = session.data.session.access_token;
-    const refreshToken = session.data.session.refresh_token;
-    const expiresAt = new Date(session.data.session.expires_at! * 1000).toISOString();
-
     return {
       success: true,
       message: 'Supabase session retrieved successfully',
       data: {
-        ...user,
-        accessToken,
-        refreshToken,
-        expiresAt,
+        ...user
       },
     };
   } catch (error) {

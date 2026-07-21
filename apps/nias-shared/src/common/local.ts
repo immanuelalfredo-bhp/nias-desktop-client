@@ -11,17 +11,24 @@ export const UserSchema = z.object({
   syncVersion: schemas.syncVersion,
 });
 
+export const UserDataSchema = UserSchema.omit({
+  accessToken: true,
+  refreshToken: true,
+  expiresAt: true,
+});
+
 export const UserSyncSchema = z.object({
   id: z.array(schemas.uuid),
   syncVersion: z.array(schemas.syncVersion),
 });
 
 export const UserSyncDeltaSchema = z.object({
-  upsert: z.array(UserSchema.omit({ accessToken: true, refreshToken: true, expiresAt: true })),
+  upsert: z.array(UserDataSchema),
   delete: z.array(schemas.uuid),
 });
 
 export type User = z.infer<typeof UserSchema>;
+export type UserData = z.infer<typeof UserDataSchema>;
 export type UserSync = z.infer<typeof UserSyncSchema>;
 export type UserSyncDelta = z.infer<typeof UserSyncDeltaSchema>;
 

@@ -10,6 +10,7 @@ const syncedSchemas = Object.fromEntries(SYNC_TABLE_MAP.map(({ key, table }) => 
 
 export { serverUsers, syncMetadata, syncChanges, SYNC_TABLE_MAP, users };
 export const schemas = {
+  users,
   serverUsers,
   syncMetadata,
   syncChanges,

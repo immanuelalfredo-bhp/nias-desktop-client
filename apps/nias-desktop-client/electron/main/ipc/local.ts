@@ -59,9 +59,6 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
                 email: parsed.email,
                 passwordHash: hashedPassword,
                 syncVersion: data.syncVersion,
-                accessToken: data.accessToken,
-                refreshToken: data.refreshToken,
-                expiresAt: data.expiresAt,
               });
             });
             logger.info({ scope: 'auth', userId: data.id }, 'User fetched and stored successfully');
@@ -128,9 +125,6 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
             email: user.email,
             passwordHash: user.passwordHash,
             syncVersion: user.syncVersion,
-            accessToken: user.accessToken,
-            refreshToken: user.refreshToken,
-            expiresAt: user.expiresAt,
           });
           logger.info({ scope: 'auth', userId: user.id }, 'Upserted user from sync delta');
         }

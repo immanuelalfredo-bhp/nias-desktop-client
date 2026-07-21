@@ -4,368 +4,368 @@ import { logger, type Envelope } from '@nias/shared/server';
 import { UserDatabase } from '../../db/database';
 import { createAuditLog } from './audit';
 
-export function registerProjectMapsIpcHandlers(userDb: UserDatabase, userId: string): void {
+export function registerRoleMapsIpcHandlers(userDb: UserDatabase, userId: string): void {
   ipcMain.handle(
-    'project-map:list-active',
-    async (_event): Promise<Envelope<system.ProjectMap[]>> => {
+    'role-map:list-active',
+    async (_event): Promise<Envelope<system.RoleMap[]>> => {
       try {
-        const projectMaps = userDb.projectMap.listActive();
+        const roleMaps = userDb.roleMap.listActive();
         logger.info(
-          { scope: 'project-map', projectMapCount: projectMaps.length },
-          'Active project maps retrieved successfully',
+          { scope: 'role-map', roleMapCount: roleMaps.length },
+          'Active role maps retrieved successfully',
         );
         return {
           success: true,
-          message: 'Active project maps retrieved successfully',
-          data: projectMaps,
+          message: 'Active role maps retrieved successfully',
+          data: roleMaps,
         };
       } catch (error) {
         logger.error(
           {
-            scope: 'project-map',
+            scope: 'role-map',
             err: error,
             errorMessage: error instanceof Error ? error.message : String(error),
           },
-          'Failed to retrieve active project maps',
+          'Failed to retrieve active role maps',
         );
         return {
           success: false,
-          message: 'Failed to retrieve active project maps',
+          message: 'Failed to retrieve active role maps',
         };
       }
     },
   );
 
   ipcMain.handle(
-    'project-map:list-deleted',
-    async (_event): Promise<Envelope<system.ProjectMap[]>> => {
+    'role-map:list-deleted',
+    async (_event): Promise<Envelope<system.RoleMap[]>> => {
       try {
-        const projectMaps = userDb.projectMap.listDeleted();
+        const roleMaps = userDb.roleMap.listDeleted();
         logger.info(
-          { scope: 'project-map', projectMapCount: projectMaps.length },
-          'Deleted project maps retrieved successfully',
+          { scope: 'role-map', roleMapCount: roleMaps.length },
+          'Deleted role maps retrieved successfully',
         );
         return {
           success: true,
-          message: 'Deleted project maps retrieved successfully',
-          data: projectMaps,
+          message: 'Deleted role maps retrieved successfully',
+          data: roleMaps,
         };
       } catch (error) {
         logger.error(
           {
-            scope: 'project-map',
+            scope: 'role-map',
             err: error,
             errorMessage: error instanceof Error ? error.message : String(error),
           },
-          'Failed to retrieve deleted project maps',
+          'Failed to retrieve deleted role maps',
         );
         return {
           success: false,
-          message: 'Failed to retrieve deleted project maps',
+          message: 'Failed to retrieve deleted role maps',
         };
       }
     },
   );
 
   ipcMain.handle(
-    'project-map:get-by-id',
-    async (_event, projectMapId: string): Promise<Envelope<system.ProjectMap | null>> => {
+    'role-map:get-by-id',
+    async (_event, roleMapId: string): Promise<Envelope<system.RoleMap | null>> => {
       try {
-        const projectMap = userDb.projectMap.getById(projectMapId);
-        if (!projectMap) {
-          logger.error({ scope: 'project-map', projectMapId }, 'Project map not found');
+        const roleMap = userDb.roleMap.getById(roleMapId);
+        if (!roleMap) {
+          logger.error({ scope: 'role-map', roleMapId }, 'Role map not found');
           return {
             success: false,
-            message: 'Project map not found',
+            message: 'Role map not found',
           };
         }
         logger.info(
-          { scope: 'project-map', projectMapId },
-          'Project map retrieved successfully',
+          { scope: 'role-map', roleMapId },
+          'Role map retrieved successfully',
         );
         return {
           success: true,
-          message: 'Project map retrieved successfully',
-          data: projectMap,
+          message: 'Role map retrieved successfully',
+          data: roleMap,
         };
       } catch (error) {
         logger.error(
           {
-            scope: 'project-map',
-            projectMapId,
+            scope: 'role-map',
+            roleMapId,
             err: error,
             errorMessage: error instanceof Error ? error.message : String(error),
           },
-          'Failed to retrieve project map',
+          'Failed to retrieve role map',
         );
         return {
           success: false,
-          message: 'Failed to retrieve project map',
+          message: 'Failed to retrieve role map',
         };
       }
     },
   );
 
   ipcMain.handle(
-    'project-map:create',
-    async (_event, payload: system.CreateProjectMapInput): Promise<common.SuccessResponse> => {
+    'role-map:create',
+    async (_event, payload: system.CreateRoleMapInput): Promise<common.SuccessResponse> => {
       try {
-        const parsed = system.CreateProjectMapInputSchema.parse(payload);
+        const parsed = system.CreateRoleMapInputSchema.parse(payload);
 
-        const data: system.CreateProjectMap = {
+        const data: system.CreateRoleMap = {
           id: crypto.randomUUID(),
-          projectId: parsed.projectId,
+          roleId: parsed.roleId,
           userId: parsed.userId,
         };
 
-        userDb.projectMap.create(data);
+        userDb.roleMap.create(data);
         logger.info(
-          { scope: 'project-map', projectMapId: data.id },
-          'Project map created successfully',
+          { scope: 'role-map', roleMapId: data.id },
+          'Role map created successfully',
         );
 
         createAuditLog(userDb, userId, {
           action: 'create',
-          tableName: 'project_maps',
+          tableName: 'role_maps',
           recordId: data.id,
           recordName: data.id,
         });
         logger.info(
-          { scope: 'audit', projectMapId: data.id },
-          'Audit log created for project map creation',
+          { scope: 'audit', roleMapId: data.id },
+          'Audit log created for role map creation',
         );
 
         return {
           success: true,
-          message: 'Project map created successfully',
+          message: 'Role map created successfully',
         };
       } catch (error) {
         logger.error(
           {
-            scope: 'project-map',
+            scope: 'role-map',
             err: error,
             errorMessage: error instanceof Error ? error.message : String(error),
           },
-          'Failed to create project map',
+          'Failed to create role map',
         );
         return {
           success: false,
-          message: 'Failed to create project map',
+          message: 'Failed to create role map',
         };
       }
     },
   );
 
   ipcMain.handle(
-    'project-map:update',
-    async (_event, payload: system.UpdateProjectMap): Promise<common.SuccessResponse> => {
+    'role-map:update',
+    async (_event, payload: system.UpdateRoleMap): Promise<common.SuccessResponse> => {
       try {
-        const parsed = system.UpdateProjectMapSchema.parse(payload);
-        const existing = userDb.projectMap.getById(parsed.id);
+        const parsed = system.UpdateRoleMapSchema.parse(payload);
+        const existing = userDb.roleMap.getById(parsed.id);
         if (!existing) {
           logger.error(
-            { scope: 'project-map', projectMapId: parsed.id },
-            'Project map not found for update',
+            { scope: 'role-map', roleMapId: parsed.id },
+            'Role map not found for update',
           );
           return {
             success: false,
-            message: 'Project map not found for update',
+            message: 'Role map not found for update',
           };
         }
 
-        const updatedData: system.UpdateProjectMap = {
+        const updatedData: system.UpdateRoleMap = {
           id: parsed.id,
-          projectId: parsed.projectId,
+          roleId: parsed.roleId,
           userId: parsed.userId,
         };
 
-        userDb.projectMap.update(updatedData);
+        userDb.roleMap.update(updatedData);
         logger.info(
-          { scope: 'project-map', projectMapId: parsed.id },
-          'Project map updated successfully',
+          { scope: 'role-map', roleMapId: parsed.id },
+          'Role map updated successfully',
         );
 
         createAuditLog(userDb, userId, {
           action: 'update',
-          tableName: 'project_maps',
+          tableName: 'role_maps',
           recordName: parsed.id,
           recordId: parsed.id,
         });
         logger.info(
-          { scope: 'audit', projectMapId: parsed.id },
-          'Audit log created for project map update',
+          { scope: 'audit', roleMapId: parsed.id },
+          'Audit log created for role map update',
         );
 
         return {
           success: true,
-          message: 'Project map updated successfully',
+          message: 'Role map updated successfully',
         };
       } catch (error) {
         logger.error(
           {
-            scope: 'project-map',
+            scope: 'role-map',
             err: error,
             errorMessage: error instanceof Error ? error.message : String(error),
           },
-          'Failed to update project map',
+          'Failed to update role map',
         );
         return {
           success: false,
-          message: 'Failed to update project map',
+          message: 'Failed to update role map',
         };
       }
     },
   );
 
   ipcMain.handle(
-    'project-map:delete',
-    async (_event, projectMapId: string): Promise<common.SuccessResponse> => {
+    'role-map:delete',
+    async (_event, roleMapId: string): Promise<common.SuccessResponse> => {
       try {
-        const existing = userDb.projectMap.getById(projectMapId);
+        const existing = userDb.roleMap.getById(roleMapId);
         if (!existing) {
           logger.error(
-            { scope: 'project-map', projectMapId },
-            'Project map not found for deletion',
+            { scope: 'role-map', roleMapId },
+            'Role map not found for deletion',
           );
           return {
             success: false,
-            message: 'Project map not found for deletion',
+            message: 'Role map not found for deletion',
           };
         }
-        userDb.projectMap.delete(projectMapId);
+        userDb.roleMap.delete(roleMapId);
         logger.info(
-          { scope: 'project-map', projectMapId },
-          'Project map deleted successfully',
+          { scope: 'role-map', roleMapId },
+          'Role map deleted successfully',
         );
 
         createAuditLog(userDb, userId, {
           action: 'delete',
-          tableName: 'project_maps',
-          recordName: projectMapId,
-          recordId: projectMapId,
+          tableName: 'role_maps',
+          recordName: roleMapId,
+          recordId: roleMapId,
         });
         logger.info(
-          { scope: 'audit', projectMapId },
-          'Audit log created for project map deletion',
+          { scope: 'audit', roleMapId },
+          'Audit log created for role map deletion',
         );
 
         return {
           success: true,
-          message: 'Project map deleted successfully',
+          message: 'Role map deleted successfully',
         };
       } catch (error) {
         logger.error(
           {
-            scope: 'project-map',
-            projectMapId,
+            scope: 'role-map',
+            roleMapId,
             err: error,
             errorMessage: error instanceof Error ? error.message : String(error),
           },
-          'Failed to delete project map',
+          'Failed to delete role map',
         );
         return {
           success: false,
-          message: 'Failed to delete project map',
+          message: 'Failed to delete role map',
         };
       }
     },
   );
 
   ipcMain.handle(
-    'project-map:restore',
-    async (_event, projectMapId: string): Promise<common.SuccessResponse> => {
+    'role-map:restore',
+    async (_event, roleMapId: string): Promise<common.SuccessResponse> => {
       try {
-        const existing = userDb.projectMap.getById(projectMapId);
+        const existing = userDb.roleMap.getById(roleMapId);
         if (!existing) {
           logger.error(
-            { scope: 'project-map', projectMapId },
-            'Project map not found for restoration',
+            { scope: 'role-map', roleMapId },
+            'Role map not found for restoration',
           );
           return {
             success: false,
-            message: 'Project map not found for restoration',
+            message: 'Role map not found for restoration',
           };
         }
-        userDb.projectMap.restore(projectMapId);
+        userDb.roleMap.restore(roleMapId);
         logger.info(
-          { scope: 'project-map', projectMapId },
-          'Project map restored successfully',
+          { scope: 'role-map', roleMapId },
+          'Role map restored successfully',
         );
 
         createAuditLog(userDb, userId, {
           action: 'restore',
-          tableName: 'project_maps',
-          recordName: projectMapId,
-          recordId: projectMapId,
+          tableName: 'role_maps',
+          recordName: roleMapId,
+          recordId: roleMapId,
         });
         logger.info(
-          { scope: 'audit', projectMapId },
-          'Audit log created for project map restoration',
+          { scope: 'audit', roleMapId },
+          'Audit log created for role map restoration',
         );
 
         return {
           success: true,
-          message: 'Project map restored successfully',
+          message: 'Role map restored successfully',
         };
       } catch (error) {
         logger.error(
           {
-            scope: 'project-map',
-            projectMapId,
+            scope: 'role-map',
+            roleMapId,
             err: error,
             errorMessage: error instanceof Error ? error.message : String(error),
           },
-          'Failed to restore project map',
+          'Failed to restore role map',
         );
         return {
           success: false,
-          message: 'Failed to restore project map',
+          message: 'Failed to restore role map',
         };
       }
     },
   );
 
   ipcMain.handle(
-    'project-map:upsert',
-    async (_event, payload: system.ProjectMap[]): Promise<common.SuccessResponse> => {
+    'role-map:upsert',
+    async (_event, payload: system.RoleMap[]): Promise<common.SuccessResponse> => {
       try {
-        userDb.projectMap.transaction(() => {
-          for (const projectMap of payload) {
-            const parsed = system.ProjectMapSchema.parse(projectMap);
-            userDb.projectMap.upsert(parsed);
+        userDb.roleMap.transaction(() => {
+          for (const roleMap of payload) {
+            const parsed = system.RoleMapSchema.parse(roleMap);
+            userDb.roleMap.upsert(parsed);
             logger.info(
-              { scope: 'project-map', projectMapId: parsed.id },
-              'Project map upserted successfully',
+              { scope: 'role-map', roleMapId: parsed.id },
+              'Role map upserted successfully',
             );
 
             createAuditLog(userDb, userId, {
               action: 'upsert',
-              tableName: 'project_maps',
+              tableName: 'role_maps',
               recordName: parsed.id,
               recordId: parsed.id,
             });
             logger.info(
-              { scope: 'audit', projectMapId: parsed.id },
-              'Audit log created for project map upsert',
+              { scope: 'audit', roleMapId: parsed.id },
+              'Audit log created for role map upsert',
             );
           }
         });
         return {
           success: true,
-          message: 'Project maps upserted successfully',
+          message: 'Role maps upserted successfully',
         };
       } catch (error) {
         logger.error(
           {
-            scope: 'project-map',
+            scope: 'role-map',
             err: error,
             errorMessage: error instanceof Error ? error.message : String(error),
           },
-          'Failed to upsert project maps',
+          'Failed to upsert role maps',
         );
         return {
           success: false,
-          message: 'Failed to upsert project maps',
+          message: 'Failed to upsert role maps',
         };
       }
     },

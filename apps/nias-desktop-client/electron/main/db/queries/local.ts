@@ -39,7 +39,7 @@ export class LocalQueries {
     return result || null;
   }
 
-  upsert(params: local.User): void {
+  upsert(params: local.UserData): void {
     const stmt = this.db.prepare(`
       INSERT INTO users (
         id, email, password_hash, sync_version

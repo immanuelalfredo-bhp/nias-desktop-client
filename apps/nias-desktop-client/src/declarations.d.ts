@@ -302,6 +302,18 @@ export interface ElectronAPI {
   requestItemDelete: (payload: order.RequestItemId) => Promise<common.SuccessResponse>;
   requestItemRestore: (payload: order.RequestItemId) => Promise<common.SuccessResponse>;
   requestItemUpsert: (payload: order.RequestItem[]) => Promise<common.SuccessResponse>;
+
+  // Authentication IPC handlers
+  authStatus: () => Promise<Envelope<local.BootstrapStatus>>;
+  authLogin: (payload: { email: string; password: string }) => Promise<Envelope<common.SuccessResponse>>;
+  authSync: () => Promise<Envelope<common.SuccessResponse>>;
+
+  // Bootstrap IPC handlers
+  bootstrapStatus: () => Promise<Envelope<local.BootstrapStatus>>;
+  bootstrapExecute: (payload: local.BootstrapInput) => Promise<common.SuccessResponse>;
+
+  // Sync IPC handlers
+  syncPull: () => Promise<Envelope<server.PullResponse>>;
 }
 
 declare global {

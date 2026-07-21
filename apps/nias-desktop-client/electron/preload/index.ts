@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { attribute, item, variant, order, system } from '@nias/shared';
+import { attribute, item, variant, order, system, local, server } from '@nias/shared';
 
 contextBridge.exposeInMainWorld('electronAPI', {
   // User IPC handlers
@@ -380,17 +380,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
   requestItemUpsert: (payload: order.RequestItem[]) =>
     ipcRenderer.invoke('request-item:upsert', payload),
 
-  // // Authentication IPC handlers
-  // authStatus: () => ipcRenderer.invoke('auth:status'),
-  // authLogin: (payload: auth.LoginCredentials) => ipcRenderer.invoke('auth:login', payload),
-  // authSync: () => ipcRenderer.invoke('auth:sync'),
+  // Authentication IPC handlers
+  authStatus: () => ipcRenderer.invoke('auth:status'),
+  authLogin: (payload: { email: string; password: string }) =>
+    ipcRenderer.invoke('auth:login', payload),
+  authSync: () => ipcRenderer.invoke('auth:sync'),
 
-  // // Bootstrap IPC handlers
-  // bootstrapStatus: (bootstrapSecret: string) =>
-  //   ipcRenderer.invoke('bootstrap:status', bootstrapSecret),
-  // bootstrapExecute: (bootstrapSecret: string, payload: auth.BootstrapInput) =>
-  //   ipcRenderer.invoke('bootstrap:execute', bootstrapSecret, payload),
+  // Bootstrap IPC handlers
+  bootstrapStatus: () => ipcRenderer.invoke('bootstrap:status'),
+  bootstrapExecute: (payload: local.BootstrapInput) =>
+    ipcRenderer.invoke('bootstrap:execute', payload),
 
-  // // Sync IPC handlers
-  // syncPull: () => ipcRenderer.invoke('sync:pull'),
+  // Sync IPC handlers
+  syncPull: () => ipcRenderer.invoke('sync:pull'),
+  // syncPush: (payload: { email: string; password: string }) =>
+  //   ipcRenderer.invoke('sync:push', payload),
 });
