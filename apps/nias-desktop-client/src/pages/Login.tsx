@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import BootstrapModal from '../components/modals/BootstrapModal';
 import type { LoginRouteState, StatusState } from '../types';
 
 export default function Login() {
@@ -13,7 +12,6 @@ export default function Login() {
     isError: false,
   });
   const [isAuthEmpty, setIsAuthEmpty] = useState(false);
-  const [showModal, setShowModal] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -99,8 +97,28 @@ export default function Login() {
     }
   };
 
-  const handleBootstrap = () => {
-    navigate('/bootstrap', { replace: true });
+  const handleBootstrap = async () => {
+    setIsBusy(true);
+    setStatus({ text: 'Verifying...', isError: false });
+
+    try {
+      const result = await window.electronAPI.bootstrapStatus();
+
+      if (!result.success) {
+        setStatus({
+          text: `Bootstrap failed: ${result.message || 'Unknown error'}`,
+          isError: true,
+        });
+        return;
+      }
+      if (result.data.isEmpty) {
+        navigate('/bootstrap', { replace: true });
+      }
+    } catch {
+      setStatus({ text: 'Bootstrap failed: Connection error', isError: true });
+    } finally {
+      setIsBusy(false);
+    }
   };
 
   return (
@@ -133,22 +151,13 @@ export default function Login() {
             Sync
           </button>
           {isAuthEmpty && (
-            <button onClick={() => setShowModal(true)} className="secondary" disabled={isBusy}>
+            <button onClick={handleBootstrap} className="secondary" disabled={isBusy}>
               Bootstrap
             </button>
           )}
         </div>
         <div className={status.isError ? 'status error' : 'status'}>{status.text}</div>
       </section>
-      {showModal && (
-        <BootstrapModal
-          handleClose={() => setShowModal(false)}
-          handleBootstrap={() => {
-            handleBootstrap();
-            setShowModal(false);
-          }}
-        />
-      )}
     </div>
   );
 }

@@ -96,9 +96,21 @@ export async function handleResponse<T>(
     return envelopeResult.data.data;
   }
 
+  logger.error(
+    {
+      scope,
+      issues: envelopeResult.error.issues,
+      data: json,
+    },
+    'Sync request failed: Invalid response envelope from sync server',
+  );
+
   const responseData = safeParse(schema, json);
   if (!responseData.success) {
-    logger.error({ scope, data: json }, 'Sync request failed: Invalid response from sync server');
+    logger.error(
+      { scope, issues: responseData.error.issues, data: json },
+      'Sync request failed: Invalid response from sync server',
+    );
     return { success: false, message: 'Invalid response from sync server' };
   }
   const data = responseData.data;

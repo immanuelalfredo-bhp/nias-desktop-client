@@ -44,7 +44,7 @@ export const registerSyncIpcHandlers = (
           },
           body: JSON.stringify(cursor),
         });
-
+        logger.info({ scope: 'sync', page, cursor, response }, 'Sync pull response received');
         const data = await handleResponse(response, server.PullResponseSchema, 'sync');
         if (!isSuccess(data)) {
           return { success: false, message: 'Sync pull failed' };
@@ -66,20 +66,12 @@ export const registerSyncIpcHandlers = (
         mergedResponse.latestVersions = { ...cursor };
         mergedResponse.hasMore = hasMore;
 
-        if (hasMore && cursor.users <= previousCursor.users) {
+        if (hasMore && JSON.stringify(previousCursor) === JSON.stringify(cursor)) {
           logger.error(
-            {
-              scope: 'sync',
-              page,
-              previousCursor,
-              cursor,
-            },
-            'Sync pull pagination stalled: cursor did not advance',
+            { scope: 'sync', page, previousCursor, cursor },
+            'Sync pull failed: cursor did not advance despite hasMore being true',
           );
-          return {
-            success: false,
-            message: 'Sync pull failed: pagination stalled without version progress',
-          };
+          return { success: false, message: 'Sync pull failed: cursor did not advance' };
         }
       } while (hasMore);
 

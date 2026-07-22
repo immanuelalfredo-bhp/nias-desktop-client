@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { auth } from '@nias/shared';
+import type { local } from '@nias/shared';
 import type { StatusState } from '../types';
 
 export default function BootstrapPage() {
@@ -35,13 +35,14 @@ export default function BootstrapPage() {
         setStatus({ text: 'Passwords do not match', isError: true });
         return;
       } else {
-        const payload: auth.BootstrapInput = {
+        const payload: local.BootstrapInput = {
           displayName,
           email,
           password,
+          bootstrapKey: bootstrapSecret,
         };
 
-        const result = await window.electronAPI.bootstrapExecute(bootstrapSecret, payload);
+        const result = await window.electronAPI.bootstrapExecute(payload);
 
         if (result.success) {
           navigate('/login', {

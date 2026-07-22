@@ -5,6 +5,10 @@ const argon2Regex = new RegExp(
     '\\$[A-Za-z0-9+/]+={0,2}\\$[A-Za-z0-9+/]+={0,2}$',
 );
 
+export const normalizedDatetime = z.string().transform((val) => {
+  return new Date(val).toISOString();
+}).pipe(z.iso.datetime());
+
 export const uuid = z.uuid();
 export const displayName = z.string().trim().max(100).default('');
 export const email = z.email();
@@ -37,7 +41,7 @@ export const jsonb = z.any()
 export const boolean = z.boolean();
 export const integer = z.number().int();
 export const float = z.number();
-export const dateTime = z.iso.datetime();
+export const dateTime = normalizedDatetime;
 export const slug = z
   .string()
   .trim()
