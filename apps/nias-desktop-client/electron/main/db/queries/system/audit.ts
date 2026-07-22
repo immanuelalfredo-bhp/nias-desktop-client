@@ -49,7 +49,7 @@ export class AuditQueries extends BaseQueries<system.Audit, system.CreateAudit, 
           is_synced = excluded.is_synced,
           sync_version = excluded.sync_version`,
       )
-      .run(params);
+      .run({ ...params, isSynced: params.isSynced ? 1 : 0 });
   }
   update(): void {} // Not implemented for audits
 }

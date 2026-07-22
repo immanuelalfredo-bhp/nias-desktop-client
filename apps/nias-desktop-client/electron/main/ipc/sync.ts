@@ -44,7 +44,6 @@ export const registerSyncIpcHandlers = (
           },
           body: JSON.stringify(cursor),
         });
-        logger.info({ scope: 'sync', page, cursor, response }, 'Sync pull response received');
         const data = await handleResponse(response, server.PullResponseSchema, 'sync');
         if (!isSuccess(data)) {
           return { success: false, message: 'Sync pull failed' };
