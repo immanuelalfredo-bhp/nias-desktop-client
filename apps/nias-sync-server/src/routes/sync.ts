@@ -83,7 +83,15 @@ async function getSyncDelta(
       },
     };
   } catch (error) {
-    context?.log?.error({ scope: 'sync', error }, 'Error computing sync delta');
+    context?.log?.error(
+      {
+        scope: 'sync',
+        errorMessage: (error as Error).message,
+        errorStack: (error as Error).stack,
+        rawError: error,
+      },
+      'Error computing sync delta',
+    );
     return { success: false, message: 'Failed to compute sync delta' };
   }
 }
@@ -123,7 +131,15 @@ export async function handlePull(
 
     return res.json(data);
   } catch (error) {
-    req.log.error({ scope: 'sync', error }, 'Error handling sync pull');
+    req.log.error(
+      {
+        scope: 'sync',
+        errorMessage: (error as Error).message,
+        errorStack: (error as Error).stack,
+        rawError: error,
+      },
+      'Error handling sync pull',
+    );
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 }
@@ -138,7 +154,15 @@ export async function refreshUserToken(
     });
 
     if (error) {
-      context?.log?.error({ scope: 'auth', error }, 'Failed to refresh user token');
+      context?.log?.error(
+        {
+          scope: 'auth',
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
+        },
+        'Failed to refresh user token',
+      );
       return { success: false, message: 'Failed to refresh user token' };
     }
 
