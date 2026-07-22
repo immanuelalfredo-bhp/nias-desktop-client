@@ -98,7 +98,7 @@ app.post('/api/database/new-user',
   },
 );
 
-app.post('/api/bootstrap/status', bootstrapAuthenticate, (req, res, next) =>
+app.post('/api/bootstrap/status', appAuthenticate, (req, res, next) =>
   getBootstrapStatus(req, res).catch(next),
 );
 
