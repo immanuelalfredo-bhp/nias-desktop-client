@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import {
-  SyncMetadataSchema as DrizzleSyncMetadataSchema,
   type SyncMetadata as DrizzleSyncMetadata,
   SYNC_TABLE_MAP,
   type SyncTableKey,
@@ -47,7 +46,7 @@ import {
 } from '../server/schema/variant.js';
 import { RequestSchema, RequestItemSchema } from '../server/schema/order.js';
 
-export const SyncMetadataSchema = DrizzleSyncMetadataSchema;
+export const SyncMetadataSchema = schemas.syncMetadata;
 export type SyncMetadata = DrizzleSyncMetadata;
 
 const PayloadSchemaByTableName = {

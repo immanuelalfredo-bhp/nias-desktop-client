@@ -7,7 +7,7 @@ export type DBTransaction = PgTransaction<any, any, any>;
 
 export const TABLE_MAP = SYNC_TABLE_MAP;
 
-export const defaultRegistry = TABLE_MAP.reduce((acc, t) => {
+export const defaultRegistry = SYNC_TABLE_MAP.reduce((acc, t) => {
   acc[t.key] = 0;
   return acc;
 }, {} as server.SyncMetadata);

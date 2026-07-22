@@ -14,6 +14,7 @@ export const syncVersion = z.number().int().nonnegative().default(0);
 export const token = z.string();
 
 export const sortOrder = z.number().nonnegative().max(100).default(0);
+export const syncMetadata = z.record(z.string(), syncVersion);
 
 // Enumerations
 export const scope = z.enum(['global', 'contextual']);

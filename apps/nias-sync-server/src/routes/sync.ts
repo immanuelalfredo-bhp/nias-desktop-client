@@ -2,11 +2,131 @@ import { type Request, type Response } from 'express';
 import { asc, gt } from 'drizzle-orm';
 import type { Logger } from 'pino';
 import { server } from '@nias/shared';
-import { type Envelope } from '@nias/shared/server';
+import { syncMetadata, type Envelope } from '@nias/shared/server';
 import { SYNC_LIMIT } from '../config.js';
 import { db } from '../db.js';
 import { defaultRegistry, TABLE_MAP, upsertSyncRecords } from '../utils.js';
 import { supabase } from '../supabase.js';
+
+async function getSyncDelta(
+  clientVersions: server.SyncMetadata,
+  context?: { log?: Logger; userId?: string },
+): Promise<Envelope<server.PullResponse>> {
+  try {
+    const rows = await db.select().from(syncMetadata);
+    const syncLimit = SYNC_LIMIT;
+    const payload = clientVersions;
+
+    const registry: server.SyncMetadata = { ...defaultRegistry };
+    for (const row of rows) {
+      if (row.tableName) {
+        registry[row.tableName] = row.syncVersion ?? 0;
+      }
+    }
+
+    const entries = await Promise.all(
+      TABLE_MAP.map(async (tableInfo) => {
+        const clientVersion = payload[tableInfo.key] ?? 0;
+        const serverVersion = registry[tableInfo.key] ?? 0;
+
+        if (clientVersion < serverVersion) {
+          context?.log?.info(
+            {
+              scope: 'sync',
+              table: tableInfo.key,
+              clientVersion,
+              serverVersion,
+              userId: context?.userId,
+              syncVersion: tableInfo.table.syncVersion,
+            },
+            'Client version is behind server version, fetching changes',
+          );
+          return (
+            db
+              .select()
+              .from(tableInfo.table)
+              .where(gt(tableInfo.table.syncVersion, clientVersion))
+              // We limit the number of records to avoid massive memory spikes
+              // and to keep individual network responses within safe size limits.
+              .limit(syncLimit)
+              .orderBy(asc(tableInfo.table.syncVersion))
+          );
+        } else {
+          return [];
+        }
+      }),
+    );
+
+    const changes = Object.fromEntries(
+      TABLE_MAP.map((t, idx) => [t.key, entries[idx] ?? []]),
+    ) as server.PullResponse['changes'];
+
+    context?.log?.info(
+      {
+        scope: 'sync',
+        hasMore: entries.some((r) => r.length === syncLimit),
+        latestVersions: registry,
+        tableCounts: Object.fromEntries(
+          Object.entries(changes).map(([key, rows]) => [key, rows.length]),
+        ),
+      },
+      'Computed sync delta',
+    );
+
+    return {
+      success: true,
+      message: 'Sync delta computed successfully',
+      data: {
+        changes,
+        hasMore: entries.some((r) => r.length === syncLimit),
+        latestVersions: registry,
+      },
+    };
+  } catch (error) {
+    context?.log?.error({ scope: 'sync', error }, 'Error computing sync delta');
+    return { success: false, message: 'Failed to compute sync delta' };
+  }
+}
+
+export async function handlePull(
+  req: Request,
+  res: Response,
+): Promise<Response<Envelope<server.PullResponse>>> {
+  try {
+    const metadata = req.validatedBody as server.SyncMetadata;
+    req.log.info({ scope: 'sync', metadata }, 'Starting sync pull');
+
+    const data = await getSyncDelta(metadata);
+
+    if (!data.success) {
+      req.log.error({ scope: 'sync', message: data.message }, 'Failed to compute sync delta');
+      return res.status(500).json(data);
+    }
+
+    const changes = data.data?.changes ?? {};
+    if (!changes) {
+      req.log.info({ scope: 'sync' }, 'No changes to sync, returning empty response');
+      return res.json(data);
+    }
+
+    req.log.info(
+      {
+        scope: 'sync',
+        hasMore: 'hasMore' in data ? data.hasMore : false,
+        latestVersions: 'latestVersions' in data ? data.latestVersions : {},
+        tableCounts: Object.fromEntries(
+          Object.entries(changes).map(([key, rows]) => [key, (rows as any[]).length]),
+        ),
+      },
+      'Completed sync pull',
+    );
+
+    return res.json(data);
+  } catch (error) {
+    req.log.error({ scope: 'sync', error }, 'Error handling sync pull');
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+}
 
 export async function refreshUserToken(
   params: server.RefreshToken,
@@ -56,120 +176,6 @@ export async function refreshUserToken(
     };
   }
 }
-
-// async function getSyncDelta(
-//   clientVersions: sync.SyncMetadata,
-//   context?: { log?: Logger; userId?: string },
-// ): Promise<Envelope<sync.PullManifest>> {
-//   try {
-//     const rows = await db.select().from(syncMetadata).limit(1);
-//     const syncLimit = SYNC_LIMIT;
-//     const payload = clientVersions;
-
-//     const registry: sync.SyncMetadata = { ...defaultRegistry, ...(rows[0] ?? {}) };
-
-//     const entries = await Promise.all(
-//       TABLE_MAP.map(async (tableInfo) => {
-//         const clientVersion = payload[tableInfo.key] ?? 0;
-//         const serverVersion = registry[tableInfo.key] ?? 0;
-//         if (clientVersion < serverVersion) {
-//           context?.log?.info(
-//             {
-//               scope: 'sync',
-//               table: tableInfo.key,
-//               clientVersion,
-//               serverVersion,
-//               userId: context?.userId,
-//               syncVersion: tableInfo.table.syncVersion,
-//             },
-//             'Client version is behind server version, fetching changes',
-//           );
-//           return (
-//             db
-//               .select()
-//               .from(tableInfo.table)
-//               .where(gt(tableInfo.table.syncVersion, clientVersion))
-//               // We limit the number of records to avoid massive memory spikes
-//               // and to keep individual network responses within safe size limits.
-//               .limit(syncLimit)
-//               .orderBy(asc(tableInfo.table.syncVersion))
-//           );
-//         } else {
-//           return [];
-//         }
-//       }),
-//     );
-
-//     const changes = Object.fromEntries(
-//       TABLE_MAP.map((t, idx) => [t.key, entries[idx] ?? []]),
-//     ) as sync.PullManifest['changes'];
-
-//     context?.log?.info(
-//       {
-//         scope: 'sync',
-//         hasMore: entries.some((r) => r.length === syncLimit),
-//         latestVersions: registry,
-//         tableCounts: Object.fromEntries(
-//           Object.entries(changes).map(([key, rows]) => [key, rows.length]),
-//         ),
-//       },
-//       'Computed sync delta',
-//     );
-
-//     return {
-//       success: true,
-//       message: 'Sync delta computed successfully',
-//       data: {
-//         changes,
-//         hasMore: entries.some((r) => r.length === syncLimit),
-//         latestVersions: registry,
-//       },
-//     };
-//   } catch (error) {
-//     context?.log?.error({ scope: 'sync', error }, 'Error computing sync delta');
-//     return { success: false, message: 'Failed to compute sync delta' };
-//   }
-// }
-
-// export async function handlePull(
-//   req: Request,
-//   res: Response,
-// ): Promise<Response<Envelope<sync.PullManifest>>> {
-//   try {
-//     const metadata = req.validatedBody as sync.SyncMetadata;
-//     req.log.info({ scope: 'sync', metadata }, 'Starting sync pull');
-
-//     const data = await getSyncDelta(metadata);
-
-//     if (!data.success) {
-//       req.log.error({ scope: 'sync', message: data.message }, 'Failed to compute sync delta');
-//       return res.status(500).json(data);
-//     }
-
-//     const changes = data.data?.changes ?? {};
-//     if (!changes) {
-//       req.log.info({ scope: 'sync' }, 'No changes to sync, returning empty response');
-//       return res.json(data);
-//     }
-
-//     req.log.info(
-//       {
-//         scope: 'sync',
-//         hasMore: 'hasMore' in data ? data.hasMore : false,
-//         latestVersions: 'latestVersions' in data ? data.latestVersions : {},
-//         tableCounts: Object.fromEntries(
-//           Object.entries(changes).map(([key, rows]) => [key, (rows as any[]).length]),
-//         ),
-//       },
-//       'Completed sync pull',
-//     );
-
-//     return res.json(data);
-//   } catch (error) {
-//     req.log.error({ scope: 'sync', error }, 'Error handling sync pull');
-//     return res.status(500).json({ success: false, message: 'Internal server error' });
-//   }
-// }
 
 // export async function handlePush(
 //   payload: sync.PushPayload,

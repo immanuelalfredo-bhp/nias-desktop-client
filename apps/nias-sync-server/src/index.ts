@@ -12,7 +12,7 @@ import {
 } from './middleware.js';
 import { getBootstrapStatus, handleBootstrap } from './routes/bootstrap.js';
 import { initialLogin, syncLocalUsers } from './routes/login.js';
-import { refreshUserToken } from './routes/sync.js';
+import { handlePull, refreshUserToken } from './routes/sync.js';
 import { handleCreateUser } from './routes/database.js';
 
 const shutdownTimeout = SHUTDOWN_TIMEOUT;
@@ -21,6 +21,21 @@ const PORT = Number(process.env.PORT || 3000);
 app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+app.post('/api/sync/pull', userAuthenticate, validate(server.SyncMetadataSchema), (req, res, next) =>
+  handlePull(req, res).catch(next),
+);
+
+// app.post('/api/sync/push', userAuthenticate, validate(sync.PushPayloadSchema), (req, res, next) => {
+//   const context = {
+//     log: req.log,
+//     ...(req.user?.id ? { userId: req.user.id } : {}),
+//   };
+
+//   return handlePush(req.validatedBody as sync.PushPayload, context)
+//     .then((result) => res.json(result))
+//     .catch(next);
+// });
 
 app.post(
   '/api/sync/refresh-token',
@@ -37,21 +52,6 @@ app.post(
       .catch(next);
   }
 );
-
-// app.post('/api/sync/push', userAuthenticate, validate(sync.PushPayloadSchema), (req, res, next) => {
-//   const context = {
-//     log: req.log,
-//     ...(req.user?.id ? { userId: req.user.id } : {}),
-//   };
-
-//   return handlePush(req.validatedBody as sync.PushPayload, context)
-//     .then((result) => res.json(result))
-//     .catch(next);
-// });
-
-// app.post('/api/sync/pull', userAuthenticate, validate(sync.SyncMetadataSchema), (req, res, next) =>
-//   handlePull(req, res).catch(next),
-// );
 
 app.post(
   '/api/login/initial',
