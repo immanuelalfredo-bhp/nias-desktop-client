@@ -125,7 +125,7 @@ CREATE INDEX IF NOT EXISTS idx_project_map_deleted_at ON project_map (deleted_at
 CREATE INDEX IF NOT EXISTS idx_project_map_is_synced ON project_map (is_synced);
 CREATE INDEX IF NOT EXISTS idx_project_map_sync_version ON project_map (sync_version);
 
-INSERT INTO
+INSERT OR IGNORE INTO
   sync_metadata (table_name, sync_version)
 VALUES
   ('roles', 0),
@@ -133,4 +133,4 @@ VALUES
   ('role_capabilities', 0),
   ('role_management', 0),
   ('role_map', 0),
-  ('project_map', 0)
+  ('project_map', 0);

@@ -13,8 +13,8 @@ import { resolveUserAccessToken } from '../sync.js';
 import { SYNC_SERVER_URL } from '../../config';
 
 export function registerUserIpcHandlers(
-  userDb: UserDatabase,
   authDb: AuthDatabase,
+  userDb: UserDatabase,
   userId: string,
 ): void {
   ipcMain.handle('user:list-active', async (_event): Promise<Envelope<system.User[]>> => {
@@ -33,8 +33,9 @@ export function registerUserIpcHandlers(
       logger.error(
         {
           scope: 'user',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve active users',
       );
@@ -61,8 +62,9 @@ export function registerUserIpcHandlers(
       logger.error(
         {
           scope: 'user',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve deleted users',
       );
@@ -96,8 +98,9 @@ export function registerUserIpcHandlers(
           {
             scope: 'user',
             userId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve user',
         );
@@ -174,8 +177,9 @@ export function registerUserIpcHandlers(
             {
               scope: 'user',
               userId: data.id,
-              err: error,
-              errorMessage: error instanceof Error ? error.message : String(error),
+              errorMessage: (error as Error).message,
+              errorStack: (error as Error).stack,
+              rawError: error,
             },
             'Failed to upsert user in local database',
           );
@@ -193,8 +197,9 @@ export function registerUserIpcHandlers(
         logger.error(
           {
             scope: 'user',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create user',
         );
@@ -247,8 +252,9 @@ export function registerUserIpcHandlers(
           {
             scope: 'user',
             userId: payload.id,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update user',
         );
@@ -300,8 +306,9 @@ export function registerUserIpcHandlers(
           {
             scope: 'user',
             userId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update user',
         );
@@ -386,8 +393,9 @@ export function registerUserIpcHandlers(
             {
               scope: 'user',
               userId: parsed.id,
-              err: error,
-              errorMessage: error instanceof Error ? error.message : String(error),
+              errorMessage: (error as Error).message,
+              errorStack: (error as Error).stack,
+              rawError: error,
             },
             'Failed to update user password in local database',
           );
@@ -419,8 +427,9 @@ export function registerUserIpcHandlers(
               {
                 scope: 'auth',
                 userId: parsed.id,
-                err: error,
-                errorMessage: error instanceof Error ? error.message : String(error),
+                errorMessage: (error as Error).message,
+                errorStack: (error as Error).stack,
+                rawError: error,
               },
               'Failed to update user password in auth database',
             );
@@ -439,8 +448,9 @@ export function registerUserIpcHandlers(
           {
             scope: 'user',
             userId: payload.id,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update user password',
         );
@@ -482,8 +492,9 @@ export function registerUserIpcHandlers(
         {
           scope: 'user',
           userId,
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to delete user',
       );
@@ -526,8 +537,9 @@ export function registerUserIpcHandlers(
           {
             scope: 'user',
             userId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore user',
         );
@@ -566,8 +578,9 @@ export function registerUserIpcHandlers(
         logger.error(
           {
             scope: 'user',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert users',
         );

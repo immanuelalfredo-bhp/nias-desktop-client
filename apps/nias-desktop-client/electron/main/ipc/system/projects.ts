@@ -21,8 +21,9 @@ export function registerProjectIpcHandlers(userDb: UserDatabase, userId: string)
       logger.error(
         {
           scope: 'project',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve active projects',
       );
@@ -49,8 +50,9 @@ export function registerProjectIpcHandlers(userDb: UserDatabase, userId: string)
       logger.error(
         {
           scope: 'project',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve deleted projects',
       );
@@ -84,8 +86,9 @@ export function registerProjectIpcHandlers(userDb: UserDatabase, userId: string)
           {
             scope: 'project',
             projectId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve project',
         );
@@ -120,7 +123,10 @@ export function registerProjectIpcHandlers(userDb: UserDatabase, userId: string)
           recordId: data.id,
           recordName: data.name,
         });
-        logger.info({ scope: 'audit', projectId: data.id }, 'Audit log created for project creation');
+        logger.info(
+          { scope: 'audit', projectId: data.id },
+          'Audit log created for project creation',
+        );
 
         return {
           success: true,
@@ -130,8 +136,9 @@ export function registerProjectIpcHandlers(userDb: UserDatabase, userId: string)
         logger.error(
           {
             scope: 'project',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create project',
         );
@@ -174,7 +181,10 @@ export function registerProjectIpcHandlers(userDb: UserDatabase, userId: string)
           recordName: parsed.name || existing.name,
           recordId: parsed.id,
         });
-        logger.info({ scope: 'audit', projectId: parsed.id }, 'Audit log created for project update');
+        logger.info(
+          { scope: 'audit', projectId: parsed.id },
+          'Audit log created for project update',
+        );
 
         return {
           success: true,
@@ -184,8 +194,9 @@ export function registerProjectIpcHandlers(userDb: UserDatabase, userId: string)
         logger.error(
           {
             scope: 'project',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update project',
         );
@@ -197,47 +208,51 @@ export function registerProjectIpcHandlers(userDb: UserDatabase, userId: string)
     },
   );
 
-  ipcMain.handle('project:delete', async (_event, projectId: string): Promise<common.SuccessResponse> => {
-    try {
-      const existing = userDb.project.getById(projectId);
-      if (!existing) {
-        logger.error({ scope: 'project', projectId }, 'Project not found for deletion');
+  ipcMain.handle(
+    'project:delete',
+    async (_event, projectId: string): Promise<common.SuccessResponse> => {
+      try {
+        const existing = userDb.project.getById(projectId);
+        if (!existing) {
+          logger.error({ scope: 'project', projectId }, 'Project not found for deletion');
+          return {
+            success: false,
+            message: 'Project not found for deletion',
+          };
+        }
+        userDb.project.delete(projectId);
+        logger.info({ scope: 'project', projectId }, 'Project deleted successfully');
+
+        createAuditLog(userDb, userId, {
+          action: 'delete',
+          tableName: 'projects',
+          recordName: existing.name,
+          recordId: projectId,
+        });
+        logger.info({ scope: 'audit', projectId }, 'Audit log created for project deletion');
+
+        return {
+          success: true,
+          message: 'Project deleted successfully',
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'project',
+            projectId,
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to delete project',
+        );
         return {
           success: false,
-          message: 'Project not found for deletion',
+          message: 'Failed to delete project',
         };
       }
-      userDb.project.delete(projectId);
-      logger.info({ scope: 'project', projectId }, 'Project deleted successfully');
-
-      createAuditLog(userDb, userId, {
-        action: 'delete',
-        tableName: 'projects',
-        recordName: existing.name,
-        recordId: projectId,
-      });
-      logger.info({ scope: 'audit', projectId }, 'Audit log created for project deletion');
-
-      return {
-        success: true,
-        message: 'Project deleted successfully',
-      };
-    } catch (error) {
-      logger.error(
-        {
-          scope: 'project',
-          projectId,
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
-        },
-        'Failed to delete project',
-      );
-      return {
-        success: false,
-        message: 'Failed to delete project',
-      };
-    }
-  });
+    },
+  );
 
   ipcMain.handle(
     'project:restore',
@@ -271,8 +286,9 @@ export function registerProjectIpcHandlers(userDb: UserDatabase, userId: string)
           {
             scope: 'project',
             projectId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore project',
         );
@@ -292,7 +308,10 @@ export function registerProjectIpcHandlers(userDb: UserDatabase, userId: string)
           for (const project of payload) {
             const parsed = system.ProjectSchema.parse(project);
             userDb.project.upsert(parsed);
-            logger.info({ scope: 'project', projectId: parsed.id }, 'Project upserted successfully');
+            logger.info(
+              { scope: 'project', projectId: parsed.id },
+              'Project upserted successfully',
+            );
 
             createAuditLog(userDb, userId, {
               action: 'upsert',
@@ -300,7 +319,10 @@ export function registerProjectIpcHandlers(userDb: UserDatabase, userId: string)
               recordName: parsed.name,
               recordId: parsed.id,
             });
-            logger.info({ scope: 'audit', projectId: parsed.id }, 'Audit log created for project upsert');
+            logger.info(
+              { scope: 'audit', projectId: parsed.id },
+              'Audit log created for project upsert',
+            );
           }
         });
         return {
@@ -311,8 +333,9 @@ export function registerProjectIpcHandlers(userDb: UserDatabase, userId: string)
         logger.error(
           {
             scope: 'project',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert projects',
         );

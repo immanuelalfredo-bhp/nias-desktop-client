@@ -21,8 +21,9 @@ export function registerSystemMapsIpcHandlers(userDb: UserDatabase, userId: stri
       logger.error(
         {
           scope: 'system-map',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve active system maps',
       );
@@ -49,8 +50,9 @@ export function registerSystemMapsIpcHandlers(userDb: UserDatabase, userId: stri
       logger.error(
         {
           scope: 'system-map',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve deleted system maps',
       );
@@ -84,8 +86,9 @@ export function registerSystemMapsIpcHandlers(userDb: UserDatabase, userId: stri
           {
             scope: 'system-map',
             systemMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve system map',
         );
@@ -134,8 +137,9 @@ export function registerSystemMapsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'system-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create system map',
         );
@@ -195,8 +199,9 @@ export function registerSystemMapsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'system-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update system map',
         );
@@ -240,8 +245,9 @@ export function registerSystemMapsIpcHandlers(userDb: UserDatabase, userId: stri
           {
             scope: 'system-map',
             systemMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete system map',
         );
@@ -291,8 +297,9 @@ export function registerSystemMapsIpcHandlers(userDb: UserDatabase, userId: stri
           {
             scope: 'system-map',
             systemMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore system map',
         );
@@ -337,8 +344,9 @@ export function registerSystemMapsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'system-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert system maps',
         );

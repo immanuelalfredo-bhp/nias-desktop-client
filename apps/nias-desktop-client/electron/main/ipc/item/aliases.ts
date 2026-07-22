@@ -21,8 +21,9 @@ export function registerAliasIpcHandlers(userDb: UserDatabase, userId: string): 
       logger.error(
         {
           scope: 'alias',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve active aliases',
       );
@@ -49,8 +50,9 @@ export function registerAliasIpcHandlers(userDb: UserDatabase, userId: string): 
       logger.error(
         {
           scope: 'alias',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve deleted aliases',
       );
@@ -84,8 +86,9 @@ export function registerAliasIpcHandlers(userDb: UserDatabase, userId: string): 
           {
             scope: 'alias',
             aliasId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve alias',
         );
@@ -129,8 +132,9 @@ export function registerAliasIpcHandlers(userDb: UserDatabase, userId: string): 
         logger.error(
           {
             scope: 'alias',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create alias',
         );
@@ -182,8 +186,9 @@ export function registerAliasIpcHandlers(userDb: UserDatabase, userId: string): 
         logger.error(
           {
             scope: 'alias',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update alias',
         );
@@ -227,8 +232,9 @@ export function registerAliasIpcHandlers(userDb: UserDatabase, userId: string): 
           {
             scope: 'alias',
             aliasId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete alias',
         );
@@ -272,8 +278,9 @@ export function registerAliasIpcHandlers(userDb: UserDatabase, userId: string): 
           {
             scope: 'alias',
             aliasId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore alias',
         );
@@ -315,8 +322,9 @@ export function registerAliasIpcHandlers(userDb: UserDatabase, userId: string): 
         logger.error(
           {
             scope: 'alias',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert aliases',
         );

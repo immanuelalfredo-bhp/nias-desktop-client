@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { system, common } from '@nias/shared';
-import { slugify, logger, type Envelope } from '@nias/shared/server';
+import { logger, type Envelope } from '@nias/shared/server';
 import { UserDatabase } from '../../db/database';
 import { createAuditLog } from './audit';
 
@@ -23,8 +23,9 @@ export function registerRoleManagementIpcHandlers(userDb: UserDatabase, userId: 
         logger.error(
           {
             scope: 'role-management',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve active role management map',
         );
@@ -54,8 +55,9 @@ export function registerRoleManagementIpcHandlers(userDb: UserDatabase, userId: 
         logger.error(
           {
             scope: 'role-management',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve deleted role management map',
         );
@@ -73,7 +75,10 @@ export function registerRoleManagementIpcHandlers(userDb: UserDatabase, userId: 
       try {
         const roleManagement = userDb.roleManagement.getById(roleManagementId);
         if (!roleManagement) {
-          logger.error({ scope: 'role-management', roleManagementId }, 'Role management map not found');
+          logger.error(
+            { scope: 'role-management', roleManagementId },
+            'Role management map not found',
+          );
           return {
             success: false,
             message: 'Role management map not found',
@@ -93,8 +98,9 @@ export function registerRoleManagementIpcHandlers(userDb: UserDatabase, userId: 
           {
             scope: 'role-management',
             roleManagementId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve role management map',
         );
@@ -143,8 +149,9 @@ export function registerRoleManagementIpcHandlers(userDb: UserDatabase, userId: 
         logger.error(
           {
             scope: 'role-management',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create role management',
         );
@@ -204,8 +211,9 @@ export function registerRoleManagementIpcHandlers(userDb: UserDatabase, userId: 
         logger.error(
           {
             scope: 'role-management',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update role management',
         );
@@ -258,8 +266,9 @@ export function registerRoleManagementIpcHandlers(userDb: UserDatabase, userId: 
           {
             scope: 'role-management',
             roleManagementId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete role management',
         );
@@ -312,8 +321,9 @@ export function registerRoleManagementIpcHandlers(userDb: UserDatabase, userId: 
           {
             scope: 'role-management',
             roleManagementId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore role management',
         );
@@ -358,8 +368,9 @@ export function registerRoleManagementIpcHandlers(userDb: UserDatabase, userId: 
         logger.error(
           {
             scope: 'role-management',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert role management',
         );

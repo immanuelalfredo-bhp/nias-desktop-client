@@ -21,8 +21,9 @@ export function registerModeIpcHandlers(userDb: UserDatabase, userId: string): v
       logger.error(
         {
           scope: 'mode',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve active modes',
       );
@@ -49,8 +50,9 @@ export function registerModeIpcHandlers(userDb: UserDatabase, userId: string): v
       logger.error(
         {
           scope: 'mode',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve deleted modes',
       );
@@ -84,8 +86,9 @@ export function registerModeIpcHandlers(userDb: UserDatabase, userId: string): v
           {
             scope: 'mode',
             modeId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve mode',
         );
@@ -129,8 +132,9 @@ export function registerModeIpcHandlers(userDb: UserDatabase, userId: string): v
         logger.error(
           {
             scope: 'mode',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create mode',
         );
@@ -182,8 +186,9 @@ export function registerModeIpcHandlers(userDb: UserDatabase, userId: string): v
         logger.error(
           {
             scope: 'mode',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update mode',
         );
@@ -225,8 +230,9 @@ export function registerModeIpcHandlers(userDb: UserDatabase, userId: string): v
         {
           scope: 'mode',
           modeId,
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to delete mode',
       );
@@ -269,8 +275,9 @@ export function registerModeIpcHandlers(userDb: UserDatabase, userId: string): v
           {
             scope: 'mode',
             modeId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore mode',
         );
@@ -309,8 +316,9 @@ export function registerModeIpcHandlers(userDb: UserDatabase, userId: string): v
         logger.error(
           {
             scope: 'mode',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert modes',
         );

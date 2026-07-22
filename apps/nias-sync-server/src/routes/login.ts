@@ -65,7 +65,15 @@ export async function syncLocalUsers(
       data: { upsert, delete: deletedId },
     };
   } catch (error) {
-    context?.log?.error({ scope: 'login', error }, 'Error syncing local users');
+    context?.log?.error(
+      {
+        scope: 'login',
+        errorMessage: (error as Error).message,
+        errorStack: (error as Error).stack,
+        rawError: error,
+      },
+      'Error syncing local users',
+    );
     return { success: false, message: 'Error syncing local users' };
   }
 }
@@ -150,7 +158,15 @@ async function signIntoSupabase(
       },
     };
   } catch (error) {
-    context?.log?.error({ scope: 'login', error }, 'Error during Supabase sign-in');
+    context?.log?.error(
+      {
+        scope: 'login',
+        errorMessage: (error as Error).message,
+        errorStack: (error as Error).stack,
+        rawError: error,
+      },
+      'Error during Supabase sign-in',
+    );
     return null;
   }
 }
@@ -173,7 +189,7 @@ async function getUser(
       // Drizzle returns an array, so we explicitly extract the first
       // match to treat the result as a single record.
       .then((rows) => rows[0] ?? null);
-    
+
     if (user) {
       const isPasswordValid = await verifyPassword(payload.password, user.passwordHash);
 
@@ -193,12 +209,19 @@ async function getUser(
       success: true,
       message: 'Supabase session retrieved successfully',
       data: {
-        ...user
+        ...user,
       },
     };
-  } 
-  catch (error) {
-    context?.log?.error({ scope: 'login', error }, 'Error getting user');
+  } catch (error) {
+    context?.log?.error(
+      {
+        scope: 'login',
+        errorMessage: (error as Error).message,
+        errorStack: (error as Error).stack,
+        rawError: error,
+      },
+      'Error getting user',
+    );
     return { success: false, message: 'Error getting user' };
   }
 }

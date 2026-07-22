@@ -23,8 +23,9 @@ export function registerBrandlineMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'brandline-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve active brandline maps',
         );
@@ -54,8 +55,9 @@ export function registerBrandlineMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'brandline-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve deleted brandline maps',
         );
@@ -93,8 +95,9 @@ export function registerBrandlineMapsIpcHandlers(userDb: UserDatabase, userId: s
           {
             scope: 'brandline-map',
             brandlineMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve brandline map',
         );
@@ -143,8 +146,9 @@ export function registerBrandlineMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'brandline-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create brandline map',
         );
@@ -204,8 +208,9 @@ export function registerBrandlineMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'brandline-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update brandline map',
         );
@@ -258,8 +263,9 @@ export function registerBrandlineMapsIpcHandlers(userDb: UserDatabase, userId: s
           {
             scope: 'brandline-map',
             brandlineMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete brandline map',
         );
@@ -312,8 +318,9 @@ export function registerBrandlineMapsIpcHandlers(userDb: UserDatabase, userId: s
           {
             scope: 'brandline-map',
             brandlineMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore brandline map',
         );
@@ -358,8 +365,9 @@ export function registerBrandlineMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'brandline-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert brandline maps',
         );

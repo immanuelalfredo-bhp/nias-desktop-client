@@ -11,6 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export function setupNewDb(type: 'auth' | 'user', db: Database.Database, key: string): void {
   db.pragma(`rekey = '${key}'`);
   db.pragma('journal_mode = WAL');
+  db.pragma('foreign_keys = ON');
 
   if (type === 'auth') {
     ensureAuthDbSchema(db);
@@ -66,6 +67,7 @@ export function runMigrations(db: Database.Database): void {
     const filePath = path.join(migrationsDir, file);
     const sql = fs.readFileSync(filePath, 'utf-8');
     const transaction = db.transaction(() => {
+      db.pragma('foreign_keys = ON');
       db.exec(sql);
       db.prepare('INSERT INTO schema_migrations (filename) VALUES (?)').run(file);
     });

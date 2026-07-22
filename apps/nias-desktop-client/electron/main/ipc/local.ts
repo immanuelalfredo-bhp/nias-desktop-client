@@ -8,8 +8,20 @@ import {
   type Envelope,
 } from '@nias/shared/server';
 import { local, common } from '@nias/shared';
-import { AuthDatabase } from '../db/database.js';
+import { AuthDatabase, initializeUserDatabase } from '../db/database.js';
 import { APP_ID, SYNC_SERVER_URL } from '../config.js';
+import { registerSessionIpcHandlers, unregisterSessionIpcHandlers } from './session.js';
+
+let activeSession: { userId: string; userDb: ReturnType<typeof initializeUserDatabase> } | null =
+  null;
+
+function teardownActiveSession(): void {
+  unregisterSessionIpcHandlers();
+  if (activeSession) {
+    activeSession.userDb.close();
+    activeSession = null;
+  }
+}
 
 export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
   ipcMain.handle('auth:status', async (_event): Promise<Envelope<local.BootstrapStatus>> => {
@@ -29,6 +41,7 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
       try {
         const parsed = local.LoginSchema.parse(payload);
         const user = authDb.main.getByEmail(parsed.email);
+        let userId: string;
 
         if (!user) {
           try {
@@ -42,23 +55,6 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
               body: JSON.stringify(parsed),
             });
 
-            logger.info({ scope: 'auth', email: parsed.email }, 'Fetching user from sync server');
-            logger.debug(
-              { scope: 'auth', email: parsed.email, responseStatus: response.status },
-              'Received response from sync server',
-            );
-            logger.debug(
-              { scope: 'auth', email: parsed.email, responseBody: await response.clone().text() },
-              'Response body from sync server',
-            );
-            logger.debug(
-              { scope: 'auth', email: parsed.email, responseHeaders: response.headers },
-              'Response headers from sync server',
-            );
-            logger.debug(
-              { scope: 'auth', email: parsed.email, responseOk: response.ok },
-              'Response ok status from sync server',
-            );
             const data = await handleResponse(response, local.LoginResponseSchema, 'auth');
             if (!isSuccess(data)) {
               return data;
@@ -86,33 +82,58 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
             });
             logger.info({ scope: 'auth', userId: data.id }, 'User fetched and stored successfully');
 
-            return { success: true, message: 'User fetched and stored successfully' };
+            userId = data.id;
           } catch (error) {
-            logger.error({ scope: 'auth', error }, 'Error during login');
+            logger.error(
+              {
+                scope: 'auth',
+                errorMessage: (error as Error).message,
+                errorStack: (error as Error).stack,
+                rawError: error,
+              },
+              'Error during login',
+            );
             return {
               success: false,
               message: error instanceof Error ? error.message : 'An error occurred during login',
             };
           }
+        } else {
+          logger.info({ scope: 'auth', userId: user.id }, 'User found in local database');
+          if (!user.passwordHash) {
+            logger.warn(
+              { scope: 'auth', userId: user.id },
+              'Login failed: User has no password hash',
+            );
+            return { success: false, message: 'User has no password hash' };
+          }
+
+          const isPasswordValid = await verifyPassword(parsed.password, user.passwordHash);
+          if (!isPasswordValid) {
+            logger.warn({ scope: 'auth', userId: user.id }, 'Login failed: Invalid password');
+            return { success: false, message: 'Invalid password' };
+          }
+          logger.info({ scope: 'auth', userId: user.id }, 'Login successful for local user');
+
+          userId = user.id;
         }
 
-        if (!user.passwordHash) {
-          logger.warn(
-            { scope: 'auth', userId: user.id },
-            'Login failed: User has no password hash',
-          );
-          return { success: false, message: 'User has no password hash' };
-        }
+        teardownActiveSession();
+        const userDb = initializeUserDatabase(userId);
+        registerSessionIpcHandlers(authDb, userDb, userId);
+        activeSession = { userId, userDb };
 
-        const isPasswordValid = await verifyPassword(parsed.password, user.passwordHash);
-        if (!isPasswordValid) {
-          logger.warn({ scope: 'auth', userId: user.id }, 'Login failed: Invalid password');
-          return { success: false, message: 'Invalid password' };
-        }
-        logger.info({ scope: 'auth', userId: user.id }, 'Login successful for local user');
         return { success: true, message: 'Login successful' };
       } catch (error) {
-        logger.error({ scope: 'auth', error }, 'Error during login');
+        logger.error(
+          {
+            scope: 'auth',
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Error during login',
+        );
         return {
           success: false,
           message: error instanceof Error ? error.message : 'An error occurred during login',
@@ -158,10 +179,39 @@ export const registerAuthIpcHandlers = (authDb: AuthDatabase): void => {
       });
       return { success: true, message: 'Users synced successfully' };
     } catch (error) {
-      logger.error({ scope: 'auth', error }, 'Error syncing users with sync server');
+      logger.error(
+        {
+          scope: 'auth',
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
+        },
+        'Error syncing users with sync server',
+      );
       return {
         success: false,
         message: error instanceof Error ? error.message : 'An error occurred while syncing users',
+      };
+    }
+  });
+
+  ipcMain.handle('auth:logout', async (_event): Promise<common.SuccessResponse> => {
+    try {
+      teardownActiveSession();
+      return { success: true, message: 'Logged out successfully' };
+    } catch (error) {
+      logger.error(
+        {
+          scope: 'auth',
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
+        },
+        'Error during logout',
+      );
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'An error occurred during logout',
       };
     }
   });
@@ -185,7 +235,12 @@ export const registerBootstrapIpcHandlers = (): void => {
       return { success: true, message: 'Bootstrap status retrieved successfully', data };
     } catch (error) {
       logger.error(
-        { scope: 'bootstrap', error },
+        {
+          scope: 'bootstrap',
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
+        },
         'Error retrieving bootstrap status from sync server',
       );
       return {
@@ -227,7 +282,15 @@ export const registerBootstrapIpcHandlers = (): void => {
         logger.info({ scope: 'bootstrap', userId: data.id }, 'Bootstrap executed successfully');
         return { success: true, message: 'Bootstrap completed successfully' };
       } catch (error) {
-        logger.error({ scope: 'bootstrap', error }, 'Bootstrap execution failed');
+        logger.error(
+          {
+            scope: 'bootstrap',
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Bootstrap execution failed',
+        );
         return {
           success: false,
           message: 'Bootstrap execution failed. Please check the logs for more details.',

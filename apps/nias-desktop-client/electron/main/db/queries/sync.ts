@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3-multiple-ciphers';
 import { system, attribute, item, variant, order, server } from '@nias/shared';
+import { logger } from '@nias/shared/server';
 import {
   // System queries
   UserQueries,
@@ -212,7 +213,15 @@ export class SyncQueries {
       tx();
       return nextVersions;
     } catch (error) {
-      console.error('Failed to apply changes to the database:', error);
+      logger.error(
+        {
+          scope: 'sync',
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
+        },
+        'Error applying changes from sync manifest.',
+      );
       throw error;
     }
   }

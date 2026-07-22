@@ -21,8 +21,9 @@ export function registerVendorMapsIpcHandlers(userDb: UserDatabase, userId: stri
       logger.error(
         {
           scope: 'vendor-map',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve active vendor maps',
       );
@@ -49,8 +50,9 @@ export function registerVendorMapsIpcHandlers(userDb: UserDatabase, userId: stri
       logger.error(
         {
           scope: 'vendor-map',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve deleted vendor maps',
       );
@@ -84,8 +86,9 @@ export function registerVendorMapsIpcHandlers(userDb: UserDatabase, userId: stri
           {
             scope: 'vendor-map',
             vendorMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve vendor map',
         );
@@ -134,8 +137,9 @@ export function registerVendorMapsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'vendor-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create vendor map',
         );
@@ -195,8 +199,9 @@ export function registerVendorMapsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'vendor-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update vendor map',
         );
@@ -240,8 +245,9 @@ export function registerVendorMapsIpcHandlers(userDb: UserDatabase, userId: stri
           {
             scope: 'vendor-map',
             vendorMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete vendor map',
         );
@@ -291,8 +297,9 @@ export function registerVendorMapsIpcHandlers(userDb: UserDatabase, userId: stri
           {
             scope: 'vendor-map',
             vendorMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore vendor map',
         );
@@ -337,8 +344,9 @@ export function registerVendorMapsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'vendor-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert vendor maps',
         );

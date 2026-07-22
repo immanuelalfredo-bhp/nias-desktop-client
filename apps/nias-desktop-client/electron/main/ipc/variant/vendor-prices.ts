@@ -23,8 +23,9 @@ export function registerVendorPriceIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'vendor-price',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve active vendor prices',
         );
@@ -54,8 +55,9 @@ export function registerVendorPriceIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'vendor-price',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve deleted vendor prices',
         );
@@ -93,8 +95,9 @@ export function registerVendorPriceIpcHandlers(userDb: UserDatabase, userId: str
           {
             scope: 'vendor-price',
             vendorPriceId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve vendor price',
         );
@@ -145,8 +148,9 @@ export function registerVendorPriceIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'vendor-price',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create vendor price record',
         );
@@ -208,8 +212,9 @@ export function registerVendorPriceIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'vendor-price',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update vendor price record',
         );
@@ -237,10 +242,7 @@ export function registerVendorPriceIpcHandlers(userDb: UserDatabase, userId: str
           };
         }
         userDb.vendorPrice.delete(vendorPriceId);
-        logger.info(
-          { scope: 'vendor-price', vendorPriceId },
-          'Vendor price deleted successfully',
-        );
+        logger.info({ scope: 'vendor-price', vendorPriceId }, 'Vendor price deleted successfully');
 
         createAuditLog(userDb, userId, {
           action: 'delete',
@@ -262,8 +264,9 @@ export function registerVendorPriceIpcHandlers(userDb: UserDatabase, userId: str
           {
             scope: 'vendor-price',
             vendorPriceId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete vendor price record',
         );
@@ -291,10 +294,7 @@ export function registerVendorPriceIpcHandlers(userDb: UserDatabase, userId: str
           };
         }
         userDb.vendorPrice.restore(vendorPriceId);
-        logger.info(
-          { scope: 'vendor-price', vendorPriceId },
-          'Vendor price restored successfully',
-        );
+        logger.info({ scope: 'vendor-price', vendorPriceId }, 'Vendor price restored successfully');
 
         createAuditLog(userDb, userId, {
           action: 'restore',
@@ -316,8 +316,9 @@ export function registerVendorPriceIpcHandlers(userDb: UserDatabase, userId: str
           {
             scope: 'vendor-price',
             vendorPriceId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore vendor price record',
         );
@@ -362,8 +363,9 @@ export function registerVendorPriceIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'vendor-price',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert vendor price records',
         );

@@ -265,7 +265,7 @@ CREATE INDEX IF NOT EXISTS idx_generation_rules_is_synced
 CREATE INDEX IF NOT EXISTS idx_generation_rules_sync_version
 	ON generation_rules (sync_version);
 
-INSERT INTO
+INSERT OR IGNORE INTO
   sync_metadata (table_name, sync_version)
 VALUES
   ('item_records', 0),

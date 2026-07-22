@@ -23,8 +23,9 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
         logger.error(
           {
             scope: 'variant-record',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve active variant records',
         );
@@ -54,8 +55,9 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
         logger.error(
           {
             scope: 'variant-record',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve deleted variant records',
         );
@@ -93,8 +95,9 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
           {
             scope: 'variant-record',
             variantRecordId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve variant record',
         );
@@ -150,8 +153,9 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
         logger.error(
           {
             scope: 'variant-record',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create variant record',
         );
@@ -218,8 +222,9 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
         logger.error(
           {
             scope: 'variant-record',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update variant record',
         );
@@ -272,8 +277,9 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
           {
             scope: 'variant-record',
             variantRecordId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete variant record',
         );
@@ -326,8 +332,9 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
           {
             scope: 'variant-record',
             variantRecordId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore variant record',
         );
@@ -372,8 +379,9 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
         logger.error(
           {
             scope: 'variant-record',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert variant records',
         );

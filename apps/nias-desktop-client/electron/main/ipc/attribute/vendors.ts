@@ -21,8 +21,9 @@ export function registerVendorIpcHandlers(userDb: UserDatabase, userId: string):
       logger.error(
         {
           scope: 'vendor',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve active vendors',
       );
@@ -49,8 +50,9 @@ export function registerVendorIpcHandlers(userDb: UserDatabase, userId: string):
       logger.error(
         {
           scope: 'vendor',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve deleted vendors',
       );
@@ -84,8 +86,9 @@ export function registerVendorIpcHandlers(userDb: UserDatabase, userId: string):
           {
             scope: 'vendor',
             vendorId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve vendor',
         );
@@ -130,8 +133,9 @@ export function registerVendorIpcHandlers(userDb: UserDatabase, userId: string):
         logger.error(
           {
             scope: 'vendor',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create vendor',
         );
@@ -184,8 +188,9 @@ export function registerVendorIpcHandlers(userDb: UserDatabase, userId: string):
         logger.error(
           {
             scope: 'vendor',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update vendor',
         );
@@ -229,8 +234,9 @@ export function registerVendorIpcHandlers(userDb: UserDatabase, userId: string):
           {
             scope: 'vendor',
             vendorId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete vendor',
         );
@@ -274,8 +280,9 @@ export function registerVendorIpcHandlers(userDb: UserDatabase, userId: string):
           {
             scope: 'vendor',
             vendorId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore vendor',
         );
@@ -317,8 +324,9 @@ export function registerVendorIpcHandlers(userDb: UserDatabase, userId: string):
         logger.error(
           {
             scope: 'vendor',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert vendors',
         );

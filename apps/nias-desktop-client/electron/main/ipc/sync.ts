@@ -110,8 +110,9 @@ export const registerSyncIpcHandlers = (
       logger.error(
         {
           scope: 'sync',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Sync pull failed',
       );
@@ -162,7 +163,16 @@ async function refreshUserToken(
     logger.info({ scope: 'auth', userId }, 'User token refreshed successfully');
     return { success: true, message: 'User token refreshed successfully' };
   } catch (error) {
-    logger.error({ scope: 'auth', userId, error }, 'Error refreshing user token');
+    logger.error(
+      {
+        scope: 'auth',
+        userId,
+        errorMessage: (error as Error).message,
+        errorStack: (error as Error).stack,
+        rawError: error,
+      },
+      'Error refreshing user token',
+    );
     return {
       success: false,
       message: error instanceof Error ? error.message : 'An error occurred during token refresh',

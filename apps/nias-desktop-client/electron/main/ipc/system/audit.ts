@@ -20,8 +20,9 @@ export function registerAuditIpcHandlers(userDb: UserDatabase): void {
       logger.error(
         {
           scope: 'audit',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve audit logs',
       );
@@ -68,8 +69,9 @@ export function createAuditLog(
     logger.error(
       {
         scope: 'audit',
-        err: error,
-        errorMessage: error instanceof Error ? error.message : String(error),
+        errorMessage: (error as Error).message,
+        errorStack: (error as Error).stack,
+        rawError: error,
       },
       'Failed to create audit log',
     );

@@ -23,8 +23,9 @@ export function registerCategoryIpcHandlers(userDb: UserDatabase, userId: string
         logger.error(
           {
             scope: 'category',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve active categories',
         );
@@ -54,8 +55,9 @@ export function registerCategoryIpcHandlers(userDb: UserDatabase, userId: string
         logger.error(
           {
             scope: 'category',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve deleted categories',
         );
@@ -90,8 +92,9 @@ export function registerCategoryIpcHandlers(userDb: UserDatabase, userId: string
           {
             scope: 'category',
             categoryId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve category',
         );
@@ -138,8 +141,9 @@ export function registerCategoryIpcHandlers(userDb: UserDatabase, userId: string
         logger.error(
           {
             scope: 'category',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create category',
         );
@@ -197,8 +201,9 @@ export function registerCategoryIpcHandlers(userDb: UserDatabase, userId: string
         logger.error(
           {
             scope: 'category',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update category',
         );
@@ -242,8 +247,9 @@ export function registerCategoryIpcHandlers(userDb: UserDatabase, userId: string
           {
             scope: 'category',
             categoryId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete category',
         );
@@ -287,8 +293,9 @@ export function registerCategoryIpcHandlers(userDb: UserDatabase, userId: string
           {
             scope: 'category',
             categoryId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore category',
         );
@@ -333,8 +340,9 @@ export function registerCategoryIpcHandlers(userDb: UserDatabase, userId: string
         logger.error(
           {
             scope: 'category',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert categories',
         );

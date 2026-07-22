@@ -162,11 +162,12 @@ CREATE INDEX IF NOT EXISTS idx_vendor_price_is_synced
 CREATE INDEX IF NOT EXISTS idx_vendor_price_sync_version
 	ON vendor_price (sync_version);
 
-INSERT INTO
+INSERT OR IGNORE INTO
   sync_metadata (table_name, sync_version)
 VALUES
   ('variant_records', 0),
   ('dimension_value_map', 0),
   ('component_map', 0),
   ('switch_map', 0),
-  ('vendor_price', 0)
+  ('vendor_price', 0);
+  

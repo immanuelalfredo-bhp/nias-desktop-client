@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { order, common } from '@nias/shared';
-import { slugify, logger, type Envelope } from '@nias/shared/server';
+import { logger, type Envelope } from '@nias/shared/server';
 import { UserDatabase } from '../../db/database';
 import { createAuditLog } from '../system/audit';
 
@@ -23,8 +23,9 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'request-item',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve active request items',
         );
@@ -54,8 +55,9 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'request-item',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve deleted request items',
         );
@@ -93,8 +95,9 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
           {
             scope: 'request-item',
             requestItemId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve request item',
         );
@@ -147,8 +150,9 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'request-item',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create request item',
         );
@@ -212,8 +216,9 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'request-item',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update request item',
         );
@@ -263,8 +268,9 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
           {
             scope: 'request-item',
             requestItemId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete request item',
         );
@@ -314,8 +320,9 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
           {
             scope: 'request-item',
             requestItemId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore request item',
         );
@@ -360,8 +367,9 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'request-item',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert request items',
         );

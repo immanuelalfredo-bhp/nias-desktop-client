@@ -21,8 +21,9 @@ export function registerRoleIpcHandlers(userDb: UserDatabase, userId: string): v
       logger.error(
         {
           scope: 'role',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve active roles',
       );
@@ -49,8 +50,9 @@ export function registerRoleIpcHandlers(userDb: UserDatabase, userId: string): v
       logger.error(
         {
           scope: 'role',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve deleted roles',
       );
@@ -84,8 +86,9 @@ export function registerRoleIpcHandlers(userDb: UserDatabase, userId: string): v
           {
             scope: 'role',
             roleId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve role',
         );
@@ -128,8 +131,9 @@ export function registerRoleIpcHandlers(userDb: UserDatabase, userId: string): v
         logger.error(
           {
             scope: 'role',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create role',
         );
@@ -180,8 +184,9 @@ export function registerRoleIpcHandlers(userDb: UserDatabase, userId: string): v
         logger.error(
           {
             scope: 'role',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update role',
         );
@@ -223,8 +228,9 @@ export function registerRoleIpcHandlers(userDb: UserDatabase, userId: string): v
         {
           scope: 'role',
           roleId,
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to delete role',
       );
@@ -267,8 +273,9 @@ export function registerRoleIpcHandlers(userDb: UserDatabase, userId: string): v
           {
             scope: 'role',
             roleId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore role',
         );
@@ -307,8 +314,9 @@ export function registerRoleIpcHandlers(userDb: UserDatabase, userId: string): v
         logger.error(
           {
             scope: 'role',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert roles',
         );

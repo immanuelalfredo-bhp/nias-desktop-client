@@ -7,7 +7,10 @@ CREATE TABLE IF NOT EXISTS requests (
   updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%fZ', 'now')),
   deleted_at TEXT DEFAULT NULL,
   is_synced BOOLEAN DEFAULT FALSE,
-  sync_version INTEGER NOT NULL DEFAULT 0
+  sync_version INTEGER NOT NULL DEFAULT 0,
+
+  FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_requests_project_id ON requests (project_id);
@@ -31,7 +34,9 @@ CREATE TABLE IF NOT EXISTS request_items (
   deleted_at TEXT DEFAULT NULL,
   is_synced BOOLEAN DEFAULT FALSE,
   sync_version INTEGER NOT NULL DEFAULT 0,
-  FOREIGN KEY (request_id) REFERENCES requests (id) ON DELETE CASCADE
+
+  FOREIGN KEY (request_id) REFERENCES requests (id) ON DELETE CASCADE,
+  FOREIGN KEY (variant_id) REFERENCES variant_records (id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_request_items_request_id ON request_items (request_id);
@@ -42,8 +47,8 @@ CREATE INDEX IF NOT EXISTS idx_request_items_deleted_at ON request_items (delete
 CREATE INDEX IF NOT EXISTS idx_request_items_is_synced ON request_items (is_synced);
 CREATE INDEX IF NOT EXISTS idx_request_items_sync_version ON request_items (sync_version);
 
-INSERT INTO
+INSERT OR IGNORE INTO
   sync_metadata (table_name, sync_version)
 VALUES
   ('requests', 0),
-  ('request_items', 0)
+  ('request_items', 0);

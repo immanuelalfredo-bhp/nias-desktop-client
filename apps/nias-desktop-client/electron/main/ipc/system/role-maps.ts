@@ -5,67 +5,63 @@ import { UserDatabase } from '../../db/database';
 import { createAuditLog } from './audit';
 
 export function registerRoleMapsIpcHandlers(userDb: UserDatabase, userId: string): void {
-  ipcMain.handle(
-    'role-map:list-active',
-    async (_event): Promise<Envelope<system.RoleMap[]>> => {
-      try {
-        const roleMaps = userDb.roleMap.listActive();
-        logger.info(
-          { scope: 'role-map', roleMapCount: roleMaps.length },
-          'Active role maps retrieved successfully',
-        );
-        return {
-          success: true,
-          message: 'Active role maps retrieved successfully',
-          data: roleMaps,
-        };
-      } catch (error) {
-        logger.error(
-          {
-            scope: 'role-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
-          },
-          'Failed to retrieve active role maps',
-        );
-        return {
-          success: false,
-          message: 'Failed to retrieve active role maps',
-        };
-      }
-    },
-  );
+  ipcMain.handle('role-map:list-active', async (_event): Promise<Envelope<system.RoleMap[]>> => {
+    try {
+      const roleMaps = userDb.roleMap.listActive();
+      logger.info(
+        { scope: 'role-map', roleMapCount: roleMaps.length },
+        'Active role maps retrieved successfully',
+      );
+      return {
+        success: true,
+        message: 'Active role maps retrieved successfully',
+        data: roleMaps,
+      };
+    } catch (error) {
+      logger.error(
+        {
+          scope: 'role-map',
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
+        },
+        'Failed to retrieve active role maps',
+      );
+      return {
+        success: false,
+        message: 'Failed to retrieve active role maps',
+      };
+    }
+  });
 
-  ipcMain.handle(
-    'role-map:list-deleted',
-    async (_event): Promise<Envelope<system.RoleMap[]>> => {
-      try {
-        const roleMaps = userDb.roleMap.listDeleted();
-        logger.info(
-          { scope: 'role-map', roleMapCount: roleMaps.length },
-          'Deleted role maps retrieved successfully',
-        );
-        return {
-          success: true,
-          message: 'Deleted role maps retrieved successfully',
-          data: roleMaps,
-        };
-      } catch (error) {
-        logger.error(
-          {
-            scope: 'role-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
-          },
-          'Failed to retrieve deleted role maps',
-        );
-        return {
-          success: false,
-          message: 'Failed to retrieve deleted role maps',
-        };
-      }
-    },
-  );
+  ipcMain.handle('role-map:list-deleted', async (_event): Promise<Envelope<system.RoleMap[]>> => {
+    try {
+      const roleMaps = userDb.roleMap.listDeleted();
+      logger.info(
+        { scope: 'role-map', roleMapCount: roleMaps.length },
+        'Deleted role maps retrieved successfully',
+      );
+      return {
+        success: true,
+        message: 'Deleted role maps retrieved successfully',
+        data: roleMaps,
+      };
+    } catch (error) {
+      logger.error(
+        {
+          scope: 'role-map',
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
+        },
+        'Failed to retrieve deleted role maps',
+      );
+      return {
+        success: false,
+        message: 'Failed to retrieve deleted role maps',
+      };
+    }
+  });
 
   ipcMain.handle(
     'role-map:get-by-id',
@@ -79,10 +75,7 @@ export function registerRoleMapsIpcHandlers(userDb: UserDatabase, userId: string
             message: 'Role map not found',
           };
         }
-        logger.info(
-          { scope: 'role-map', roleMapId },
-          'Role map retrieved successfully',
-        );
+        logger.info({ scope: 'role-map', roleMapId }, 'Role map retrieved successfully');
         return {
           success: true,
           message: 'Role map retrieved successfully',
@@ -93,8 +86,9 @@ export function registerRoleMapsIpcHandlers(userDb: UserDatabase, userId: string
           {
             scope: 'role-map',
             roleMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve role map',
         );
@@ -119,10 +113,7 @@ export function registerRoleMapsIpcHandlers(userDb: UserDatabase, userId: string
         };
 
         userDb.roleMap.create(data);
-        logger.info(
-          { scope: 'role-map', roleMapId: data.id },
-          'Role map created successfully',
-        );
+        logger.info({ scope: 'role-map', roleMapId: data.id }, 'Role map created successfully');
 
         createAuditLog(userDb, userId, {
           action: 'create',
@@ -143,8 +134,9 @@ export function registerRoleMapsIpcHandlers(userDb: UserDatabase, userId: string
         logger.error(
           {
             scope: 'role-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create role map',
         );
@@ -180,10 +172,7 @@ export function registerRoleMapsIpcHandlers(userDb: UserDatabase, userId: string
         };
 
         userDb.roleMap.update(updatedData);
-        logger.info(
-          { scope: 'role-map', roleMapId: parsed.id },
-          'Role map updated successfully',
-        );
+        logger.info({ scope: 'role-map', roleMapId: parsed.id }, 'Role map updated successfully');
 
         createAuditLog(userDb, userId, {
           action: 'update',
@@ -204,8 +193,9 @@ export function registerRoleMapsIpcHandlers(userDb: UserDatabase, userId: string
         logger.error(
           {
             scope: 'role-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update role map',
         );
@@ -223,20 +213,14 @@ export function registerRoleMapsIpcHandlers(userDb: UserDatabase, userId: string
       try {
         const existing = userDb.roleMap.getById(roleMapId);
         if (!existing) {
-          logger.error(
-            { scope: 'role-map', roleMapId },
-            'Role map not found for deletion',
-          );
+          logger.error({ scope: 'role-map', roleMapId }, 'Role map not found for deletion');
           return {
             success: false,
             message: 'Role map not found for deletion',
           };
         }
         userDb.roleMap.delete(roleMapId);
-        logger.info(
-          { scope: 'role-map', roleMapId },
-          'Role map deleted successfully',
-        );
+        logger.info({ scope: 'role-map', roleMapId }, 'Role map deleted successfully');
 
         createAuditLog(userDb, userId, {
           action: 'delete',
@@ -244,10 +228,7 @@ export function registerRoleMapsIpcHandlers(userDb: UserDatabase, userId: string
           recordName: roleMapId,
           recordId: roleMapId,
         });
-        logger.info(
-          { scope: 'audit', roleMapId },
-          'Audit log created for role map deletion',
-        );
+        logger.info({ scope: 'audit', roleMapId }, 'Audit log created for role map deletion');
 
         return {
           success: true,
@@ -258,8 +239,9 @@ export function registerRoleMapsIpcHandlers(userDb: UserDatabase, userId: string
           {
             scope: 'role-map',
             roleMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete role map',
         );
@@ -277,20 +259,14 @@ export function registerRoleMapsIpcHandlers(userDb: UserDatabase, userId: string
       try {
         const existing = userDb.roleMap.getById(roleMapId);
         if (!existing) {
-          logger.error(
-            { scope: 'role-map', roleMapId },
-            'Role map not found for restoration',
-          );
+          logger.error({ scope: 'role-map', roleMapId }, 'Role map not found for restoration');
           return {
             success: false,
             message: 'Role map not found for restoration',
           };
         }
         userDb.roleMap.restore(roleMapId);
-        logger.info(
-          { scope: 'role-map', roleMapId },
-          'Role map restored successfully',
-        );
+        logger.info({ scope: 'role-map', roleMapId }, 'Role map restored successfully');
 
         createAuditLog(userDb, userId, {
           action: 'restore',
@@ -298,10 +274,7 @@ export function registerRoleMapsIpcHandlers(userDb: UserDatabase, userId: string
           recordName: roleMapId,
           recordId: roleMapId,
         });
-        logger.info(
-          { scope: 'audit', roleMapId },
-          'Audit log created for role map restoration',
-        );
+        logger.info({ scope: 'audit', roleMapId }, 'Audit log created for role map restoration');
 
         return {
           success: true,
@@ -312,8 +285,9 @@ export function registerRoleMapsIpcHandlers(userDb: UserDatabase, userId: string
           {
             scope: 'role-map',
             roleMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore role map',
         );
@@ -358,8 +332,9 @@ export function registerRoleMapsIpcHandlers(userDb: UserDatabase, userId: string
         logger.error(
           {
             scope: 'role-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert role maps',
         );

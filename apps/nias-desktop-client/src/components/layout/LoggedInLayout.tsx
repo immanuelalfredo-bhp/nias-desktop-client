@@ -30,12 +30,16 @@ export default function LoggedInLayout() {
     window.localStorage.setItem(STORAGE_KEY, fromState);
   }
 
-  const handleLogout = () => {
-    window.localStorage.removeItem(STORAGE_KEY);
-    navigate('/login', {
-      replace: true,
-      state: { message: 'Logged out successfully.' } satisfies AuthenticatedRouteState,
-    });
+  const handleLogout = async () => {
+    try {
+      await window.electronAPI.authLogout();
+    } finally {
+      window.localStorage.removeItem(STORAGE_KEY);
+      navigate('/login', {
+        replace: true,
+        state: { message: 'Logged out successfully.' } satisfies AuthenticatedRouteState,
+      });
+    }
   };
 
   const handleSettingsClick = () => {

@@ -307,6 +307,7 @@ export interface ElectronAPI {
   authStatus: () => Promise<Envelope<local.BootstrapStatus>>;
   authLogin: (payload: { email: string; password: string }) => Promise<Envelope<common.SuccessResponse>>;
   authSync: () => Promise<Envelope<common.SuccessResponse>>;
+  authLogout: () => Promise<common.SuccessResponse>;
 
   // Bootstrap IPC handlers
   bootstrapStatus: () => Promise<Envelope<local.BootstrapStatus>>;

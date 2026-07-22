@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
   deleted_at TEXT DEFAULT NULL,
   is_synced BOOLEAN DEFAULT FALSE,
-  sync_version INTEGER NOT NULL DEFAULT 0
+  sync_version INTEGER NOT NULL DEFAULT 0,
 
   FOREIGN KEY (is_managed_by) REFERENCES users (id) ON DELETE SET NULL
 );
@@ -46,12 +46,12 @@ CREATE INDEX IF NOT EXISTS idx_audit_sync_version ON audit (sync_version);
 
 CREATE TABLE IF NOT EXISTS sync_metadata (
   table_name TEXT PRIMARY KEY,
-  sync_version INTEGER NOT NULL DEFAULT 0,
+  sync_version INTEGER NOT NULL DEFAULT 0
 );
 
-INSERT INTO
+INSERT OR IGNORE INTO
   sync_metadata (table_name, sync_version)
 VALUES
-  ('users', 0) ON CONFLICT DO NOTHING,
-  ('audit', 0) ON CONFLICT DO NOTHING;
+  ('users', 0),
+  ('audit', 0);
   

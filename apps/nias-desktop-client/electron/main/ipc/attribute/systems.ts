@@ -21,8 +21,9 @@ export function registerSystemIpcHandlers(userDb: UserDatabase, userId: string):
       logger.error(
         {
           scope: 'system',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve active systems',
       );
@@ -49,8 +50,9 @@ export function registerSystemIpcHandlers(userDb: UserDatabase, userId: string):
       logger.error(
         {
           scope: 'system',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve deleted systems',
       );
@@ -84,8 +86,9 @@ export function registerSystemIpcHandlers(userDb: UserDatabase, userId: string):
           {
             scope: 'system',
             systemId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve system',
         );
@@ -129,8 +132,9 @@ export function registerSystemIpcHandlers(userDb: UserDatabase, userId: string):
         logger.error(
           {
             scope: 'system',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create system',
         );
@@ -182,8 +186,9 @@ export function registerSystemIpcHandlers(userDb: UserDatabase, userId: string):
         logger.error(
           {
             scope: 'system',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update system',
         );
@@ -227,8 +232,9 @@ export function registerSystemIpcHandlers(userDb: UserDatabase, userId: string):
           {
             scope: 'system',
             systemId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete system',
         );
@@ -272,8 +278,9 @@ export function registerSystemIpcHandlers(userDb: UserDatabase, userId: string):
           {
             scope: 'system',
             systemId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore system',
         );
@@ -315,8 +322,9 @@ export function registerSystemIpcHandlers(userDb: UserDatabase, userId: string):
         logger.error(
           {
             scope: 'system',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert systems',
         );

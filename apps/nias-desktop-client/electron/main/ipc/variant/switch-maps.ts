@@ -23,8 +23,9 @@ export function registerSwitchMapsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'switch-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve active switch maps',
         );
@@ -54,8 +55,9 @@ export function registerSwitchMapsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'switch-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve deleted switch maps',
         );
@@ -90,8 +92,9 @@ export function registerSwitchMapsIpcHandlers(userDb: UserDatabase, userId: stri
           {
             scope: 'switch-map',
             switchMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve switch map',
         );
@@ -140,8 +143,9 @@ export function registerSwitchMapsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'switch-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create switch map',
         );
@@ -201,8 +205,9 @@ export function registerSwitchMapsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'switch-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update switch map',
         );
@@ -246,8 +251,9 @@ export function registerSwitchMapsIpcHandlers(userDb: UserDatabase, userId: stri
           {
             scope: 'switch-map',
             switchMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete switch map',
         );
@@ -297,8 +303,9 @@ export function registerSwitchMapsIpcHandlers(userDb: UserDatabase, userId: stri
           {
             scope: 'switch-map',
             switchMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore switch map',
         );
@@ -343,8 +350,9 @@ export function registerSwitchMapsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'switch-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert switch maps',
         );

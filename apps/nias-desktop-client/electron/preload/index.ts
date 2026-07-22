@@ -385,6 +385,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   authLogin: (payload: { email: string; password: string }) =>
     ipcRenderer.invoke('auth:login', payload),
   authSync: () => ipcRenderer.invoke('auth:sync'),
+  authLogout: () => ipcRenderer.invoke('auth:logout'),
 
   // Bootstrap IPC handlers
   bootstrapStatus: () => ipcRenderer.invoke('bootstrap:status'),

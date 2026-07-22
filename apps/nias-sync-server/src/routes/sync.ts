@@ -41,7 +41,15 @@ export async function refreshUserToken(
       data: { accessToken, expiresAt, refreshToken: newRefreshToken },
     };
   } catch (error) {
-    context?.log?.error({ scope: 'auth', error }, 'Error during token refresh');
+    context?.log?.error(
+      {
+        scope: 'auth',
+        errorMessage: (error as Error).message,
+        errorStack: (error as Error).stack,
+        rawError: error,
+      },
+      'Error during token refresh',
+    );
     return {
       success: false,
       message: error instanceof Error ? error.message : 'An error occurred during token refresh',

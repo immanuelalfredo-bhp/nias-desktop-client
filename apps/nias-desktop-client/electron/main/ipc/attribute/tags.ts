@@ -18,8 +18,9 @@ export function registerTagIpcHandlers(userDb: UserDatabase, userId: string): vo
       logger.error(
         {
           scope: 'tag',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve active tags',
       );
@@ -43,8 +44,9 @@ export function registerTagIpcHandlers(userDb: UserDatabase, userId: string): vo
       logger.error(
         {
           scope: 'tag',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve deleted tags',
       );
@@ -78,8 +80,9 @@ export function registerTagIpcHandlers(userDb: UserDatabase, userId: string): vo
           {
             scope: 'tag',
             tagId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve tag',
         );
@@ -123,8 +126,9 @@ export function registerTagIpcHandlers(userDb: UserDatabase, userId: string): vo
         logger.error(
           {
             scope: 'tag',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create tag',
         );
@@ -176,8 +180,9 @@ export function registerTagIpcHandlers(userDb: UserDatabase, userId: string): vo
         logger.error(
           {
             scope: 'tag',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update tag',
         );
@@ -219,8 +224,9 @@ export function registerTagIpcHandlers(userDb: UserDatabase, userId: string): vo
         {
           scope: 'tag',
           tagId,
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to delete tag',
       );
@@ -261,8 +267,9 @@ export function registerTagIpcHandlers(userDb: UserDatabase, userId: string): vo
         {
           scope: 'tag',
           tagId,
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to restore tag',
       );
@@ -300,8 +307,9 @@ export function registerTagIpcHandlers(userDb: UserDatabase, userId: string): vo
         logger.error(
           {
             scope: 'tag',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert tags',
         );

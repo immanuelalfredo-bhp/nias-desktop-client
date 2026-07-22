@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { order, common } from '@nias/shared';
-import { slugify, logger, type Envelope } from '@nias/shared/server';
+import { logger, type Envelope } from '@nias/shared/server';
 import { UserDatabase } from '../../db/database';
 import { createAuditLog } from '../system/audit';
 
@@ -21,8 +21,9 @@ export function registerRequestIpcHandlers(userDb: UserDatabase, userId: string)
       logger.error(
         {
           scope: 'request',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve active requests',
       );
@@ -49,8 +50,9 @@ export function registerRequestIpcHandlers(userDb: UserDatabase, userId: string)
       logger.error(
         {
           scope: 'request',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve deleted requests',
       );
@@ -84,8 +86,9 @@ export function registerRequestIpcHandlers(userDb: UserDatabase, userId: string)
           {
             scope: 'request',
             requestId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve request',
         );
@@ -132,8 +135,9 @@ export function registerRequestIpcHandlers(userDb: UserDatabase, userId: string)
         logger.error(
           {
             scope: 'request',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create request',
         );
@@ -188,8 +192,9 @@ export function registerRequestIpcHandlers(userDb: UserDatabase, userId: string)
         logger.error(
           {
             scope: 'request',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update request',
         );
@@ -233,8 +238,9 @@ export function registerRequestIpcHandlers(userDb: UserDatabase, userId: string)
           {
             scope: 'request',
             requestId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete request',
         );
@@ -278,8 +284,9 @@ export function registerRequestIpcHandlers(userDb: UserDatabase, userId: string)
           {
             scope: 'request',
             requestId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore request',
         );
@@ -324,8 +331,9 @@ export function registerRequestIpcHandlers(userDb: UserDatabase, userId: string)
         logger.error(
           {
             scope: 'request',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert requests',
         );

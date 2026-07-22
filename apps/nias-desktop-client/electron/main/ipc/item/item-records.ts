@@ -23,8 +23,9 @@ export function registerItemRecordsIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'item-record',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve active item records',
         );
@@ -54,8 +55,9 @@ export function registerItemRecordsIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'item-record',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve deleted item records',
         );
@@ -93,8 +95,9 @@ export function registerItemRecordsIpcHandlers(userDb: UserDatabase, userId: str
           {
             scope: 'item-record',
             itemRecordId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve item record',
         );
@@ -153,8 +156,9 @@ export function registerItemRecordsIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'item-record',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create item record',
         );
@@ -224,8 +228,9 @@ export function registerItemRecordsIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'item-record',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update item record',
         );
@@ -272,8 +277,9 @@ export function registerItemRecordsIpcHandlers(userDb: UserDatabase, userId: str
           {
             scope: 'item-record',
             itemRecordId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete item record',
         );
@@ -323,8 +329,9 @@ export function registerItemRecordsIpcHandlers(userDb: UserDatabase, userId: str
           {
             scope: 'item-record',
             itemRecordId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore item record',
         );
@@ -369,8 +376,9 @@ export function registerItemRecordsIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'item-record',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert item records',
         );

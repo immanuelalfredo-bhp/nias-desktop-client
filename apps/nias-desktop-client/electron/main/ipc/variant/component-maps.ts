@@ -23,8 +23,9 @@ export function registerComponentMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'component-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve active component maps',
         );
@@ -54,8 +55,9 @@ export function registerComponentMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'component-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve deleted component maps',
         );
@@ -93,8 +95,9 @@ export function registerComponentMapsIpcHandlers(userDb: UserDatabase, userId: s
           {
             scope: 'component-map',
             componentMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve component map',
         );
@@ -144,8 +147,9 @@ export function registerComponentMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'component-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create component map',
         );
@@ -206,8 +210,9 @@ export function registerComponentMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'component-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update component map',
         );
@@ -260,8 +265,9 @@ export function registerComponentMapsIpcHandlers(userDb: UserDatabase, userId: s
           {
             scope: 'component-map',
             componentMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete component map',
         );
@@ -314,8 +320,9 @@ export function registerComponentMapsIpcHandlers(userDb: UserDatabase, userId: s
           {
             scope: 'component-map',
             componentMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore component map',
         );
@@ -360,8 +367,9 @@ export function registerComponentMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'component-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert component maps',
         );

@@ -21,8 +21,9 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
       logger.error(
         {
           scope: 'tag-map',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve active tag maps',
       );
@@ -49,8 +50,9 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
       logger.error(
         {
           scope: 'tag-map',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve deleted tag maps',
       );
@@ -84,8 +86,9 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
           {
             scope: 'tag-map',
             tagMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve tag map',
         );
@@ -110,10 +113,7 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
         };
 
         userDb.tagMap.create(data);
-        logger.info(
-          { scope: 'tag-map', tagMapId: data.id },
-          'Tag map created successfully',
-        );
+        logger.info({ scope: 'tag-map', tagMapId: data.id }, 'Tag map created successfully');
 
         createAuditLog(userDb, userId, {
           action: 'create',
@@ -134,8 +134,9 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
         logger.error(
           {
             scope: 'tag-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create tag map',
         );
@@ -154,10 +155,7 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
         const parsed = item.UpdateTagMapSchema.parse(payload);
         const existing = userDb.tagMap.getById(parsed.id);
         if (!existing) {
-          logger.error(
-            { scope: 'tag-map', tagMapId: parsed.id },
-            'Tag map not found for update',
-          );
+          logger.error({ scope: 'tag-map', tagMapId: parsed.id }, 'Tag map not found for update');
           return {
             success: false,
             message: 'Tag map not found for update',
@@ -171,10 +169,7 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
         };
 
         userDb.tagMap.update(updatedData);
-        logger.info(
-          { scope: 'tag-map', tagMapId: parsed.id },
-          'Tag map updated successfully',
-        );
+        logger.info({ scope: 'tag-map', tagMapId: parsed.id }, 'Tag map updated successfully');
 
         createAuditLog(userDb, userId, {
           action: 'update',
@@ -195,8 +190,9 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
         logger.error(
           {
             scope: 'tag-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update tag map',
         );
@@ -240,8 +236,9 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
           {
             scope: 'tag-map',
             tagMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete tag map',
         );
@@ -259,10 +256,7 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
       try {
         const existing = userDb.tagMap.getById(tagMapId);
         if (!existing) {
-          logger.error(
-            { scope: 'tag-map', tagMapId },
-            'Tag map not found for restoration',
-          );
+          logger.error({ scope: 'tag-map', tagMapId }, 'Tag map not found for restoration');
           return {
             success: false,
             message: 'Tag map not found for restoration',
@@ -277,10 +271,7 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
           recordName: existing.id,
           recordId: tagMapId,
         });
-        logger.info(
-          { scope: 'audit', tagMapId },
-          'Audit log created for tag map restoration',
-        );
+        logger.info({ scope: 'audit', tagMapId }, 'Audit log created for tag map restoration');
 
         return {
           success: true,
@@ -291,8 +282,9 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
           {
             scope: 'tag-map',
             tagMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore tag map',
         );
@@ -312,10 +304,7 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
           for (const tagMap of payload) {
             const parsed = item.TagMapSchema.parse(tagMap);
             userDb.tagMap.upsert(parsed);
-            logger.info(
-              { scope: 'tag-map', tagMapId: parsed.id },
-              'Tag map upserted successfully',
-            );
+            logger.info({ scope: 'tag-map', tagMapId: parsed.id }, 'Tag map upserted successfully');
 
             createAuditLog(userDb, userId, {
               action: 'upsert',
@@ -337,8 +326,9 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
         logger.error(
           {
             scope: 'tag-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert tag maps',
         );

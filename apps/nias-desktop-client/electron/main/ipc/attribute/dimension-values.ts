@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { attribute, common } from '@nias/shared';
-import { slugify, logger, type Envelope } from '@nias/shared/server';
+import { logger, type Envelope } from '@nias/shared/server';
 import { UserDatabase } from '../../db/database';
 import { createAuditLog } from '../system/audit';
 
@@ -23,8 +23,9 @@ export function registerDimensionValuesIpcHandlers(userDb: UserDatabase, userId:
         logger.error(
           {
             scope: 'dimension-value',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve active dimension values',
         );
@@ -54,8 +55,9 @@ export function registerDimensionValuesIpcHandlers(userDb: UserDatabase, userId:
         logger.error(
           {
             scope: 'dimension-value',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve deleted dimension values',
         );
@@ -96,8 +98,9 @@ export function registerDimensionValuesIpcHandlers(userDb: UserDatabase, userId:
           {
             scope: 'dimension-value',
             dimensionValueId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve dimension value',
         );
@@ -152,8 +155,9 @@ export function registerDimensionValuesIpcHandlers(userDb: UserDatabase, userId:
         logger.error(
           {
             scope: 'dimension-value',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create dimension value',
         );
@@ -216,8 +220,9 @@ export function registerDimensionValuesIpcHandlers(userDb: UserDatabase, userId:
         logger.error(
           {
             scope: 'dimension-value',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update dimension value',
         );
@@ -270,8 +275,9 @@ export function registerDimensionValuesIpcHandlers(userDb: UserDatabase, userId:
           {
             scope: 'dimension-value',
             dimensionValueId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete dimension value',
         );
@@ -324,8 +330,9 @@ export function registerDimensionValuesIpcHandlers(userDb: UserDatabase, userId:
           {
             scope: 'dimension-value',
             dimensionValueId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore dimension value',
         );
@@ -370,8 +377,9 @@ export function registerDimensionValuesIpcHandlers(userDb: UserDatabase, userId:
         logger.error(
           {
             scope: 'dimension-value',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert dimension values',
         );

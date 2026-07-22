@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { item, common } from '@nias/shared';
-import { slugify, logger, type Envelope } from '@nias/shared/server';
+import { logger, type Envelope } from '@nias/shared/server';
 import { UserDatabase } from '../../db/database';
 import { createAuditLog } from '../system/audit';
 
@@ -23,8 +23,9 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
         logger.error(
           {
             scope: 'generation-rule',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve active item records',
         );
@@ -54,8 +55,9 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
         logger.error(
           {
             scope: 'generation-rule',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve deleted item records',
         );
@@ -93,8 +95,9 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
           {
             scope: 'generation-rule',
             generationRuleId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve item record',
         );
@@ -148,8 +151,9 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
         logger.error(
           {
             scope: 'generation-rule',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create item record',
         );
@@ -214,8 +218,9 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
         logger.error(
           {
             scope: 'generation-rule',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update item record',
         );
@@ -268,8 +273,9 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
           {
             scope: 'generation-rule',
             generationRuleId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete item record',
         );
@@ -322,8 +328,9 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
           {
             scope: 'generation-rule',
             generationRuleId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore item record',
         );
@@ -368,8 +375,9 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
         logger.error(
           {
             scope: 'generation-rule',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert item records',
         );

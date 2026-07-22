@@ -18,8 +18,9 @@ export function registerUomIpcHandlers(userDb: UserDatabase, userId: string): vo
       logger.error(
         {
           scope: 'uom',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve active uoms',
       );
@@ -43,8 +44,9 @@ export function registerUomIpcHandlers(userDb: UserDatabase, userId: string): vo
       logger.error(
         {
           scope: 'uom',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve deleted uoms',
       );
@@ -78,8 +80,9 @@ export function registerUomIpcHandlers(userDb: UserDatabase, userId: string): vo
           {
             scope: 'uom',
             uomId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve uom',
         );
@@ -124,8 +127,9 @@ export function registerUomIpcHandlers(userDb: UserDatabase, userId: string): vo
         logger.error(
           {
             scope: 'uom',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create uom',
         );
@@ -178,8 +182,9 @@ export function registerUomIpcHandlers(userDb: UserDatabase, userId: string): vo
         logger.error(
           {
             scope: 'uom',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update uom',
         );
@@ -221,8 +226,9 @@ export function registerUomIpcHandlers(userDb: UserDatabase, userId: string): vo
         {
           scope: 'uom',
           uomId,
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to delete uom',
       );
@@ -263,8 +269,9 @@ export function registerUomIpcHandlers(userDb: UserDatabase, userId: string): vo
         {
           scope: 'uom',
           uomId,
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to restore uom',
       );
@@ -302,8 +309,9 @@ export function registerUomIpcHandlers(userDb: UserDatabase, userId: string): vo
         logger.error(
           {
             scope: 'uom',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert uoms',
         );

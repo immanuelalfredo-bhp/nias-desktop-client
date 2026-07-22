@@ -23,8 +23,9 @@ export function registerProjectMapsIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'project-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve active project maps',
         );
@@ -54,8 +55,9 @@ export function registerProjectMapsIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'project-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve deleted project maps',
         );
@@ -79,10 +81,7 @@ export function registerProjectMapsIpcHandlers(userDb: UserDatabase, userId: str
             message: 'Project map not found',
           };
         }
-        logger.info(
-          { scope: 'project-map', projectMapId },
-          'Project map retrieved successfully',
-        );
+        logger.info({ scope: 'project-map', projectMapId }, 'Project map retrieved successfully');
         return {
           success: true,
           message: 'Project map retrieved successfully',
@@ -93,8 +92,9 @@ export function registerProjectMapsIpcHandlers(userDb: UserDatabase, userId: str
           {
             scope: 'project-map',
             projectMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve project map',
         );
@@ -143,8 +143,9 @@ export function registerProjectMapsIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'project-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create project map',
         );
@@ -204,8 +205,9 @@ export function registerProjectMapsIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'project-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update project map',
         );
@@ -233,10 +235,7 @@ export function registerProjectMapsIpcHandlers(userDb: UserDatabase, userId: str
           };
         }
         userDb.projectMap.delete(projectMapId);
-        logger.info(
-          { scope: 'project-map', projectMapId },
-          'Project map deleted successfully',
-        );
+        logger.info({ scope: 'project-map', projectMapId }, 'Project map deleted successfully');
 
         createAuditLog(userDb, userId, {
           action: 'delete',
@@ -244,10 +243,7 @@ export function registerProjectMapsIpcHandlers(userDb: UserDatabase, userId: str
           recordName: projectMapId,
           recordId: projectMapId,
         });
-        logger.info(
-          { scope: 'audit', projectMapId },
-          'Audit log created for project map deletion',
-        );
+        logger.info({ scope: 'audit', projectMapId }, 'Audit log created for project map deletion');
 
         return {
           success: true,
@@ -258,8 +254,9 @@ export function registerProjectMapsIpcHandlers(userDb: UserDatabase, userId: str
           {
             scope: 'project-map',
             projectMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete project map',
         );
@@ -287,10 +284,7 @@ export function registerProjectMapsIpcHandlers(userDb: UserDatabase, userId: str
           };
         }
         userDb.projectMap.restore(projectMapId);
-        logger.info(
-          { scope: 'project-map', projectMapId },
-          'Project map restored successfully',
-        );
+        logger.info({ scope: 'project-map', projectMapId }, 'Project map restored successfully');
 
         createAuditLog(userDb, userId, {
           action: 'restore',
@@ -312,8 +306,9 @@ export function registerProjectMapsIpcHandlers(userDb: UserDatabase, userId: str
           {
             scope: 'project-map',
             projectMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore project map',
         );
@@ -358,8 +353,9 @@ export function registerProjectMapsIpcHandlers(userDb: UserDatabase, userId: str
         logger.error(
           {
             scope: 'project-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert project maps',
         );

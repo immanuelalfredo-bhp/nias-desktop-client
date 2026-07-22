@@ -98,7 +98,9 @@ CREATE TABLE IF NOT EXISTS dimension_values (
   updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
   deleted_at TEXT DEFAULT NULL,
   is_synced BOOLEAN DEFAULT FALSE,
-  sync_version INTEGER NOT NULL DEFAULT 0 FOREIGN KEY (dimension_id) REFERENCES dimensions (id) ON DELETE CASCADE
+  sync_version INTEGER NOT NULL DEFAULT 0,
+  
+  FOREIGN KEY (dimension_id) REFERENCES dimensions (id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_dimension_values_dimension_id ON dimension_values (dimension_id);
@@ -194,15 +196,15 @@ CREATE INDEX IF NOT EXISTS idx_tags_deleted_at ON tags (deleted_at);
 CREATE INDEX IF NOT EXISTS idx_tags_is_synced ON tags (is_synced);
 CREATE INDEX IF NOT EXISTS idx_tags_sync_version ON tags (sync_version);
 
-INSERT INTO
+INSERT OR IGNORE INTO
   sync_metadata (table_name, sync_version)
 VALUES
-  ('brands', 0) ON CONFLICT DO NOTHING,
-  ('modes', 0) ON CONFLICT DO NOTHING,
-  ('uoms', 0) ON CONFLICT DO NOTHING,
-  ('dimensions', 0) ON CONFLICT DO NOTHING,
-  ('dimension_values', 0) ON CONFLICT DO NOTHING,
-  ('systems', 0) ON CONFLICT DO NOTHING,
-  ('categories', 0) ON CONFLICT DO NOTHING,
-  ('vendors', 0) ON CONFLICT DO NOTHING,
-  ('tags', 0) ON CONFLICT DO NOTHING;
+  ('brands', 0),
+  ('modes', 0),
+  ('uoms', 0),
+  ('dimensions', 0),
+  ('dimension_values', 0),
+  ('systems', 0),
+  ('categories', 0),
+  ('vendors', 0),
+  ('tags', 0);

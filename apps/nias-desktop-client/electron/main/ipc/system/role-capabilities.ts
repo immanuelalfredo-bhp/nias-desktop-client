@@ -23,8 +23,9 @@ export function registerRoleCapabilitiesIpcHandlers(userDb: UserDatabase, userId
         logger.error(
           {
             scope: 'role-capability',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve active role capabilities',
         );
@@ -54,8 +55,9 @@ export function registerRoleCapabilitiesIpcHandlers(userDb: UserDatabase, userId
         logger.error(
           {
             scope: 'role-capability',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve deleted role capabilities',
         );
@@ -93,8 +95,9 @@ export function registerRoleCapabilitiesIpcHandlers(userDb: UserDatabase, userId
           {
             scope: 'role-capability',
             roleCapabilityId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve role capability',
         );
@@ -143,8 +146,9 @@ export function registerRoleCapabilitiesIpcHandlers(userDb: UserDatabase, userId
         logger.error(
           {
             scope: 'role-capability',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create role capability',
         );
@@ -204,8 +208,9 @@ export function registerRoleCapabilitiesIpcHandlers(userDb: UserDatabase, userId
         logger.error(
           {
             scope: 'role-capability',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update role capability',
         );
@@ -258,8 +263,9 @@ export function registerRoleCapabilitiesIpcHandlers(userDb: UserDatabase, userId
           {
             scope: 'role-capability',
             roleCapabilityId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete role capability',
         );
@@ -312,8 +318,9 @@ export function registerRoleCapabilitiesIpcHandlers(userDb: UserDatabase, userId
           {
             scope: 'role-capability',
             roleCapabilityId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore role capability',
         );
@@ -358,8 +365,9 @@ export function registerRoleCapabilitiesIpcHandlers(userDb: UserDatabase, userId
         logger.error(
           {
             scope: 'role-capability',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert role capabilities',
         );

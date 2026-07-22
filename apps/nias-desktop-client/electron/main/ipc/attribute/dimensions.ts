@@ -23,8 +23,9 @@ export function registerDimensionsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'dimension',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve active dimensions',
         );
@@ -54,8 +55,9 @@ export function registerDimensionsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'dimension',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve deleted dimensions',
         );
@@ -90,8 +92,9 @@ export function registerDimensionsIpcHandlers(userDb: UserDatabase, userId: stri
           {
             scope: 'dimension',
             dimensionId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve dimension',
         );
@@ -141,8 +144,9 @@ export function registerDimensionsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'dimension',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create dimension',
         );
@@ -206,8 +210,9 @@ export function registerDimensionsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'dimension',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update dimension',
         );
@@ -251,8 +256,9 @@ export function registerDimensionsIpcHandlers(userDb: UserDatabase, userId: stri
           {
             scope: 'dimension',
             dimensionId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete dimension',
         );
@@ -296,8 +302,9 @@ export function registerDimensionsIpcHandlers(userDb: UserDatabase, userId: stri
           {
             scope: 'dimension',
             dimensionId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore dimension',
         );
@@ -342,8 +349,9 @@ export function registerDimensionsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'dimension',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert dimensions',
         );

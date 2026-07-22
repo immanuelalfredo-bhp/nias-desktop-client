@@ -23,8 +23,9 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'dimension-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve active dimension maps',
         );
@@ -54,8 +55,9 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'dimension-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve deleted dimension maps',
         );
@@ -93,8 +95,9 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
           {
             scope: 'dimension-map',
             dimensionMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve dimension map',
         );
@@ -143,8 +146,9 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'dimension-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create dimension map',
         );
@@ -204,8 +208,9 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'dimension-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update dimension map',
         );
@@ -258,8 +263,9 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
           {
             scope: 'dimension-map',
             dimensionMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete dimension map',
         );
@@ -312,8 +318,9 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
           {
             scope: 'dimension-map',
             dimensionMapId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore dimension map',
         );
@@ -358,8 +365,9 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'dimension-map',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert dimension maps',
         );

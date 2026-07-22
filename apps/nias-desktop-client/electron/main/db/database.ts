@@ -24,7 +24,7 @@ import {
   CategoryQueries,
   VendorQueries,
   TagQueries,
-  
+
   // Item queries
   ItemRecordQueries,
   AliasQueries,
@@ -34,7 +34,7 @@ import {
   SystemMapQueries,
   TagMapQueries,
   GenerationRulesQueries,
-  
+
   // Variant queries
   VariantRecordQueries,
   ComponentMapQueries,
@@ -48,7 +48,7 @@ import {
 
   // Other queries
   SyncQueries,
-  LocalQueries
+  LocalQueries,
 } from './queries/index.js';
 import { openEncryptedDatabase } from './connection.js';
 import { backupArtifacts, ensureAuthDbSchema, runMigrations, setupNewDb } from './migrations.js';
@@ -62,6 +62,10 @@ export class AuthDatabase {
     this.db = openEncryptedDatabase(dbPath, key);
     this.main = new LocalQueries(this.db);
   }
+
+  close(): void {
+    this.db.close();
+  }
 }
 
 export class UserDatabase {
@@ -72,9 +76,9 @@ export class UserDatabase {
   readonly role: RoleQueries;
   readonly project: ProjectQueries;
   readonly roleCapability: RoleCapabilityQueries;
-  readonly roleManagement: RoleManagementQueries
+  readonly roleManagement: RoleManagementQueries;
   readonly roleMap: RoleMapQueries;
-  readonly projectMap: ProjectMapQueries
+  readonly projectMap: ProjectMapQueries;
   readonly audit: AuditQueries;
 
   // Sync queries
@@ -160,12 +164,16 @@ export class UserDatabase {
     this.switchMap = new SwitchMapQueries(this.db);
     this.vendorPrice = new VendorPriceQueries(this.db);
   }
+
+  close(): void {
+    this.db.close();
+  }
 }
 const authDbPath = path.join(app.getPath('userData'), 'auth.db');
 
 export function initializeAuthDatabase(): AuthDatabase {
   let key = getOrGenerateKey('system');
-  let db: Database.Database;
+  let db: Database.Database | undefined;
 
   try {
     const dbExists = fs.existsSync(authDbPath);
@@ -181,8 +189,14 @@ export function initializeAuthDatabase(): AuthDatabase {
       logger.info({ scope: 'auth' }, 'Auth database created and initialized successfully.');
     }
   } catch (error) {
+    db?.close();
     logger.error(
-      { scope: 'auth', error },
+      {
+        scope: 'auth',
+        errorMessage: (error as Error).message,
+        errorStack: (error as Error).stack,
+        rawError: error,
+      },
       'Key incorrect or auth DB corrupted, backing up auth data...',
     );
     backupArtifacts('auth', authDbPath);
@@ -191,6 +205,8 @@ export function initializeAuthDatabase(): AuthDatabase {
     db = new Database(authDbPath);
     setupNewDb('auth', db, key);
     logger.info({ scope: 'auth' }, 'Auth database re-initialized successfully after backup.');
+  } finally {
+    db?.close();
   }
 
   return new AuthDatabase(authDbPath, key);
@@ -208,7 +224,7 @@ export function initializeUserDatabase(uuid: string): UserDatabase {
   }
 
   let key = getOrGenerateKey('user', uuid);
-  let db: Database.Database;
+  let db: Database.Database | undefined;
 
   try {
     const dbExists = fs.existsSync(userDbPath);
@@ -230,8 +246,15 @@ export function initializeUserDatabase(uuid: string): UserDatabase {
       );
     }
   } catch (error) {
+    db?.close();
     logger.error(
-      { scope: 'user', uuid, error },
+      {
+        scope: 'user',
+        uuid,
+        errorMessage: (error as Error).message,
+        errorStack: (error as Error).stack,
+        rawError: error,
+      },
       `Key incorrect or user DB corrupted for UUID ${uuid}, backing up user data...`,
     );
     backupArtifacts('user', userDbPath, uuid);
@@ -243,6 +266,8 @@ export function initializeUserDatabase(uuid: string): UserDatabase {
       { scope: 'user', uuid },
       `User database for UUID ${uuid} re-initialized successfully after backup.`,
     );
+  } finally {
+    db?.close();
   }
 
   return new UserDatabase(userDbPath, key);

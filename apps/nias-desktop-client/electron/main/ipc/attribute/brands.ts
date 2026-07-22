@@ -21,8 +21,9 @@ export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): 
       logger.error(
         {
           scope: 'brand',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve active brands',
       );
@@ -49,8 +50,9 @@ export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): 
       logger.error(
         {
           scope: 'brand',
-          err: error,
-          errorMessage: error instanceof Error ? error.message : String(error),
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
         },
         'Failed to retrieve deleted brands',
       );
@@ -84,8 +86,9 @@ export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): 
           {
             scope: 'brand',
             brandId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to retrieve brand',
         );
@@ -130,8 +133,9 @@ export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): 
         logger.error(
           {
             scope: 'brand',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to create brand',
         );
@@ -184,8 +188,9 @@ export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): 
         logger.error(
           {
             scope: 'brand',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to update brand',
         );
@@ -229,8 +234,9 @@ export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): 
           {
             scope: 'brand',
             brandId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to delete brand',
         );
@@ -274,8 +280,9 @@ export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): 
           {
             scope: 'brand',
             brandId,
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to restore brand',
         );
@@ -317,8 +324,9 @@ export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): 
         logger.error(
           {
             scope: 'brand',
-            err: error,
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
           },
           'Failed to upsert brands',
         );
