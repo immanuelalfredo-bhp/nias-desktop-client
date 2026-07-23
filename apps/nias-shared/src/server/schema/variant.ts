@@ -28,7 +28,7 @@ const variantOverrides = {
   deletedAt: schemas.dateTime.nullable(),
 };
 
-export const variantRecords = variantSchema.table('variant_records', {
+export const variantRecords = variantSchema.table('records', {
   ...variantBaseFields,
   itemId: uuid('item_id').notNull(),
   categoryId: uuid('category_id').notNull(),

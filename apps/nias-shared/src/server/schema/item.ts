@@ -19,7 +19,7 @@ const itemOverrides = {
   deletedAt: schemas.dateTime.nullable(),
 };
 
-export const itemRecords = itemSchema.table('item_records', {
+export const itemRecords = itemSchema.table('records', {
   ...itemBaseFields,
   baseName: text('base_name').notNull(),
   normalizedBaseName: text('normalized_base_name').notNull(),
