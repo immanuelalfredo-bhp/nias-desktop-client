@@ -22,7 +22,7 @@ export const syncMetadata = z.record(z.string(), syncVersion);
 
 // Enumerations
 export const scope = z.enum(['global', 'contextual']);
-export const position = z.enum(['prefix', 'suffix', 'parenthesis', 'append']);
+export const position = z.enum(['prefix', 'suffix', 'dimensions', 'end']);
 export const skuSource = z.enum(['internal', 'external']);
 export const materialType = z.enum(['component', 'assembly']);
 export const materialClass = z.enum(['main', 'installation', 'support']);

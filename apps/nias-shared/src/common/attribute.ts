@@ -33,7 +33,7 @@ export const CreateBrandSchema = BrandSchema.omit(CreateOmissions);
 export const UpdateBrandSchema = BrandSchema.pick({
   id: true,
 }).extend(BrandSchema.omit(UpdateOmissions).partial().shape);
-export const CreateBrandInputSchema = CreateBrandSchema.omit({ normalizedName: true });
+export const CreateBrandInputSchema = CreateBrandSchema.omit({ id: true, normalizedName: true });
 export const UpdateBrandInputSchema = UpdateBrandSchema.omit({ normalizedName: true });
 
 export type BrandId = z.infer<typeof BrandIdSchema>;
@@ -54,7 +54,7 @@ export const CreateModeSchema = ModeSchema.omit(CreateOmissions);
 export const UpdateModeSchema = ModeSchema.pick({
   id: true,
 }).extend(ModeSchema.omit(UpdateOmissions).partial().shape);
-export const CreateModeInputSchema = CreateModeSchema.omit({ normalizedName: true });
+export const CreateModeInputSchema = CreateModeSchema.omit({ id: true, normalizedName: true });
 export const UpdateModeInputSchema = UpdateModeSchema.omit({ normalizedName: true });
 
 export type ModeId = z.infer<typeof ModeIdSchema>;
