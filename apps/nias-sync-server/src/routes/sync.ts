@@ -2,10 +2,10 @@ import { type Request, type Response } from 'express';
 import { asc, gt } from 'drizzle-orm';
 import type { Logger } from 'pino';
 import { server } from '@nias/shared';
-import { syncMetadata, type Envelope } from '@nias/shared/server';
+import { syncMetadata, SYNC_TABLE_MAP, type Envelope } from '@nias/shared/server';
 import { SYNC_LIMIT } from '../config.js';
 import { db } from '../db.js';
-import { defaultRegistry, TABLE_MAP, upsertSyncRecords } from '../utils.js';
+import { defaultRegistry, upsertSyncRecords } from '../utils.js';
 import { supabase } from '../supabase.js';
 
 async function getSyncDelta(
@@ -25,7 +25,7 @@ async function getSyncDelta(
     }
 
     const entries = await Promise.all(
-      TABLE_MAP.map(async (tableInfo) => {
+      SYNC_TABLE_MAP.map(async (tableInfo) => {
         const clientVersion = payload[tableInfo.key] ?? 0;
         const serverVersion = registry[tableInfo.key] ?? 0;
 
@@ -58,7 +58,7 @@ async function getSyncDelta(
     );
 
     const changes = Object.fromEntries(
-      TABLE_MAP.map((t, idx) => [t.key, entries[idx] ?? []]),
+      SYNC_TABLE_MAP.map((t, idx) => [t.key, entries[idx] ?? []]),
     ) as server.PullResponse['changes'];
 
     context?.log?.info(
@@ -120,8 +120,8 @@ export async function handlePull(
     req.log.info(
       {
         scope: 'sync',
-        hasMore: 'hasMore' in data ? data.hasMore : false,
-        latestVersions: 'latestVersions' in data ? data.latestVersions : {},
+        hasMore: data.data?.hasMore ?? false,
+        latestVersions: data.data?.latestVersions ?? {},
         tableCounts: Object.fromEntries(
           Object.entries(changes).map(([key, rows]) => [key, (rows as any[]).length]),
         ),
