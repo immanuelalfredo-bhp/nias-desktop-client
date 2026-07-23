@@ -270,8 +270,8 @@ export const attributeEntityDefinitions: Record<AttributeEntityKey, AttributeEnt
         options: [
           { value: 'prefix', label: 'Prefix' },
           { value: 'suffix', label: 'Suffix' },
-          { value: 'parenthesis', label: 'Parenthesis' },
-          { value: 'append', label: 'Append' },
+          { value: 'dimensions', label: 'Dimensions' },
+          { value: 'end', label: 'End' },
         ],
       },
       sortOrder: { label: 'Sort Order', type: 'number', step: '0.01' },
@@ -308,7 +308,7 @@ export const attributeEntityDefinitions: Record<AttributeEntityKey, AttributeEnt
       { key: 'numericValue', label: 'Numeric Value' },
       { key: 'sortOrder', label: 'Sort Order' },
     ],
-    createSchema: attribute.CreateDimensionValueSchema,
+    createSchema: attribute.CreateDimensionValueInputSchema,
     updateSchema: attribute.UpdateDimensionValueSchema,
     fieldOverrides: {
       dimensionId: { label: 'Dimension ID', placeholder: 'UUID' },

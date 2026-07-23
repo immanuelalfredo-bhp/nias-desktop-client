@@ -45,7 +45,7 @@ export class VendorQueries extends BaseQueries<
         sku_code = @skuCode, sort_order = @sortOrder, updated_at = @updatedAt, is_synced = @isSynced
         WHERE id = @id`,
       )
-      .run({ ...existing, ...params, updatedAt: new Date().toISOString() });
+      .run({ ...existing, ...params, updatedAt: new Date().toISOString(), isSynced: 0 });
   }
   upsert(params: attribute.Vendor): void {
     this.db
@@ -67,6 +67,6 @@ export class VendorQueries extends BaseQueries<
           is_synced = excluded.is_synced,
           sync_version = excluded.sync_version`,
       )
-      .run(params);
+      .run({ ...params, isSynced: params.isSynced ? 1 : 0 });
   }
 }

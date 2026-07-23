@@ -94,6 +94,10 @@ export class ItemRecordQueries extends BaseQueries<
           is_synced = excluded.is_synced,
           sync_version = excluded.sync_version`,
       )
-      .run(params);
+      .run({
+        ...params,
+        hasAutoAssemblyTrigger: params.hasAutoAssemblyTrigger ? 1 : 0,
+        isSynced: params.isSynced ? 1 : 0,
+      });
   }
 }

@@ -15,14 +15,14 @@ const COLUMNS = `
 
 export class AuditQueries extends BaseQueries<system.Audit, system.CreateAudit, void> {
   constructor(db: Database.Database) {
-    super(db, 'audits', COLUMNS);
+    super(db, 'audit', COLUMNS);
   }
   create(params: system.CreateAudit): void {
     const now = new Date().toISOString();
     this.db
       .prepare(
         `
-        INSERT INTO audits (
+        INSERT INTO audit (
           id, user_id, action, table_name, record_id, timestamp, details) 
         VALUES (
           @id, @userId, @action, @tableName, @recordId, @timestamp, @details)`,
@@ -33,7 +33,7 @@ export class AuditQueries extends BaseQueries<system.Audit, system.CreateAudit, 
     this.db
       .prepare(
         `
-        INSERT INTO audits (
+        INSERT INTO audit (
           id, user_id, action, table_name, record_id, timestamp, details,
           is_synced, sync_version) 
         VALUES (

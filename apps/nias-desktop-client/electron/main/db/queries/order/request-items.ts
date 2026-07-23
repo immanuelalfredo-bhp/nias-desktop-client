@@ -72,6 +72,6 @@ export class RequestItemQueries extends BaseQueries<
           is_synced = excluded.is_synced,
           sync_version = excluded.sync_version`,
       )
-      .run(params);
+      .run({ ...params, isSynced: params.isSynced ? 1 : 0 });
   }
 }

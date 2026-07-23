@@ -10,7 +10,7 @@ interface AttributeModalProps {
   submitLabel: string;
   schema: z.ZodObject<any>;
   defaultValues: Record<string, unknown>;
-  fieldOverrides?: Record<string, FieldOverride>;
+  fieldOverrides?: Record<string, FieldOverride> | undefined;
   onSubmitValues: (values: Record<string, unknown>) => Promise<{ success: boolean; message?: string }>;
   handleClose: () => void;
   onSuccess: (message: string) => void;

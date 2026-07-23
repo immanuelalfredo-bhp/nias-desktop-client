@@ -28,12 +28,12 @@ CREATE TABLE IF NOT EXISTS audit (
   action TEXT NOT NULL,
   table_name TEXT NOT NULL,
   record_id TEXT NOT NULL,
-  timestamp TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
   details TEXT,
+  timestamp TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
   is_synced BOOLEAN DEFAULT FALSE,
   sync_version INTEGER NOT NULL DEFAULT 0,
 
-  FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+  FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_user_id ON audit (user_id);
