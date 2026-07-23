@@ -1,4 +1,4 @@
-import { boolean, integer, pgSchema, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, integer, pgSchema, real, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { createSelectSchema } from 'drizzle-zod';
 import * as schemas from '../../common/defines.js';
 
@@ -31,8 +31,8 @@ export const requestItems = orderSchema.table('request_items', {
   requestId: uuid('request_id').notNull(),
   variantId: uuid('variant_id').notNull(),
   quantity: integer('quantity').notNull(),
-  price: integer('price').notNull(),
-  total: integer('total').notNull(),
+  price: real('price').notNull(),
+  total: real('total').notNull(),
   comments: text('comments'),
 });
 
