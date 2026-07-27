@@ -1,11 +1,11 @@
 import { ipcMain } from 'electron';
-import { item, common } from '@nias/shared';
+import { attribute, common } from '@nias/shared';
 import { logger, type Envelope } from '@nias/shared/server';
 import { UserDatabase } from '../../db/database';
 import { createAuditLog } from '../system/audit';
 
 export function registerVendorMapsIpcHandlers(userDb: UserDatabase, userId: string): void {
-  ipcMain.handle('vendor-map:list-active', async (_event): Promise<Envelope<item.VendorMap[]>> => {
+  ipcMain.handle('vendor-map:list-active', async (_event): Promise<Envelope<attribute.VendorMap[]>> => {
     try {
       const vendorMaps = userDb.vendorMap.listActive();
       logger.info(
@@ -34,7 +34,7 @@ export function registerVendorMapsIpcHandlers(userDb: UserDatabase, userId: stri
     }
   });
 
-  ipcMain.handle('vendor-map:list-deleted', async (_event): Promise<Envelope<item.VendorMap[]>> => {
+  ipcMain.handle('vendor-map:list-deleted', async (_event): Promise<Envelope<attribute.VendorMap[]>> => {
     try {
       const vendorMaps = userDb.vendorMap.listDeleted();
       logger.info(
@@ -65,7 +65,7 @@ export function registerVendorMapsIpcHandlers(userDb: UserDatabase, userId: stri
 
   ipcMain.handle(
     'vendor-map:get-by-id',
-    async (_event, vendorMapId: string): Promise<Envelope<item.VendorMap | null>> => {
+    async (_event, vendorMapId: string): Promise<Envelope<attribute.VendorMap | null>> => {
       try {
         const vendorMap = userDb.vendorMap.getById(vendorMapId);
         if (!vendorMap) {
@@ -102,13 +102,13 @@ export function registerVendorMapsIpcHandlers(userDb: UserDatabase, userId: stri
 
   ipcMain.handle(
     'vendor-map:create',
-    async (_event, payload: item.CreateVendorMapInput): Promise<common.SuccessResponse> => {
+    async (_event, payload: attribute.CreateVendorMapInput): Promise<common.SuccessResponse> => {
       try {
-        const parsed = item.CreateVendorMapInputSchema.parse(payload);
+        const parsed = attribute.CreateVendorMapInputSchema.parse(payload);
 
-        const data: item.CreateVendorMap = {
+        const data: attribute.CreateVendorMap = {
           id: crypto.randomUUID(),
-          brandlineId: parsed.brandlineId,
+          brandId: parsed.brandId,
           vendorId: parsed.vendorId,
         };
 
@@ -153,9 +153,9 @@ export function registerVendorMapsIpcHandlers(userDb: UserDatabase, userId: stri
 
   ipcMain.handle(
     'vendor-map:update',
-    async (_event, payload: item.UpdateVendorMap): Promise<common.SuccessResponse> => {
+    async (_event, payload: attribute.UpdateVendorMap): Promise<common.SuccessResponse> => {
       try {
-        const parsed = item.UpdateVendorMapSchema.parse(payload);
+        const parsed = attribute.UpdateVendorMapSchema.parse(payload);
         const existing = userDb.vendorMap.getById(parsed.id);
         if (!existing) {
           logger.error(
@@ -168,9 +168,9 @@ export function registerVendorMapsIpcHandlers(userDb: UserDatabase, userId: stri
           };
         }
 
-        const updatedData: item.UpdateVendorMap = {
+        const updatedData: attribute.UpdateVendorMap = {
           id: parsed.id,
-          brandlineId: parsed.brandlineId,
+          brandId: parsed.brandId,
           vendorId: parsed.vendorId,
         };
 
@@ -313,11 +313,11 @@ export function registerVendorMapsIpcHandlers(userDb: UserDatabase, userId: stri
 
   ipcMain.handle(
     'vendor-map:upsert',
-    async (_event, payload: item.VendorMap[]): Promise<common.SuccessResponse> => {
+    async (_event, payload: attribute.VendorMap[]): Promise<common.SuccessResponse> => {
       try {
         userDb.vendorMap.transaction(() => {
           for (const vendorMap of payload) {
-            const parsed = item.VendorMapSchema.parse(vendorMap);
+            const parsed = attribute.VendorMapSchema.parse(vendorMap);
             userDb.vendorMap.upsert(parsed);
             logger.info(
               { scope: 'vendor-map', vendorMapId: parsed.id },

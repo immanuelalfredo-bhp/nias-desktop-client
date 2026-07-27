@@ -73,4 +73,11 @@ export class DimensionQueries extends BaseQueries<
       )
       .run({ ...params, isSynced: params.isSynced ? 1 : 0 });
   }
+  getByNorm(normalizedName: string): attribute.Dimension | null {
+    return (
+      (this.db
+        .prepare(`SELECT ${this.columns} FROM ${this.tableName} WHERE normalized_name = ?`)
+        .get(normalizedName) as attribute.Dimension) || null
+    );
+  }
 }

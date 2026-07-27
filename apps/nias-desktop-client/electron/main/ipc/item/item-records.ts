@@ -4,9 +4,9 @@ import { slugify, logger, type Envelope } from '@nias/shared/server';
 import { UserDatabase } from '../../db/database';
 import { createAuditLog } from '../system/audit';
 
-export function registerItemRecordsIpcHandlers(userDb: UserDatabase, userId: string): void {
+export function registerItemsIpcHandlers(userDb: UserDatabase, userId: string): void {
   ipcMain.handle(
-    'item-record:list-active',
+    'item:list-active',
     async (_event): Promise<Envelope<item.ItemRecord[]>> => {
       try {
         const itemRecords = userDb.item.listActive();
@@ -38,7 +38,7 @@ export function registerItemRecordsIpcHandlers(userDb: UserDatabase, userId: str
   );
 
   ipcMain.handle(
-    'item-record:list-deleted',
+    'item:list-deleted',
     async (_event): Promise<Envelope<item.ItemRecord[]>> => {
       try {
         const itemRecords = userDb.item.listDeleted();
@@ -70,7 +70,7 @@ export function registerItemRecordsIpcHandlers(userDb: UserDatabase, userId: str
   );
 
   ipcMain.handle(
-    'item-record:get-by-id',
+    'item:get-by-id',
     async (_event, itemRecordId: string): Promise<Envelope<item.ItemRecord | null>> => {
       try {
         const itemRecord = userDb.item.getById(itemRecordId);
@@ -110,7 +110,7 @@ export function registerItemRecordsIpcHandlers(userDb: UserDatabase, userId: str
   );
 
   ipcMain.handle(
-    'item-record:create',
+    'item:create',
     async (_event, payload: item.CreateItemRecordInput): Promise<common.SuccessResponse> => {
       try {
         const parsed = item.CreateItemRecordInputSchema.parse(payload);
@@ -171,7 +171,7 @@ export function registerItemRecordsIpcHandlers(userDb: UserDatabase, userId: str
   );
 
   ipcMain.handle(
-    'item-record:update',
+    'item:update',
     async (_event, payload: item.UpdateItemRecord): Promise<common.SuccessResponse> => {
       try {
         const parsed = item.UpdateItemRecordSchema.parse(payload);
@@ -243,7 +243,7 @@ export function registerItemRecordsIpcHandlers(userDb: UserDatabase, userId: str
   );
 
   ipcMain.handle(
-    'item-record:delete',
+    'item:delete',
     async (_event, itemRecordId: string): Promise<common.SuccessResponse> => {
       try {
         const existing = userDb.item.getById(itemRecordId);
@@ -292,7 +292,7 @@ export function registerItemRecordsIpcHandlers(userDb: UserDatabase, userId: str
   );
 
   ipcMain.handle(
-    'item-record:restore',
+    'item:restore',
     async (_event, itemRecordId: string): Promise<common.SuccessResponse> => {
       try {
         const existing = userDb.item.getById(itemRecordId);
@@ -344,7 +344,7 @@ export function registerItemRecordsIpcHandlers(userDb: UserDatabase, userId: str
   );
 
   ipcMain.handle(
-    'item-record:upsert',
+    'item:upsert',
     async (_event, payload: item.ItemRecord[]): Promise<common.SuccessResponse> => {
       try {
         userDb.item.transaction(() => {

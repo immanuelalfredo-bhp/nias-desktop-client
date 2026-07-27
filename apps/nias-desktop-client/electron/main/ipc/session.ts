@@ -20,24 +20,24 @@ import { registerDimensionValuesIpcHandlers } from './attribute/dimension-values
 import { registerSystemIpcHandlers } from './attribute/systems.js';
 import { registerCategoryIpcHandlers } from './attribute/categories.js';
 import { registerVendorIpcHandlers } from './attribute/vendors.js';
+import { registerVendorMapsIpcHandlers } from './attribute/vendor-maps.js'
 import { registerTagIpcHandlers } from './attribute/tags.js';
 
 // Item IPC handlers
-import { registerItemRecordsIpcHandlers } from './item/item-records.js';
+import { registerItemsIpcHandlers } from './item/item-records.js';
 import { registerAliasIpcHandlers } from './item/aliases.js';
-import { registerBrandlineMapsIpcHandlers } from './item/brandline-maps.js';
 import { registerDimensionMapsIpcHandlers } from './item/dimension-maps.js';
 import { registerSystemMapsIpcHandlers } from './item/system-maps.js';
 import { registerTagMapsIpcHandlers } from './item/tag-maps.js';
-import { registerVendorMapsIpcHandlers } from './item/vendor-maps.js';
 import { registerGenerationRulesIpcHandlers } from './item/generation-rules.js';
 
 // Variant IPC handlers
-import { registerVariantRecordsIpcHandlers } from './variant/variant-records.js';
+import { registerVariantsIpcHandlers } from './variant/variant-records.js';
 import { registerDimensionValueMapsIpcHandlers } from './variant/dimension-value-maps.js';
 import { registerComponentMapsIpcHandlers } from './variant/component-maps.js';
 import { registerSwitchMapsIpcHandlers } from './variant/switch-maps.js';
 import { registerVendorPriceIpcHandlers } from './variant/vendor-prices.js';
+import { registerVariantGeneratorIpcHandlers } from './variant/variant-generator.js';
 
 // Order IPC handlers
 import { registerRequestIpcHandlers } from './order/requests.js';
@@ -93,24 +93,24 @@ export function registerSessionIpcHandlers(authDb: AuthDatabase, userDb: UserDat
     registerSystemIpcHandlers(userDb, userId);
     registerCategoryIpcHandlers(userDb, userId);
     registerVendorIpcHandlers(userDb, userId);
+    registerVendorMapsIpcHandlers(userDb, userId);
     registerTagIpcHandlers(userDb, userId);
 
     // Item IPC handlers
-    registerItemRecordsIpcHandlers(userDb, userId);
+    registerItemsIpcHandlers(userDb, userId);
     registerAliasIpcHandlers(userDb, userId);
-    registerBrandlineMapsIpcHandlers(userDb, userId);
     registerDimensionMapsIpcHandlers(userDb, userId);
     registerSystemMapsIpcHandlers(userDb, userId);
     registerTagMapsIpcHandlers(userDb, userId);
-    registerVendorMapsIpcHandlers(userDb, userId);
     registerGenerationRulesIpcHandlers(userDb, userId);
 
     // Variant IPC handlers
-    registerVariantRecordsIpcHandlers(userDb, userId);
+    registerVariantsIpcHandlers(userDb, userId);
     registerDimensionValueMapsIpcHandlers(userDb, userId);
     registerComponentMapsIpcHandlers(userDb, userId);
     registerSwitchMapsIpcHandlers(userDb, userId);
     registerVendorPriceIpcHandlers(userDb, userId);
+    registerVariantGeneratorIpcHandlers(userDb, userId);
 
     // Order IPC handlers
     registerRequestIpcHandlers(userDb, userId);

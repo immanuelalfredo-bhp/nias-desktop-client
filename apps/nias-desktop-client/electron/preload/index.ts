@@ -179,6 +179,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
   vendorRestore: (payload: attribute.VendorId) => ipcRenderer.invoke('vendor:restore', payload),
   vendorUpsert: (payload: attribute.Vendor[]) => ipcRenderer.invoke('vendor:upsert', payload),
 
+  // Vendor Map IPC handlers
+  vendorMapListActive: () => ipcRenderer.invoke('vendor-map:list-active'),
+  vendorMapListDeleted: () => ipcRenderer.invoke('vendor-map:list-deleted'),
+  vendorMapCreate: (payload: attribute.CreateVendorMapInput) =>
+    ipcRenderer.invoke('vendor-map:create', payload),
+  vendorMapUpdate: (payload: attribute.UpdateVendorMap) =>
+    ipcRenderer.invoke('vendor-map:update', payload),
+  vendorMapDelete: (payload: attribute.VendorMapId) => ipcRenderer.invoke('vendor-map:delete', payload),
+  vendorMapRestore: (payload: attribute.VendorMapId) =>
+    ipcRenderer.invoke('vendor-map:restore', payload),
+  vendorMapUpsert: (payload: attribute.VendorMap[]) => ipcRenderer.invoke('vendor-map:upsert', payload),
+
   // Tag IPC handlers
   tagListActive: () => ipcRenderer.invoke('tag:list-active'),
   tagListDeleted: () => ipcRenderer.invoke('tag:list-deleted'),
@@ -189,18 +201,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   tagUpsert: (payload: attribute.Tag[]) => ipcRenderer.invoke('tag:upsert', payload),
 
   // Item Record IPC handlers
-  itemRecordListActive: () => ipcRenderer.invoke('item-record:list-active'),
-  itemRecordListDeleted: () => ipcRenderer.invoke('item-record:list-deleted'),
-  itemRecordCreate: (payload: item.CreateItemRecordInput) =>
-    ipcRenderer.invoke('item-record:create', payload),
-  itemRecordUpdate: (payload: item.UpdateItemRecordInput) =>
-    ipcRenderer.invoke('item-record:update', payload),
-  itemRecordDelete: (payload: item.ItemRecordId) =>
-    ipcRenderer.invoke('item-record:delete', payload),
-  itemRecordRestore: (payload: item.ItemRecordId) =>
-    ipcRenderer.invoke('item-record:restore', payload),
-  itemRecordUpsert: (payload: item.ItemRecord[]) =>
-    ipcRenderer.invoke('item-record:upsert', payload),
+  itemListActive: () => ipcRenderer.invoke('item:list-active'),
+  itemListDeleted: () => ipcRenderer.invoke('item:list-deleted'),
+  itemCreate: (payload: item.CreateItemRecordInput) => ipcRenderer.invoke('item:create', payload),
+  itemUpdate: (payload: item.UpdateItemRecordInput) => ipcRenderer.invoke('item:update', payload),
+  itemDelete: (payload: item.ItemRecordId) => ipcRenderer.invoke('item:delete', payload),
+  itemRestore: (payload: item.ItemRecordId) => ipcRenderer.invoke('item:restore', payload),
+  itemUpsert: (payload: item.ItemRecord[]) => ipcRenderer.invoke('item:upsert', payload),
 
   // Alias IPC handlers
   aliasListActive: () => ipcRenderer.invoke('alias:list-active'),
@@ -210,32 +217,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   aliasDelete: (payload: item.AliasId) => ipcRenderer.invoke('alias:delete', payload),
   aliasRestore: (payload: item.AliasId) => ipcRenderer.invoke('alias:restore', payload),
   aliasUpsert: (payload: item.Alias[]) => ipcRenderer.invoke('alias:upsert', payload),
-
-  // Brandline Map IPC handlers
-  brandlineMapListActive: () => ipcRenderer.invoke('brandline-map:list-active'),
-  brandlineMapListDeleted: () => ipcRenderer.invoke('brandline-map:list-deleted'),
-  brandlineMapCreate: (payload: item.CreateBrandlineMapInput) =>
-    ipcRenderer.invoke('brandline-map:create', payload),
-  brandlineMapUpdate: (payload: item.UpdateBrandlineMap) =>
-    ipcRenderer.invoke('brandline-map:update', payload),
-  brandlineMapDelete: (payload: item.BrandlineMapId) =>
-    ipcRenderer.invoke('brandline-map:delete', payload),
-  brandlineMapRestore: (payload: item.BrandlineMapId) =>
-    ipcRenderer.invoke('brandline-map:restore', payload),
-  brandlineMapUpsert: (payload: item.BrandlineMap[]) =>
-    ipcRenderer.invoke('brandline-map:upsert', payload),
-
-  // Vendor Map IPC handlers
-  vendorMapListActive: () => ipcRenderer.invoke('vendor-map:list-active'),
-  vendorMapListDeleted: () => ipcRenderer.invoke('vendor-map:list-deleted'),
-  vendorMapCreate: (payload: item.CreateVendorMapInput) =>
-    ipcRenderer.invoke('vendor-map:create', payload),
-  vendorMapUpdate: (payload: item.UpdateVendorMap) =>
-    ipcRenderer.invoke('vendor-map:update', payload),
-  vendorMapDelete: (payload: item.VendorMapId) => ipcRenderer.invoke('vendor-map:delete', payload),
-  vendorMapRestore: (payload: item.VendorMapId) =>
-    ipcRenderer.invoke('vendor-map:restore', payload),
-  vendorMapUpsert: (payload: item.VendorMap[]) => ipcRenderer.invoke('vendor-map:upsert', payload),
 
   // Dimension Map IPC handlers
   dimensionMapListActive: () => ipcRenderer.invoke('dimension-map:list-active'),
@@ -275,6 +256,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Generation Rules IPC handlers
   generationRuleListActive: () => ipcRenderer.invoke('generation-rule:list-active'),
   generationRuleListDeleted: () => ipcRenderer.invoke('generation-rule:list-deleted'),
+  generationRuleListDirty: () => ipcRenderer.invoke('generation-rule:list-dirty'),
   generationRuleCreate: (payload: item.CreateGenerationRuleInput) =>
     ipcRenderer.invoke('generation-rule:create', payload),
   generationRuleUpdate: (payload: item.UpdateGenerationRule) =>
@@ -286,19 +268,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
   generationRuleUpsert: (payload: item.GenerationRules[]) =>
     ipcRenderer.invoke('generation-rule:upsert', payload),
 
+  // Variant Generator IPC handlers
+  variantGeneratorRun: () => ipcRenderer.invoke('variant-generator:run'),
+
   // Variant Record IPC handlers
-  variantRecordListActive: () => ipcRenderer.invoke('variant-record:list-active'),
-  variantRecordListDeleted: () => ipcRenderer.invoke('variant-record:list-deleted'),
-  variantRecordCreate: (payload: variant.CreateVariantRecordInput) =>
-    ipcRenderer.invoke('variant-record:create', payload),
-  variantRecordUpdate: (payload: variant.UpdateVariantRecord) =>
-    ipcRenderer.invoke('variant-record:update', payload),
-  variantRecordDelete: (payload: variant.VariantRecordId) =>
-    ipcRenderer.invoke('variant-record:delete', payload),
-  variantRecordRestore: (payload: variant.VariantRecordId) =>
-    ipcRenderer.invoke('variant-record:restore', payload),
-  variantRecordUpsert: (payload: variant.VariantRecord[]) =>
-    ipcRenderer.invoke('variant-record:upsert', payload),
+  variantListActive: () => ipcRenderer.invoke('variant:list-active'),
+  variantListDeleted: () => ipcRenderer.invoke('variant:list-deleted'),
+  variantCreate: (payload: variant.CreateVariantRecordInput) =>
+    ipcRenderer.invoke('variant:create', payload),
+  variantUpdate: (payload: variant.UpdateVariantRecord) =>
+    ipcRenderer.invoke('variant:update', payload),
+  variantDelete: (payload: variant.VariantRecordId) =>
+    ipcRenderer.invoke('variant:delete', payload),
+  variantRestore: (payload: variant.VariantRecordId) =>
+    ipcRenderer.invoke('variant:restore', payload),
+  variantUpsert: (payload: variant.VariantRecord[]) =>
+    ipcRenderer.invoke('variant:upsert', payload),
 
   // Component Map IPC handlers
   componentMapListActive: () => ipcRenderer.invoke('component-map:list-active'),

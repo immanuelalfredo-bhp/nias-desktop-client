@@ -22,8 +22,7 @@ export { TagQueries } from './attribute/tags.js';
 // Item queries
 export { ItemRecordQueries } from './item/item-records.js';
 export { AliasQueries } from './item/aliases.js';
-export { BrandlineMapQueries } from './item/brandline-map.js';
-export { VendorMapQueries } from './item/vendor-map.js';
+export { VendorMapQueries } from './attribute/vendor-map.js';
 export { DimensionMapQueries } from './item/dimension-map.js';
 export { SystemMapQueries } from './item/system-map.js';
 export { TagMapQueries } from './item/tag-map.js';

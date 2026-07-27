@@ -9,6 +9,7 @@ import {
   SystemSchema as DrizzleSystemsSchema,
   CategorySchema as DrizzleCategoriesSchema,
   VendorSchema as DrizzleVendorsSchema,
+  VendorMapSchema as DrizzleVendorMapSchema,
   TagSchema as DrizzleTagsSchema,
   type Brand as DrizzleBrand,
   type Mode as DrizzleMode,
@@ -18,6 +19,7 @@ import {
   type System as DrizzleSystem,
   type Category as DrizzleCategory,
   type Vendor as DrizzleVendor,
+  type VendorMap as DrizzleVendorMap,
   type Tag as DrizzleTag,
 } from '../server/schema/attribute.js';
 
@@ -192,6 +194,27 @@ export type CreateVendor = z.infer<typeof CreateVendorSchema>;
 export type UpdateVendor = z.infer<typeof UpdateVendorSchema>;
 export type CreateVendorInput = z.infer<typeof CreateVendorInputSchema>;
 export type UpdateVendorInput = z.infer<typeof UpdateVendorInputSchema>;
+
+// ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
+// ║                                       VENDOR MAP SCHEMAS                                      ║
+// ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
+
+export const VendorMapIdSchema = EntityIdSchema;
+export const VendorMapSchema = DrizzleVendorMapSchema;
+export type VendorMap = DrizzleVendorMap;
+
+export const CreateVendorMapSchema = VendorMapSchema.omit(CreateOmissions);
+export const UpdateVendorMapSchema = VendorMapSchema.pick({
+  id: true,
+}).extend(VendorMapSchema.omit(UpdateOmissions).partial().shape);
+export const CreateVendorMapInputSchema = CreateVendorMapSchema.omit({
+  id: true,
+});
+
+export type VendorMapId = z.infer<typeof VendorMapIdSchema>;
+export type CreateVendorMap = z.infer<typeof CreateVendorMapSchema>;
+export type UpdateVendorMap = z.infer<typeof UpdateVendorMapSchema>;
+export type CreateVendorMapInput = z.infer<typeof CreateVendorMapInputSchema>;
 
 // ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 // ║                                          TAG SCHEMAS                                          ║

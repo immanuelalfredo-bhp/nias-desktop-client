@@ -9,7 +9,6 @@ const COLUMNS = `
     brand_id AS brandId,
     mode_id AS modeId,
     uom_id AS uomId,
-    dimension_value_ids AS dimensionValueIds,
     description,
     sku_code AS skuCode,
     details,
@@ -33,10 +32,10 @@ export class VariantRecordQueries extends BaseQueries<
       .prepare(
         `
         INSERT INTO variant_records (
-          id, item_id, category_id, brand_id, mode_id, uom_id, dimension_value_ids,
+          id, item_id, category_id, brand_id, mode_id, uom_id,
           description, sku_code, details, created_at, updated_at) 
         VALUES (
-          @id, @itemId, @categoryId, @brandId, @modeId, @uomId, @dimensionValueIds,
+          @id, @itemId, @categoryId, @brandId, @modeId, @uomId,
           @description, @skuCode, @details, @createdAt, @updatedAt)`,
       )
       .run({ ...params, createdAt: now, updatedAt: now });
@@ -50,8 +49,8 @@ export class VariantRecordQueries extends BaseQueries<
         `
         UPDATE variant_records SET 
           item_id = @itemId, category_id = @categoryId, brand_id = @brandId, mode_id = @modeId,
-          uom_id = @uomId, dimension_value_ids = @dimensionValueIds, description = @description,
-          sku_code = @skuCode, details = @details, updated_at = @updatedAt, is_synced = @isSynced
+          uom_id = @uomId, description = @description, sku_code = @skuCode, details = @details,
+          updated_at = @updatedAt, is_synced = @isSynced
           WHERE id = @id`,
       )
       .run({ ...existing, ...params, updatedAt: new Date().toISOString(), isSynced: 0 });
@@ -61,11 +60,11 @@ export class VariantRecordQueries extends BaseQueries<
       .prepare(
         `
         INSERT INTO variant_records (
-          id, item_id, category_id, brand_id, mode_id, uom_id, dimension_value_ids,
+          id, item_id, category_id, brand_id, mode_id, uom_id,
           description, sku_code, details, created_at, updated_at,
           deleted_at, is_synced, sync_version) 
         VALUES (
-          @id, @itemId, @categoryId, @brandId, @modeId, @uomId, @dimensionValueIds,
+          @id, @itemId, @categoryId, @brandId, @modeId, @uomId,
           @description, @skuCode, @details, @createdAt, @updatedAt,
           @deletedAt, @isSynced, @syncVersion)
         ON CONFLICT(id) DO UPDATE SET
@@ -74,7 +73,6 @@ export class VariantRecordQueries extends BaseQueries<
           brand_id = excluded.brand_id,
           mode_id = excluded.mode_id,
           uom_id = excluded.uom_id,
-          dimension_value_ids = excluded.dimension_value_ids,
           description = excluded.description,
           sku_code = excluded.sku_code,
           details = excluded.details,
@@ -83,6 +81,9 @@ export class VariantRecordQueries extends BaseQueries<
           is_synced = excluded.is_synced,
           sync_version = excluded.sync_version`,
       )
-      .run({ ...params, isSynced: params.isSynced ? 1 : 0 });
+      .run({
+        ...params,
+        isSynced: params.isSynced ? 1 : 0,
+      });
   }
 }

@@ -155,6 +155,15 @@ export interface ElectronAPI {
   vendorRestore: (payload: attribute.VendorId) => Promise<common.SuccessResponse>;
   vendorUpsert: (payload: attribute.Vendor[]) => Promise<common.SuccessResponse>;
 
+  // Vendor Map IPC handlers
+  vendorMapListActive: () => Promise<Envelope<item.VendorMap[]>>;
+  vendorMapListDeleted: () => Promise<Envelope<item.VendorMap[]>>;
+  vendorMapCreate: (payload: item.CreateVendorMapInput) => Promise<common.SuccessResponse>;
+  vendorMapUpdate: (payload: item.UpdateVendorMapInput) => Promise<common.SuccessResponse>;
+  vendorMapDelete: (payload: item.VendorMapId) => Promise<common.SuccessResponse>;
+  vendorMapRestore: (payload: item.VendorMapId) => Promise<common.SuccessResponse>;
+  vendorMapUpsert: (payload: item.VendorMap[]) => Promise<common.SuccessResponse>;
+
   // Tag IPC handlers
   tagListActive: () => Promise<Envelope<attribute.Tag[]>>;
   tagListDeleted: () => Promise<Envelope<attribute.Tag[]>>;
@@ -165,13 +174,13 @@ export interface ElectronAPI {
   tagUpsert: (payload: attribute.Tag[]) => Promise<common.SuccessResponse>;
 
   // Item Record IPC handlers
-  itemRecordListActive: () => Promise<Envelope<item.ItemRecord[]>>;
-  itemRecordListDeleted: () => Promise<Envelope<item.ItemRecord[]>>;
-  itemRecordCreate: (payload: item.CreateItemRecordInput) => Promise<common.SuccessResponse>;
-  itemRecordUpdate: (payload: item.UpdateItemRecordInput) => Promise<common.SuccessResponse>;
-  itemRecordDelete: (payload: item.ItemRecordId) => Promise<common.SuccessResponse>;
-  itemRecordRestore: (payload: item.ItemRecordId) => Promise<common.SuccessResponse>;
-  itemRecordUpsert: (payload: item.ItemRecord[]) => Promise<common.SuccessResponse>;
+  itemListActive: () => Promise<Envelope<item.ItemRecord[]>>;
+  itemListDeleted: () => Promise<Envelope<item.ItemRecord[]>>;
+  itemCreate: (payload: item.CreateItemRecordInput) => Promise<common.SuccessResponse>;
+  itemUpdate: (payload: item.UpdateItemRecordInput) => Promise<common.SuccessResponse>;
+  itemDelete: (payload: item.ItemRecordId) => Promise<common.SuccessResponse>;
+  itemRestore: (payload: item.ItemRecordId) => Promise<common.SuccessResponse>;
+  itemUpsert: (payload: item.ItemRecord[]) => Promise<common.SuccessResponse>;
 
   // Alias IPC handlers
   aliasListActive: () => Promise<Envelope<item.Alias[]>>;
@@ -181,24 +190,6 @@ export interface ElectronAPI {
   aliasDelete: (payload: item.AliasId) => Promise<common.SuccessResponse>;
   aliasRestore: (payload: item.AliasId) => Promise<common.SuccessResponse>;
   aliasUpsert: (payload: item.Alias[]) => Promise<common.SuccessResponse>;
-
-  // Brandline Map IPC handlers
-  brandlineMapListActive: () => Promise<Envelope<item.BrandlineMap[]>>;
-  brandlineMapListDeleted: () => Promise<Envelope<item.BrandlineMap[]>>;
-  brandlineMapCreate: (payload: item.CreateBrandlineMapInput) => Promise<common.SuccessResponse>;
-  brandlineMapUpdate: (payload: item.UpdateBrandlineMapInput) => Promise<common.SuccessResponse>;
-  brandlineMapDelete: (payload: item.BrandlineMapId) => Promise<common.SuccessResponse>;
-  brandlineMapRestore: (payload: item.BrandlineMapId) => Promise<common.SuccessResponse>;
-  brandlineMapUpsert: (payload: item.BrandlineMap[]) => Promise<common.SuccessResponse>;
-
-  // Vendor Map IPC handlers
-  vendorMapListActive: () => Promise<Envelope<item.VendorMap[]>>;
-  vendorMapListDeleted: () => Promise<Envelope<item.VendorMap[]>>;
-  vendorMapCreate: (payload: item.CreateVendorMapInput) => Promise<common.SuccessResponse>;
-  vendorMapUpdate: (payload: item.UpdateVendorMapInput) => Promise<common.SuccessResponse>;
-  vendorMapDelete: (payload: item.VendorMapId) => Promise<common.SuccessResponse>;
-  vendorMapRestore: (payload: item.VendorMapId) => Promise<common.SuccessResponse>;
-  vendorMapUpsert: (payload: item.VendorMap[]) => Promise<common.SuccessResponse>;
 
   // Dimension Map IPC handlers
   dimensionMapListActive: () => Promise<Envelope<item.DimensionMap[]>>;
@@ -230,6 +221,7 @@ export interface ElectronAPI {
   // Generation Rule IPC handlers
   generationRuleListActive: () => Promise<Envelope<item.GenerationRules[]>>;
   generationRuleListDeleted: () => Promise<Envelope<item.GenerationRules[]>>;
+  generationRuleListDirty: () => Promise<Envelope<item.GenerationRules[]>>;
   generationRuleCreate: (
     payload: item.CreateGenerationRuleInput,
   ) => Promise<common.SuccessResponse>;
@@ -239,6 +231,9 @@ export interface ElectronAPI {
   generationRuleDelete: (payload: item.GenerationRulesId) => Promise<common.SuccessResponse>;
   generationRuleRestore: (payload: item.GenerationRulesId) => Promise<common.SuccessResponse>;
   generationRuleUpsert: (payload: item.GenerationRules[]) => Promise<common.SuccessResponse>;
+
+  // Variant Generator IPC handlers
+  variantGeneratorRun: () => Promise<common.SuccessResponse>;
 
   // Variant IPC handlers
   variantListActive: () => Promise<Envelope<variant.VariantRecord[]>>;

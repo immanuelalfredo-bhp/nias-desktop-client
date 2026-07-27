@@ -5,16 +5,12 @@ import {
   AliasSchema as DrizzleAliasSchema,
   DimensionMapSchema as DrizzleDimensionMapSchema,
   SystemMapSchema as DrizzleSystemMapSchema,
-  BrandlineMapSchema as DrizzleBrandlineMapSchema,
-  VendorMapSchema as DrizzleVendorMapSchema,
   TagMapSchema as DrizzleTagMapSchema,
   GenerationRulesSchema as DrizzleGenerationRulesSchema,
   type ItemRecord as DrizzleItemRecord,
   type Alias as DrizzleAlias,
   type DimensionMap as DrizzleDimensionMap,
   type SystemMap as DrizzleSystemMap,
-  type BrandlineMap as DrizzleBrandlineMap,
-  type VendorMap as DrizzleVendorMap,
   type TagMap as DrizzleTagMap,
   type GenerationRules as DrizzleGenerationRules,
 } from '../server/schema/item.js';
@@ -114,48 +110,6 @@ export type SystemMapId = z.infer<typeof SystemMapIdSchema>;
 export type CreateSystemMap = z.infer<typeof CreateSystemMapSchema>;
 export type UpdateSystemMap = z.infer<typeof UpdateSystemMapSchema>;
 export type CreateSystemMapInput = z.infer<typeof CreateSystemMapInputSchema>;
-
-// ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
-// ║                                     BRANDLINE MAP SCHEMAS                                     ║
-// ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
-
-export const BrandlineMapIdSchema = EntityIdSchema;
-export const BrandlineMapSchema = DrizzleBrandlineMapSchema;
-export type BrandlineMap = DrizzleBrandlineMap;
-
-export const CreateBrandlineMapSchema = BrandlineMapSchema.omit(CreateOmissions);
-export const UpdateBrandlineMapSchema = BrandlineMapSchema.pick({
-  id: true,
-}).extend(BrandlineMapSchema.omit(UpdateOmissions).partial().shape);
-export const CreateBrandlineMapInputSchema = CreateBrandlineMapSchema.omit({
-  id: true,
-});
-
-export type BrandlineMapId = z.infer<typeof BrandlineMapIdSchema>;
-export type CreateBrandlineMap = z.infer<typeof CreateBrandlineMapSchema>;
-export type UpdateBrandlineMap = z.infer<typeof UpdateBrandlineMapSchema>;
-export type CreateBrandlineMapInput = z.infer<typeof CreateBrandlineMapInputSchema>;
-
-// ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
-// ║                                       VENDOR MAP SCHEMAS                                      ║
-// ╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
-
-export const VendorMapIdSchema = EntityIdSchema;
-export const VendorMapSchema = DrizzleVendorMapSchema;
-export type VendorMap = DrizzleVendorMap;
-
-export const CreateVendorMapSchema = VendorMapSchema.omit(CreateOmissions);
-export const UpdateVendorMapSchema = VendorMapSchema.pick({
-  id: true,
-}).extend(VendorMapSchema.omit(UpdateOmissions).partial().shape);
-export const CreateVendorMapInputSchema = CreateVendorMapSchema.omit({
-  id: true,
-});
-
-export type VendorMapId = z.infer<typeof VendorMapIdSchema>;
-export type CreateVendorMap = z.infer<typeof CreateVendorMapSchema>;
-export type UpdateVendorMap = z.infer<typeof UpdateVendorMapSchema>;
-export type CreateVendorMapInput = z.infer<typeof CreateVendorMapInputSchema>;
 
 // ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 // ║                                        TAG MAP SCHEMAS                                        ║

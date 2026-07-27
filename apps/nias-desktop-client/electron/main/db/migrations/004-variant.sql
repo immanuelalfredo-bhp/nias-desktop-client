@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS variant_records (
 	brand_id TEXT NOT NULL,
 	mode_id TEXT NOT NULL,
 	uom_id TEXT NOT NULL,
-	dimension_value_ids TEXT NOT NULL,
 	description TEXT NOT NULL,
 	sku_code TEXT NOT NULL UNIQUE,
 	details TEXT,

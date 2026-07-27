@@ -26,7 +26,6 @@ import {
   // Item queries
   ItemRecordQueries,
   AliasQueries,
-  BrandlineMapQueries,
   VendorMapQueries,
   DimensionMapQueries,
   SystemMapQueries,
@@ -86,7 +85,6 @@ export class SyncQueries {
       const tagQueries = new TagQueries(this.db);
       const itemRecordQueries = new ItemRecordQueries(this.db);
       const aliasQueries = new AliasQueries(this.db);
-      const brandlineMapQueries = new BrandlineMapQueries(this.db);
       const vendorMapQueries = new VendorMapQueries(this.db);
       const dimensionMapQueries = new DimensionMapQueries(this.db);
       const systemMapQueries = new SystemMapQueries(this.db);
@@ -158,9 +156,6 @@ export class SyncQueries {
         }
         for (const alias of manifest.changes.aliases as item.Alias[]) {
           aliasQueries.upsert(alias);
-        }
-        for (const brandlineMap of manifest.changes.brandlineMap as item.BrandlineMap[]) {
-          brandlineMapQueries.upsert(brandlineMap);
         }
         for (const vendorMap of manifest.changes.vendorMap as item.VendorMap[]) {
           vendorMapQueries.upsert(vendorMap);

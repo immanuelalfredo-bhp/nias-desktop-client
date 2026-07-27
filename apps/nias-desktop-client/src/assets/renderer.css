@@ -9,6 +9,8 @@
   --sidebar-ink: #e2e8f0;
   --sidebar-active: #155e75;
   --header-height: 68px;
+  --header: #1e293b;
+  --header-ink: #f8fafc;
 }
 
 * {
@@ -244,7 +246,8 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
+  background: var(--header);
+  color: var(--header-ink);
   border-bottom: 1px solid #334155;
   padding: 12px 18px;
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);

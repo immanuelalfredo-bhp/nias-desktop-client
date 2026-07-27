@@ -28,7 +28,6 @@ import {
   // Item queries
   ItemRecordQueries,
   AliasQueries,
-  BrandlineMapQueries,
   VendorMapQueries,
   DimensionMapQueries,
   SystemMapQueries,
@@ -98,7 +97,6 @@ export class UserDatabase {
   // Item queries
   readonly item: ItemRecordQueries;
   readonly alias: AliasQueries;
-  readonly brandlineMap: BrandlineMapQueries;
   readonly vendorMap: VendorMapQueries;
   readonly dimensionMap: DimensionMapQueries;
   readonly systemMap: SystemMapQueries;
@@ -146,7 +144,6 @@ export class UserDatabase {
     // Item queries
     this.item = new ItemRecordQueries(this.db);
     this.alias = new AliasQueries(this.db);
-    this.brandlineMap = new BrandlineMapQueries(this.db);
     this.vendorMap = new VendorMapQueries(this.db);
     this.dimensionMap = new DimensionMapQueries(this.db);
     this.systemMap = new SystemMapQueries(this.db);

@@ -54,18 +54,6 @@ export const systemMap = itemSchema.table('system_map', {
   systemId: uuid('system_id').notNull(),
 });
 
-export const brandlineMap = itemSchema.table('brandline_map', {
-  ...itemBaseFields,
-  itemId: uuid('item_id').notNull(),
-  brandId: uuid('brand_id').notNull(),
-});
-
-export const vendorMap = itemSchema.table('vendor_map', {
-  ...itemBaseFields,
-  brandlineId: uuid('brandline_id').notNull(),
-  vendorId: uuid('vendor_id').notNull(),
-});
-
 export const tagMap = itemSchema.table('tag_map', {
   ...itemBaseFields,
   itemId: uuid('item_id').notNull(),
@@ -113,14 +101,6 @@ export const SystemMapSchema = createSelectSchema(systemMap, {
   ...itemOverrides,
 });
 
-export const BrandlineMapSchema = createSelectSchema(brandlineMap, {
-  ...itemOverrides,
-});
-
-export const VendorMapSchema = createSelectSchema(vendorMap, {
-  ...itemOverrides,
-});
-
 export const TagMapSchema = createSelectSchema(tagMap, {
   ...itemOverrides,
 });
@@ -133,7 +113,5 @@ export type ItemRecord = typeof itemRecords.$inferSelect;
 export type Alias = typeof aliases.$inferSelect;
 export type DimensionMap = typeof dimensionMap.$inferSelect;
 export type SystemMap = typeof systemMap.$inferSelect;
-export type BrandlineMap = typeof brandlineMap.$inferSelect;
-export type VendorMap = typeof vendorMap.$inferSelect;
 export type TagMap = typeof tagMap.$inferSelect;
 export type GenerationRules = typeof generationRules.$inferSelect;

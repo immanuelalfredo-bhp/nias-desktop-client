@@ -135,64 +135,6 @@ CREATE INDEX IF NOT EXISTS idx_system_map_is_synced
 CREATE INDEX IF NOT EXISTS idx_system_map_sync_version
 	ON system_map (sync_version);
 
-CREATE TABLE IF NOT EXISTS brandline_map (
-	id TEXT PRIMARY KEY,
-	item_id TEXT NOT NULL,
-	brand_id TEXT NOT NULL,
-	created_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	deleted_at TEXT DEFAULT NULL,
-	is_synced BOOLEAN DEFAULT FALSE,
-	sync_version INTEGER NOT NULL DEFAULT 0,
-
-	FOREIGN KEY (item_id) REFERENCES item_records (id) ON DELETE CASCADE,
-	FOREIGN KEY (brand_id) REFERENCES brands (id) ON DELETE CASCADE
-);
-
-CREATE INDEX IF NOT EXISTS idx_brandline_map_item_id
-	ON brandline_map (item_id);
-CREATE INDEX IF NOT EXISTS idx_brandline_map_brand_id
-	ON brandline_map (brand_id);
-CREATE INDEX IF NOT EXISTS idx_brandline_map_created_at
-	ON brandline_map (created_at);
-CREATE INDEX IF NOT EXISTS idx_brandline_map_updated_at
-	ON brandline_map (updated_at);
-CREATE INDEX IF NOT EXISTS idx_brandline_map_deleted_at
-	ON brandline_map (deleted_at);
-CREATE INDEX IF NOT EXISTS idx_brandline_map_is_synced
-	ON brandline_map (is_synced);
-CREATE INDEX IF NOT EXISTS idx_brandline_map_sync_version
-	ON brandline_map (sync_version);
-
-CREATE TABLE IF NOT EXISTS vendor_map (
-	id TEXT PRIMARY KEY,
-	item_id TEXT NOT NULL,
-	vendor_id TEXT NOT NULL,
-	created_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	deleted_at TEXT DEFAULT NULL,
-	is_synced BOOLEAN DEFAULT FALSE,
-	sync_version INTEGER NOT NULL DEFAULT 0,
-
-	FOREIGN KEY (item_id) REFERENCES item_records (id) ON DELETE CASCADE,
-	FOREIGN KEY (vendor_id) REFERENCES vendors (id) ON DELETE CASCADE
-);
-
-CREATE INDEX IF NOT EXISTS idx_vendor_map_item_id
-	ON vendor_map (item_id);
-CREATE INDEX IF NOT EXISTS idx_vendor_map_vendor_id
-	ON vendor_map (vendor_id);
-CREATE INDEX IF NOT EXISTS idx_vendor_map_created_at
-	ON vendor_map (created_at);
-CREATE INDEX IF NOT EXISTS idx_vendor_map_updated_at
-	ON vendor_map (updated_at);
-CREATE INDEX IF NOT EXISTS idx_vendor_map_deleted_at
-	ON vendor_map (deleted_at);
-CREATE INDEX IF NOT EXISTS idx_vendor_map_is_synced
-	ON vendor_map (is_synced);
-CREATE INDEX IF NOT EXISTS idx_vendor_map_sync_version
-	ON vendor_map (sync_version);
-
 CREATE TABLE IF NOT EXISTS tag_map (
 	id TEXT PRIMARY KEY,
 	item_id TEXT NOT NULL,
@@ -272,7 +214,5 @@ VALUES
   ('aliases', 0),
   ('dimension_map', 0),
   ('system_map', 0),
-  ('brandline_map', 0),
-  ('vendor_map', 0),
   ('tag_map', 0),
   ('generation_rules', 0);

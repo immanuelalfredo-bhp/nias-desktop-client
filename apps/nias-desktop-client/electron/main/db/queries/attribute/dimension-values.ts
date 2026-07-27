@@ -71,4 +71,35 @@ export class DimensionValuesQueries extends BaseQueries<
       )
       .run({ ...params, isSynced: params.isSynced ? 1 : 0 });
   }
+  getIs(dimensionId: string, value: string | number): attribute.DimensionValue | null {
+    return (
+      (this.db
+        .prepare(
+          `
+        SELECT ${this.columns} FROM ${this.tableName}
+        WHERE dimension_id = @dimensionId AND (name = @value OR sku_code = @value
+        OR numeric_value = @value)`,
+        )
+        .get({ dimensionId, value }) as attribute.DimensionValue) || null
+    );
+  }
+  getBetween(dimensionId: string, min: number, max: number): attribute.DimensionValue[] {
+    return this.db
+      .prepare(
+        `
+        SELECT ${this.columns} FROM ${this.tableName} 
+        WHERE dimension_id = @dimensionId AND numeric_value BETWEEN @min AND @max`,
+      )
+      .all({ dimensionId, min, max }) as attribute.DimensionValue[];
+  }
+  getInclude(dimensionId: string, values: (string | number)[]): attribute.DimensionValue[] {
+    return this.db
+      .prepare(
+        `
+        SELECT ${this.columns} FROM ${this.tableName} 
+        WHERE dimension_id = @dimensionId AND (name IN (@values) OR sku_code IN (@values)
+        OR numeric_value IN (@values))`,
+      )
+      .all({ dimensionId, values }) as attribute.DimensionValue[];
+  }
 }

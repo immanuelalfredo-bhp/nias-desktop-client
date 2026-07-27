@@ -176,6 +176,35 @@ CREATE INDEX IF NOT EXISTS idx_vendors_deleted_at ON vendors (deleted_at);
 CREATE INDEX IF NOT EXISTS idx_vendors_is_synced ON vendors (is_synced);
 CREATE INDEX IF NOT EXISTS idx_vendors_sync_version ON vendors (sync_version);
 
+CREATE TABLE IF NOT EXISTS vendor_map (
+	id TEXT PRIMARY KEY,
+	brand_id TEXT NOT NULL,
+	vendor_id TEXT NOT NULL,
+	created_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	deleted_at TEXT DEFAULT NULL,
+	is_synced BOOLEAN DEFAULT FALSE,
+	sync_version INTEGER NOT NULL DEFAULT 0,
+
+	FOREIGN KEY (brand_id) REFERENCES brands (id) ON DELETE CASCADE,
+	FOREIGN KEY (vendor_id) REFERENCES vendors (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_vendor_map_brand_id
+	ON vendor_map (brand_id);
+CREATE INDEX IF NOT EXISTS idx_vendor_map_vendor_id
+	ON vendor_map (vendor_id);
+CREATE INDEX IF NOT EXISTS idx_vendor_map_created_at
+	ON vendor_map (created_at);
+CREATE INDEX IF NOT EXISTS idx_vendor_map_updated_at
+	ON vendor_map (updated_at);
+CREATE INDEX IF NOT EXISTS idx_vendor_map_deleted_at
+	ON vendor_map (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_vendor_map_is_synced
+	ON vendor_map (is_synced);
+CREATE INDEX IF NOT EXISTS idx_vendor_map_sync_version
+	ON vendor_map (sync_version);
+
 CREATE TABLE IF NOT EXISTS tags (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
@@ -207,4 +236,5 @@ VALUES
   ('systems', 0),
   ('categories', 0),
   ('vendors', 0),
+  ('vendor_map', 0),
   ('tags', 0);

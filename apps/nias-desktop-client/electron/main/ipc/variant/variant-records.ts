@@ -4,9 +4,9 @@ import { logger, type Envelope } from '@nias/shared/server';
 import { UserDatabase } from '../../db/database';
 import { createAuditLog } from '../system/audit';
 
-export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: string): void {
+export function registerVariantsIpcHandlers(userDb: UserDatabase, userId: string): void {
   ipcMain.handle(
-    'variant-record:list-active',
+    'variant:list-active',
     async (_event): Promise<Envelope<variant.VariantRecord[]>> => {
       try {
         const variantRecords = userDb.variant.listActive();
@@ -38,7 +38,7 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
   );
 
   ipcMain.handle(
-    'variant-record:list-deleted',
+    'variant:list-deleted',
     async (_event): Promise<Envelope<variant.VariantRecord[]>> => {
       try {
         const variantRecords = userDb.variant.listDeleted();
@@ -70,7 +70,7 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
   );
 
   ipcMain.handle(
-    'variant-record:get-by-id',
+    'variant:get-by-id',
     async (_event, variantRecordId: string): Promise<Envelope<variant.VariantRecord | null>> => {
       try {
         const variantRecord = userDb.variant.getById(variantRecordId);
@@ -110,7 +110,7 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
   );
 
   ipcMain.handle(
-    'variant-record:create',
+    'variant:create',
     async (_event, payload: variant.CreateVariantRecordInput): Promise<common.SuccessResponse> => {
       try {
         const parsed = variant.CreateVariantRecordInputSchema.parse(payload);
@@ -122,7 +122,6 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
           brandId: parsed.brandId,
           categoryId: parsed.categoryId,
           uomId: parsed.uomId,
-          dimensionValueIds: parsed.dimensionValueIds,
           description: parsed.description,
           skuCode: parsed.skuCode,
           details: parsed.details,
@@ -168,7 +167,7 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
   );
 
   ipcMain.handle(
-    'variant-record:update',
+    'variant:update',
     async (_event, payload: variant.UpdateVariantRecord): Promise<common.SuccessResponse> => {
       try {
         const parsed = variant.UpdateVariantRecordSchema.parse(payload);
@@ -185,13 +184,12 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
         }
 
         const updatedData: variant.UpdateVariantRecord = {
-          id: crypto.randomUUID(),
+          id: parsed.id,
           itemId: parsed.itemId,
           modeId: parsed.modeId,
           brandId: parsed.brandId,
           categoryId: parsed.categoryId,
           uomId: parsed.uomId,
-          dimensionValueIds: parsed.dimensionValueIds,
           description: parsed.description,
           skuCode: parsed.skuCode,
           details: parsed.details,
@@ -237,7 +235,7 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
   );
 
   ipcMain.handle(
-    'variant-record:delete',
+    'variant:delete',
     async (_event, variantRecordId: string): Promise<common.SuccessResponse> => {
       try {
         const existing = userDb.variant.getById(variantRecordId);
@@ -292,7 +290,7 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
   );
 
   ipcMain.handle(
-    'variant-record:restore',
+    'variant:restore',
     async (_event, variantRecordId: string): Promise<common.SuccessResponse> => {
       try {
         const existing = userDb.variant.getById(variantRecordId);
@@ -347,7 +345,7 @@ export function registerVariantRecordsIpcHandlers(userDb: UserDatabase, userId: 
   );
 
   ipcMain.handle(
-    'variant-record:upsert',
+    'variant:upsert',
     async (_event, payload: variant.VariantRecord[]): Promise<common.SuccessResponse> => {
       try {
         userDb.variant.transaction(() => {

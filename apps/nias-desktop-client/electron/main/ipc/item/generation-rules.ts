@@ -69,6 +69,32 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
     },
   );
 
+  ipcMain.handle('generation-rule:list-dirty', async (_event, itemId: string): Promise<Envelope<item.GenerationRules[]>> => {
+    try {
+      const isDirty = userDb.generationRules.listDirty();
+      return {
+        success: true,
+        message: 'Retrieved dirty generation rules successfully',
+        data: isDirty,
+      };
+    } catch (error) {
+      logger.error(
+        {
+          scope: 'generation-rule',
+          itemId,
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
+        },
+        'Failed to retrieve dirty generation rules',
+      );
+      return {
+        success: false,
+        message: 'Failed to retrieve dirty generation rules',
+      };
+    }
+  });
+
   ipcMain.handle(
     'generation-rule:get-by-id',
     async (_event, generationRuleId: string): Promise<Envelope<item.GenerationRules | null>> => {

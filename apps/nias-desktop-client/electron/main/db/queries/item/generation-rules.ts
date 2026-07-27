@@ -78,4 +78,22 @@ export class GenerationRulesQueries extends BaseQueries<
       )
       .run({ ...params, isDirty: params.isDirty ? 1 : 0, isSynced: params.isSynced ? 1 : 0 });
   }
+
+  listDirtyComponents(): item.GenerationRules[] {
+    return this.db
+      .prepare(`SELECT ${this.columns} FROM ${this.tableName}
+        JOIN items ON generation_rules.item_id = items.id
+        WHERE is_dirty = 1 AND items.deleted_at IS NULL AND items.is_synced = 1
+        AND items.material_type = 'component'`)
+      .all() as item.GenerationRules[];
+  }
+
+  listDirtyAssemblies(): item.GenerationRules[] {
+    return this.db
+      .prepare(`SELECT ${this.columns} FROM ${this.tableName}
+        JOIN items ON generation_rules.item_id = items.id
+        WHERE is_dirty = 1 AND items.deleted_at IS NULL AND items.is_synced = 1
+        AND items.material_type = 'assembly'`)
+      .all() as item.GenerationRules[];
+  }
 }

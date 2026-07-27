@@ -6,8 +6,6 @@ export const attributeSchema = pgSchema('attribute');
 
 const attributeBaseFields = {
   id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').notNull(),
-  sortOrder: real('sort_order').notNull(),
   createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   deletedAt: timestamp('deleted_at', { mode: 'string' }),
@@ -16,8 +14,6 @@ const attributeBaseFields = {
 };
 
 const attributeOverrides = {
-  name: schemas.string,
-  sortOrder: schemas.sortOrder,
   createdAt: schemas.dateTime,
   updatedAt: schemas.dateTime,
   deletedAt: schemas.dateTime.nullable(),
@@ -25,31 +21,41 @@ const attributeOverrides = {
 
 export const brands = attributeSchema.table('brands', {
   ...attributeBaseFields,
+  name: text('name').notNull(),
   normalizedName: text('normalized_name').notNull(),
+  sortOrder: real('sort_order').notNull(),
   skuCode: text('sku_code').notNull(),
 });
 
 export const modes = attributeSchema.table('modes', {
   ...attributeBaseFields,
+  name: text('name').notNull(),
   normalizedName: text('normalized_name').notNull(),
+  sortOrder: real('sort_order').notNull(),
 });
 
 export const uoms = attributeSchema.table('uoms', {
   ...attributeBaseFields,
+  name: text('name').notNull(),
   normalizedName: text('normalized_name').notNull(),
+  sortOrder: real('sort_order').notNull(),
   symbol: text('symbol').notNull(),
 });
 
 export const dimensions = attributeSchema.table('dimensions', {
   ...attributeBaseFields,
   scope: text('scope').notNull(),
+  name: text('name').notNull(),
   normalizedName: text('normalized_name').notNull(),
+  sortOrder: real('sort_order').notNull(),
   formName: text('form_name').notNull(),
   position: text('position').notNull(),
 });
 
 export const dimensionValues = attributeSchema.table('dimension_values', {
   ...attributeBaseFields,
+  name: text('name').notNull(),
+  sortOrder: real('sort_order').notNull(),
   dimensionId: uuid('dimension_id').notNull(),
   skuCode: text('sku_code').notNull(),
   numericValue: real('numeric_value'),
@@ -57,23 +63,37 @@ export const dimensionValues = attributeSchema.table('dimension_values', {
 
 export const systems = attributeSchema.table('systems', {
   ...attributeBaseFields,
+  name: text('name').notNull(),
   normalizedName: text('normalized_name').notNull(),
+  sortOrder: real('sort_order').notNull(),
 });
 
 export const categories = attributeSchema.table('categories', {
   ...attributeBaseFields,
+  name: text('name').notNull(),
   normalizedName: text('normalized_name').notNull(),
+  sortOrder: real('sort_order').notNull(),
 });
 
 export const vendors = attributeSchema.table('vendors', {
   ...attributeBaseFields,
+  name: text('name').notNull(),
   normalizedName: text('normalized_name').notNull(),
+  sortOrder: real('sort_order').notNull(),
   skuCode: text('sku_code').notNull(),
+});
+
+export const vendorMap = attributeSchema.table('vendor_map', {
+  ...attributeBaseFields,
+  brandId: uuid('brand_id').notNull(),
+  vendorId: uuid('vendor_id').notNull(),
 });
 
 export const tags = attributeSchema.table('tags', {
   ...attributeBaseFields,
+  name: text('name').notNull(),
   normalizedName: text('normalized_name').notNull(),
+  sortOrder: real('sort_order').notNull(),
 });
 
 // Only include fields with specific validation rules.
@@ -125,6 +145,10 @@ export const VendorSchema = createSelectSchema(vendors, {
   skuCode: schemas.skuVendor,
 });
 
+export const VendorMapSchema = createSelectSchema(vendorMap, {
+  ...attributeOverrides,
+});
+
 export const TagSchema = createSelectSchema(tags, {
   ...attributeOverrides,
   normalizedName: schemas.slug,
@@ -138,4 +162,5 @@ export type DimensionValue = typeof dimensionValues.$inferSelect;
 export type System = typeof systems.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type Vendor = typeof vendors.$inferSelect;
+export type VendorMap = typeof vendorMap.$inferSelect;
 export type Tag = typeof tags.$inferSelect;
