@@ -74,7 +74,7 @@ export function registerDimensionValuesIpcHandlers(userDb: UserDatabase, userId:
     async (
       _event,
       dimensionValueId: string,
-    ): Promise<Envelope<attribute.DimensionValue | null>> => {
+    ): Promise<Envelope<attribute.DimensionValue>> => {
       try {
         const dimensionValue = userDb.dimensionValue.getById(dimensionValueId);
         if (!dimensionValue) {
@@ -107,6 +107,72 @@ export function registerDimensionValuesIpcHandlers(userDb: UserDatabase, userId:
         return {
           success: false,
           message: 'Failed to retrieve dimension value',
+        };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    'dimension-value:get-active-by-dimension-id',
+    async (_event, dimensionId: string): Promise<Envelope<attribute.DimensionValue[]>> => {
+      try {
+        const dimensionValues = userDb.dimensionValue.getActiveByDimensionId(dimensionId);
+        logger.info(
+          { scope: 'dimension-value', dimensionId, dimensionValueCount: dimensionValues.length },
+          'Dimension values retrieved successfully by dimension ID',
+        );
+        return {
+          success: true,
+          message: 'Dimension values retrieved successfully by dimension ID',
+          data: dimensionValues,
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'dimension-value',
+            dimensionId,
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to retrieve dimension values by dimension ID',
+        );
+        return {
+          success: false,
+          message: 'Failed to retrieve dimension values by dimension ID',
+        };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    'dimension-value:get-deleted-by-dimension-id',
+    async (_event, dimensionId: string): Promise<Envelope<attribute.DimensionValue[]>> => {
+      try {
+        const dimensionValues = userDb.dimensionValue.getDeletedByDimensionId(dimensionId);
+        logger.info(
+          { scope: 'dimension-value', dimensionId, dimensionValueCount: dimensionValues.length },
+          'Deleted dimension values retrieved successfully by dimension ID',
+        );
+        return {
+          success: true,
+          message: 'Deleted dimension values retrieved successfully by dimension ID',
+          data: dimensionValues,
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'dimension-value',
+            dimensionId,
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to retrieve deleted dimension values by dimension ID',
+        );
+        return {
+          success: false,
+          message: 'Failed to retrieve deleted dimension values by dimension ID',
         };
       }
     },
@@ -386,6 +452,38 @@ export function registerDimensionValuesIpcHandlers(userDb: UserDatabase, userId:
         return {
           success: false,
           message: 'Failed to upsert dimension values',
+        };
+      }
+    },
+  );
+  ipcMain.handle(
+    'dimension-value:get-by-variant-ids',
+    async (_event, variantIds: string[]): Promise<Envelope<attribute.DimensionValue[]>> => {
+      try {
+        const dimensionValues = userDb.dimensionValue.getByVariantIds(variantIds);
+        logger.info(
+          { scope: 'dimension-value', variantIds, dimensionValueCount: dimensionValues.length },
+          'Dimension values retrieved successfully by variant IDs',
+        );
+        return {
+          success: true,
+          message: 'Dimension values retrieved successfully by variant IDs',
+          data: dimensionValues,
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'dimension-value',
+            variantIds,
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to retrieve dimension values by variant IDs',
+        );
+        return {
+          success: false,
+          message: 'Failed to retrieve dimension values by variant IDs',
         };
       }
     },

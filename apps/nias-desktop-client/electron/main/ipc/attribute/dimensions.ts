@@ -71,7 +71,7 @@ export function registerDimensionsIpcHandlers(userDb: UserDatabase, userId: stri
 
   ipcMain.handle(
     'dimension:get-by-id',
-    async (_event, dimensionId: string): Promise<Envelope<attribute.Dimension | null>> => {
+    async (_event, dimensionId: string): Promise<Envelope<attribute.Dimension>> => {
       try {
         const dimension = userDb.dimension.getById(dimensionId);
         if (!dimension) {
@@ -117,6 +117,7 @@ export function registerDimensionsIpcHandlers(userDb: UserDatabase, userId: stri
           scope: parsed.scope,
           name: parsed.name,
           normalizedName: slugify(parsed.name)!,
+          displayName: parsed.displayName,
           formName: parsed.formName,
           position: parsed.position,
           sortOrder: parsed.sortOrder,
@@ -358,6 +359,46 @@ export function registerDimensionsIpcHandlers(userDb: UserDatabase, userId: stri
         return {
           success: false,
           message: 'Failed to upsert dimensions',
+        };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    'dimension:get-by-item-id',
+    async (_event, itemId: string): Promise<Envelope<attribute.Dimension[]>> => {
+      try {
+        const dimensions = userDb.dimension.getByItemId(itemId);
+        if (!dimensions) {
+          logger.error({ scope: 'dimension', itemId }, 'No dimensions found for the given item ID');
+          return {
+            success: false,
+            message: 'No dimensions found for the given item ID'
+          };
+        }
+        logger.info(
+          { scope: 'dimension', itemId, dimensionCount: dimensions.length },
+          'Dimensions retrieved successfully for the given item ID',
+        );
+        return {
+          success: true,
+          message: 'Dimensions retrieved successfully for the given item ID',
+          data: dimensions,
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'dimension',
+            itemId,
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to retrieve dimensions for the given item ID',
+        );
+        return {
+          success: false,
+          message: 'Failed to retrieve dimensions for the given item ID'
         };
       }
     },

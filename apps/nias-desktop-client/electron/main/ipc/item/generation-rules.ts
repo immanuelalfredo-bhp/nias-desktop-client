@@ -12,11 +12,11 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
         const generationRules = userDb.generationRules.listActive();
         logger.info(
           { scope: 'generation-rule', generationRuleCount: generationRules.length },
-          'Active item records retrieved successfully',
+          'Active generation rules retrieved successfully',
         );
         return {
           success: true,
-          message: 'Active item records retrieved successfully',
+          message: 'Active generation rules retrieved successfully',
           data: generationRules,
         };
       } catch (error) {
@@ -27,11 +27,11 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
             errorStack: (error as Error).stack,
             rawError: error,
           },
-          'Failed to retrieve active item records',
+          'Failed to retrieve active generation rules',
         );
         return {
           success: false,
-          message: 'Failed to retrieve active item records',
+          message: 'Failed to retrieve active generation rules',
         };
       }
     },
@@ -44,11 +44,11 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
         const generationRules = userDb.generationRules.listDeleted();
         logger.info(
           { scope: 'generation-rule', generationRuleCount: generationRules.length },
-          'Deleted item records retrieved successfully',
+          'Deleted generation rules retrieved successfully',
         );
         return {
           success: true,
-          message: 'Deleted item records retrieved successfully',
+          message: 'Deleted generation rules retrieved successfully',
           data: generationRules,
         };
       } catch (error) {
@@ -59,61 +59,64 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
             errorStack: (error as Error).stack,
             rawError: error,
           },
-          'Failed to retrieve deleted item records',
+          'Failed to retrieve deleted generation rules',
         );
         return {
           success: false,
-          message: 'Failed to retrieve deleted item records',
+          message: 'Failed to retrieve deleted generation rules',
         };
       }
     },
   );
 
-  ipcMain.handle('generation-rule:list-dirty', async (_event, itemId: string): Promise<Envelope<item.GenerationRules[]>> => {
-    try {
-      const isDirty = userDb.generationRules.listDirty();
-      return {
-        success: true,
-        message: 'Retrieved dirty generation rules successfully',
-        data: isDirty,
-      };
-    } catch (error) {
-      logger.error(
-        {
-          scope: 'generation-rule',
-          itemId,
-          errorMessage: (error as Error).message,
-          errorStack: (error as Error).stack,
-          rawError: error,
-        },
-        'Failed to retrieve dirty generation rules',
-      );
-      return {
-        success: false,
-        message: 'Failed to retrieve dirty generation rules',
-      };
-    }
-  });
+  ipcMain.handle(
+    'generation-rule:list-dirty-components',
+    async (_event, itemId: string): Promise<Envelope<item.GenerationRules[]>> => {
+      try {
+        const dirtyComponents = userDb.generationRules.listDirtyComponents();
+        return {
+          success: true,
+          message: 'Retrieved dirty component generation rules successfully',
+          data: dirtyComponents,
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'generation-rule',
+            itemId,
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to retrieve dirty component generation rules',
+        );
+        return {
+          success: false,
+          message: 'Failed to retrieve dirty component generation rules',
+        };
+      }
+    },
+  );
 
   ipcMain.handle(
     'generation-rule:get-by-id',
-    async (_event, generationRuleId: string): Promise<Envelope<item.GenerationRules | null>> => {
+    async (_event, generationRuleId: string): Promise<Envelope<item.GenerationRules>> => {
       try {
         const generationRule = userDb.generationRules.getById(generationRuleId);
         if (!generationRule) {
-          logger.error({ scope: 'generation-rule', generationRuleId }, 'Dimension value not found');
+          logger.error({ scope: 'generation-rule', generationRuleId }, 'Generation rule not found');
           return {
             success: false,
-            message: 'Dimension value not found',
+            message: 'Generation rule not found',
           };
         }
         logger.info(
           { scope: 'generation-rule', generationRuleId },
-          'Dimension value retrieved successfully',
+          'Generation rule retrieved successfully',
         );
         return {
           success: true,
-          message: 'Dimension value retrieved successfully',
+          message: 'Generation rule retrieved successfully',
           data: generationRule,
         };
       } catch (error) {
@@ -125,11 +128,11 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
             errorStack: (error as Error).stack,
             rawError: error,
           },
-          'Failed to retrieve item record',
+          'Failed to retrieve generation rule',
         );
         return {
           success: false,
-          message: 'Failed to retrieve item record',
+          message: 'Failed to retrieve generation rule',
         };
       }
     },
@@ -155,23 +158,23 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
         userDb.generationRules.create(data);
         logger.info(
           { scope: 'generation-rule', generationRuleId: data.id },
-          'Item record created successfully',
+          'Generation rule created successfully',
         );
 
         createAuditLog(userDb, userId, {
           action: 'create',
-          tableName: 'item_records',
+          tableName: 'generation_rules',
           recordId: data.id,
           recordName: data.id,
         });
         logger.info(
           { scope: 'audit', generationRuleId: data.id },
-          'Audit log created for item record creation',
+          'Audit log created for generation rule creation',
         );
 
         return {
           success: true,
-          message: 'Item record created successfully',
+          message: 'Generation rule created successfully',
         };
       } catch (error) {
         logger.error(
@@ -181,11 +184,11 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
             errorStack: (error as Error).stack,
             rawError: error,
           },
-          'Failed to create item record',
+          'Failed to create generation rule',
         );
         return {
           success: false,
-          message: 'Failed to create item record',
+          message: 'Failed to create generation rule',
         };
       }
     },
@@ -196,15 +199,15 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
     async (_event, payload: item.UpdateGenerationRule): Promise<common.SuccessResponse> => {
       try {
         const parsed = item.UpdateGenerationRuleSchema.parse(payload);
-        const existing = userDb.item.getById(parsed.id);
+        const existing = userDb.generationRules.getById(parsed.id);
         if (!existing) {
           logger.error(
             { scope: 'generation-rule', generationRuleId: parsed.id },
-            'Item record not found for update',
+            'Generation rule not found for update',
           );
           return {
             success: false,
-            message: 'Item record not found for update',
+            message: 'Generation rule not found for update',
           };
         }
 
@@ -219,26 +222,26 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
           isDirty: true,
         };
 
-        userDb.item.update(updatedData);
+        userDb.generationRules.update(updatedData);
         logger.info(
           { scope: 'generation-rule', generationRuleId: parsed.id },
-          'Item record updated successfully',
+          'Generation rule updated successfully',
         );
 
         createAuditLog(userDb, userId, {
           action: 'update',
-          tableName: 'item_records',
+          tableName: 'generation_rules',
           recordName: parsed.id || existing.id,
           recordId: parsed.id,
         });
         logger.info(
           { scope: 'audit', generationRuleId: parsed.id },
-          'Audit log created for item record update',
+          'Audit log created for generation rule update',
         );
 
         return {
           success: true,
-          message: 'Item record updated successfully',
+          message: 'Generation rule updated successfully',
         };
       } catch (error) {
         logger.error(
@@ -248,11 +251,11 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
             errorStack: (error as Error).stack,
             rawError: error,
           },
-          'Failed to update item record',
+          'Failed to update generation rule',
         );
         return {
           success: false,
-          message: 'Failed to update item record',
+          message: 'Failed to update generation rule',
         };
       }
     },
@@ -262,37 +265,37 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
     'generation-rule:delete',
     async (_event, generationRuleId: string): Promise<common.SuccessResponse> => {
       try {
-        const existing = userDb.item.getById(generationRuleId);
+        const existing = userDb.generationRules.getById(generationRuleId);
         if (!existing) {
           logger.error(
             { scope: 'generation-rule', generationRuleId },
-            'Item record not found for deletion',
+            'Generation rule not found for deletion',
           );
           return {
             success: false,
-            message: 'Item record not found for deletion',
+            message: 'Generation rule not found for deletion',
           };
         }
-        userDb.item.delete(generationRuleId);
+        userDb.generationRules.delete(generationRuleId);
         logger.info(
           { scope: 'generation-rule', generationRuleId },
-          'Item record deleted successfully',
+          'Generation rule deleted successfully',
         );
 
         createAuditLog(userDb, userId, {
           action: 'delete',
-          tableName: 'item_records',
-          recordName: existing.displayName,
+          tableName: 'generation_rules',
+          recordName: generationRuleId,
           recordId: generationRuleId,
         });
         logger.info(
           { scope: 'audit', generationRuleId },
-          'Audit log created for item record deletion',
+          'Audit log created for generation rule deletion',
         );
 
         return {
           success: true,
-          message: 'Item record deleted successfully',
+          message: 'Generation rule deleted successfully',
         };
       } catch (error) {
         logger.error(
@@ -303,11 +306,11 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
             errorStack: (error as Error).stack,
             rawError: error,
           },
-          'Failed to delete item record',
+          'Failed to delete generation rule',
         );
         return {
           success: false,
-          message: 'Failed to delete item record',
+          message: 'Failed to delete generation rule',
         };
       }
     },
@@ -317,37 +320,37 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
     'generation-rule:restore',
     async (_event, generationRuleId: string): Promise<common.SuccessResponse> => {
       try {
-        const existing = userDb.item.getById(generationRuleId);
+        const existing = userDb.generationRules.getById(generationRuleId);
         if (!existing) {
           logger.error(
             { scope: 'generation-rule', generationRuleId },
-            'Item record not found for restoration',
+            'Generation rule not found for restoration',
           );
           return {
             success: false,
-            message: 'Item record not found for restoration',
+            message: 'Generation rule not found for restoration',
           };
         }
-        userDb.item.restore(generationRuleId);
+        userDb.generationRules.restore(generationRuleId);
         logger.info(
           { scope: 'generation-rule', generationRuleId },
-          'Item record restored successfully',
+          'Generation rule restored successfully',
         );
 
         createAuditLog(userDb, userId, {
           action: 'restore',
-          tableName: 'item_records',
-          recordName: existing.displayName,
+          tableName: 'generation_rules',
+          recordName: generationRuleId,
           recordId: generationRuleId,
         });
         logger.info(
           { scope: 'audit', generationRuleId },
-          'Audit log created for item record restoration',
+          'Audit log created for generation rule restoration',
         );
 
         return {
           success: true,
-          message: 'Item record restored successfully',
+          message: 'Generation rule restored successfully',
         };
       } catch (error) {
         logger.error(
@@ -358,11 +361,11 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
             errorStack: (error as Error).stack,
             rawError: error,
           },
-          'Failed to restore item record',
+          'Failed to restore generation rule',
         );
         return {
           success: false,
-          message: 'Failed to restore item record',
+          message: 'Failed to restore generation rule',
         };
       }
     },
@@ -372,30 +375,30 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
     'generation-rule:upsert',
     async (_event, payload: item.GenerationRules[]): Promise<common.SuccessResponse> => {
       try {
-        userDb.item.transaction(() => {
+        userDb.generationRules.transaction(() => {
           for (const generationRule of payload) {
             const parsed = item.GenerationRulesSchema.parse(generationRule);
             userDb.generationRules.upsert(parsed);
             logger.info(
               { scope: 'generation-rule', generationRuleId: parsed.id },
-              'Item record upserted successfully',
+              'Generation rule upserted successfully',
             );
 
             createAuditLog(userDb, userId, {
               action: 'upsert',
-              tableName: 'item_records',
+              tableName: 'generation_rules',
               recordName: parsed.id,
               recordId: parsed.id,
             });
             logger.info(
               { scope: 'audit', generationRuleId: parsed.id },
-              'Audit log created for item record upsert',
+              'Audit log created for generation rule upsert',
             );
           }
         });
         return {
           success: true,
-          message: 'Item records upserted successfully',
+          message: 'Generation rules upserted successfully',
         };
       } catch (error) {
         logger.error(
@@ -405,13 +408,42 @@ export function registerGenerationRulesIpcHandlers(userDb: UserDatabase, userId:
             errorStack: (error as Error).stack,
             rawError: error,
           },
-          'Failed to upsert item records',
+          'Failed to upsert generation rules',
         );
         return {
           success: false,
-          message: 'Failed to upsert item records',
+          message: 'Failed to upsert generation rules',
         };
       }
     },
   );
+
+  ipcMain.handle('generation-rule:list-with-names', async (_event, isActive: boolean): Promise<Envelope<any[]>> => {
+    try {
+      const generationRulesWithNames = userDb.generationRules.listWithNames(isActive);
+      logger.info(
+        { scope: 'generation-rule', generationRuleCount: generationRulesWithNames.length },
+        'Generation rules with names retrieved successfully',
+      );
+      return {
+        success: true,
+        message: 'Generation rules with names retrieved successfully',
+        data: generationRulesWithNames,
+      };
+    } catch (error) {
+      logger.error(
+        {
+          scope: 'generation-rule',
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
+        },
+        'Failed to retrieve generation rules with names',
+      );
+      return {
+        success: false,
+        message: 'Failed to retrieve generation rules with names',
+      };
+    }
+  });
 }

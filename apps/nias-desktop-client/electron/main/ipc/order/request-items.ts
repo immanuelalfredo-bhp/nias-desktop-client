@@ -71,7 +71,7 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
 
   ipcMain.handle(
     'request-item:get-by-id',
-    async (_event, requestItemId: string): Promise<Envelope<order.RequestItem | null>> => {
+    async (_event, requestItemId: string): Promise<Envelope<order.RequestItem>> => {
       try {
         const requestItem = userDb.requestItem.getById(requestItemId);
         if (!requestItem) {

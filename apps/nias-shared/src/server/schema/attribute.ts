@@ -47,8 +47,9 @@ export const dimensions = attributeSchema.table('dimensions', {
   scope: text('scope').notNull(),
   name: text('name').notNull(),
   normalizedName: text('normalized_name').notNull(),
-  sortOrder: real('sort_order').notNull(),
+  displayName: text('display_name').notNull(),
   formName: text('form_name').notNull(),
+  sortOrder: real('sort_order').notNull(),
   position: text('position').notNull(),
 });
 
@@ -83,12 +84,6 @@ export const vendors = attributeSchema.table('vendors', {
   skuCode: text('sku_code').notNull(),
 });
 
-export const vendorMap = attributeSchema.table('vendor_map', {
-  ...attributeBaseFields,
-  brandId: uuid('brand_id').notNull(),
-  vendorId: uuid('vendor_id').notNull(),
-});
-
 export const tags = attributeSchema.table('tags', {
   ...attributeBaseFields,
   name: text('name').notNull(),
@@ -118,6 +113,7 @@ export const DimensionSchema = createSelectSchema(dimensions, {
   ...attributeOverrides,
   scope: schemas.scope,
   normalizedName: schemas.slug,
+  displayName: schemas.string,
   formName: schemas.string,
   position: schemas.position,
 });
@@ -145,10 +141,6 @@ export const VendorSchema = createSelectSchema(vendors, {
   skuCode: schemas.skuVendor,
 });
 
-export const VendorMapSchema = createSelectSchema(vendorMap, {
-  ...attributeOverrides,
-});
-
 export const TagSchema = createSelectSchema(tags, {
   ...attributeOverrides,
   normalizedName: schemas.slug,
@@ -162,5 +154,4 @@ export type DimensionValue = typeof dimensionValues.$inferSelect;
 export type System = typeof systems.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type Vendor = typeof vendors.$inferSelect;
-export type VendorMap = typeof vendorMap.$inferSelect;
 export type Tag = typeof tags.$inferSelect;

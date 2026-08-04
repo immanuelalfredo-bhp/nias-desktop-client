@@ -65,7 +65,7 @@ export function registerAliasIpcHandlers(userDb: UserDatabase, userId: string): 
 
   ipcMain.handle(
     'alias:get-by-id',
-    async (_event, aliasId: string): Promise<Envelope<item.Alias | null>> => {
+    async (_event, aliasId: string): Promise<Envelope<item.Alias>> => {
       try {
         const alias = userDb.alias.getById(aliasId);
         if (!alias) {
@@ -105,6 +105,29 @@ export function registerAliasIpcHandlers(userDb: UserDatabase, userId: string): 
     async (_event, payload: item.CreateAliasInput): Promise<common.SuccessResponse> => {
       try {
         const parsed = item.CreateAliasInputSchema.parse(payload);
+
+        const existingDeleted = userDb.alias.getByIds(parsed.itemId, parsed.alias);
+        if (existingDeleted) {
+          userDb.alias.restore(existingDeleted.id);
+          logger.info(
+            { scope: 'alias', aliasId: existingDeleted.id },
+            'Alias restored successfully from deleted state',
+          );
+          createAuditLog(userDb, userId, {
+            action: 'restore',
+            tableName: 'aliases',
+            recordId: existingDeleted.id,
+            recordName: existingDeleted.alias,
+          });
+          logger.info(
+            { scope: 'audit', aliasId: existingDeleted.id },
+            'Audit log created for alias restoration',
+          );
+          return {
+            success: true,
+            message: 'Alias restored successfully from deleted state',
+          };
+        }
 
         const data: item.CreateAlias = {
           id: crypto.randomUUID(),
@@ -202,26 +225,26 @@ export function registerAliasIpcHandlers(userDb: UserDatabase, userId: string): 
 
   ipcMain.handle(
     'alias:delete',
-    async (_event, aliasId: string): Promise<common.SuccessResponse> => {
+    async (_event, itemId: string, alias: string): Promise<common.SuccessResponse> => {
       try {
-        const existing = userDb.alias.getById(aliasId);
+        const existing = userDb.alias.getByIds(itemId, alias);
         if (!existing) {
-          logger.error({ scope: 'alias', aliasId }, 'Alias not found for deletion');
+          logger.error({ scope: 'alias', itemId, alias }, 'Alias not found for deletion');
           return {
             success: false,
             message: 'Alias not found for deletion',
           };
         }
-        userDb.alias.delete(aliasId);
-        logger.info({ scope: 'alias', aliasId }, 'Alias deleted successfully');
+        userDb.alias.delete(existing.id);
+        logger.info({ scope: 'alias', itemId, alias }, 'Alias deleted successfully');
 
         createAuditLog(userDb, userId, {
           action: 'delete',
           tableName: 'aliases',
           recordName: existing.alias,
-          recordId: aliasId,
+          recordId: existing.id,
         });
-        logger.info({ scope: 'audit', aliasId }, 'Audit log created for alias deletion');
+        logger.info({ scope: 'audit', itemId, alias }, 'Audit log created for alias deletion');
 
         return {
           success: true,
@@ -231,7 +254,8 @@ export function registerAliasIpcHandlers(userDb: UserDatabase, userId: string): 
         logger.error(
           {
             scope: 'alias',
-            aliasId,
+            alias,
+            itemId,
             errorMessage: (error as Error).message,
             errorStack: (error as Error).stack,
             rawError: error,
@@ -248,26 +272,26 @@ export function registerAliasIpcHandlers(userDb: UserDatabase, userId: string): 
 
   ipcMain.handle(
     'alias:restore',
-    async (_event, aliasId: string): Promise<common.SuccessResponse> => {
+    async (_event, itemId: string, alias: string): Promise<common.SuccessResponse> => {
       try {
-        const existing = userDb.alias.getById(aliasId);
+        const existing = userDb.alias.getByIds(itemId, alias);
         if (!existing) {
-          logger.error({ scope: 'alias', aliasId }, 'Alias not found for restoration');
+          logger.error({ scope: 'alias', itemId, alias }, 'Alias not found for restoration');
           return {
             success: false,
             message: 'Alias not found for restoration',
           };
         }
-        userDb.alias.restore(aliasId);
-        logger.info({ scope: 'alias', aliasId }, 'Alias restored successfully');
+        userDb.alias.restore(existing.id);
+        logger.info({ scope: 'alias', itemId, alias }, 'Alias restored successfully');
 
         createAuditLog(userDb, userId, {
           action: 'restore',
           tableName: 'aliases',
           recordName: existing.alias,
-          recordId: aliasId,
+          recordId: existing.id,
         });
-        logger.info({ scope: 'audit', aliasId }, 'Audit log created for alias restoration');
+        logger.info({ scope: 'audit', itemId, alias }, 'Audit log created for alias restoration');
 
         return {
           success: true,
@@ -277,7 +301,8 @@ export function registerAliasIpcHandlers(userDb: UserDatabase, userId: string): 
         logger.error(
           {
             scope: 'alias',
-            aliasId,
+            itemId,
+            alias,
             errorMessage: (error as Error).message,
             errorStack: (error as Error).stack,
             rawError: error,
@@ -331,6 +356,47 @@ export function registerAliasIpcHandlers(userDb: UserDatabase, userId: string): 
         return {
           success: false,
           message: 'Failed to upsert aliases',
+        };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    'alias:get-by-item-id',
+    async (_event, itemId: string): Promise<Envelope<item.Alias[]>> => {
+      try {
+        const aliases = userDb.alias.getByItemId(itemId);
+        logger.info(
+          { scope: 'alias', itemId, aliasCount: aliases?.length ?? 0 },
+          'Aliases retrieved by item ID successfully',
+        );
+        if (!aliases || aliases.length === 0) {
+          logger.warn({ scope: 'alias', itemId }, 'No aliases found for the given item ID');
+          return {
+            success: true,
+            message: 'No aliases found for the given item ID',
+            data: [],
+          };
+        }
+        return {
+          success: true,
+          message: 'Aliases retrieved by item ID successfully',
+          data: aliases,
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'alias',
+            itemId,
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to retrieve aliases for the given item ID',
+        );
+        return {
+          success: false,
+          message: 'Failed to retrieve aliases for the given item ID',
         };
       }
     },

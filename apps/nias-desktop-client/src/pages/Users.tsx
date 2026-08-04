@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import type { system } from '@nias/shared';
-import CreateUserModal from '../components/modals/CreateUserModal';
 
 export default function UsersPage() {
   const [activeUsers, setActiveUsers] = useState<system.User[]>([]);

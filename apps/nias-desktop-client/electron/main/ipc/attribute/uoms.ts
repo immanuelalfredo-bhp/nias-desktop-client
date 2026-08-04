@@ -59,7 +59,7 @@ export function registerUomIpcHandlers(userDb: UserDatabase, userId: string): vo
 
   ipcMain.handle(
     'uom:get-by-id',
-    async (_event, uomId: string): Promise<Envelope<attribute.Uom | null>> => {
+    async (_event, uomId: string): Promise<Envelope<attribute.Uom>> => {
       try {
         const uom = userDb.uom.getById(uomId);
         if (!uom) {
@@ -318,6 +318,42 @@ export function registerUomIpcHandlers(userDb: UserDatabase, userId: string): vo
         return {
           success: false,
           message: 'Failed to upsert uoms',
+        };
+      }
+    },
+  );
+  ipcMain.handle(
+    'uom:get-by-item-id',
+    async (_event, itemId: string): Promise<Envelope<attribute.Uom[]>> => {
+      try {
+        const uom = userDb.uom.getByItemId(itemId);
+        if (!uom) {
+          logger.error({ scope: 'uom', itemId }, 'Uom not found for item');
+          return {
+            success: false,
+            message: 'Uom not found for item',
+          };
+        }
+        logger.info({ scope: 'uom', itemId }, 'Uom retrieved successfully for item');
+        return {
+          success: true,
+          message: 'Uom retrieved successfully for item',
+          data: uom,
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'uom',
+            itemId,
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to retrieve uom for item',
+        );
+        return {
+          success: false,
+          message: 'Failed to retrieve uom for item',
         };
       }
     },

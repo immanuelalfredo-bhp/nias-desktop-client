@@ -9,36 +9,79 @@ export abstract class BaseQueries<T, CreateParams, UpdateParams> {
     protected readonly db: Database.Database,
     protected readonly tableName: string,
     protected readonly columns: string,
+    protected readonly tableOrder: string,
+    protected readonly hasSoftDelete: boolean = true
   ) {}
 
   listActive(): T[] {
+    const whereClause = this.hasSoftDelete ? 'WHERE deleted_at IS NULL' : '';
+
     return this.db
-      .prepare(`SELECT ${this.columns} FROM ${this.tableName} WHERE deleted_at IS NULL`)
+      .prepare(`
+        SELECT
+          ${this.columns}
+        FROM
+          ${this.tableName}
+        ${whereClause}
+        ORDER BY
+          ${this.tableOrder}
+      `)
       .all() as T[];
   }
 
   listDeleted(): T[] {
+    const whereClause = this.hasSoftDelete ? 'WHERE deleted_at IS NOT NULL' : '';
+
     return this.db
-      .prepare(`SELECT ${this.columns} FROM ${this.tableName} WHERE deleted_at IS NOT NULL`)
+      .prepare(`
+        SELECT
+          ${this.columns}
+        FROM
+          ${this.tableName}
+        ${whereClause}
+        ORDER BY
+          ${this.tableOrder}
+      `)
       .all() as T[];
   }
 
   getById(id: string): T | null {
     return (
       (this.db
-        .prepare(`SELECT ${this.columns} FROM ${this.tableName} WHERE id = ?`)
+        .prepare(`
+          SELECT
+            ${this.columns}
+          FROM
+            ${this.tableName}
+          WHERE
+            id = ?
+        `)
         .get(id) as T) || null
     );
   }
 
   delete(id: string): void {
     this.db
-      .prepare(`UPDATE ${this.tableName} SET deleted_at = ? WHERE id = ?`)
+      .prepare(`
+        UPDATE ${this.tableName}
+        SET
+          deleted_at = ?
+        WHERE
+          id = ?
+      `)
       .run(new Date().toISOString(), id);
   }
 
   restore(id: string): void {
-    this.db.prepare(`UPDATE ${this.tableName} SET deleted_at = NULL WHERE id = ?`).run(id);
+    this.db
+      .prepare(`
+        UPDATE ${this.tableName}
+        SET
+          deleted_at = NULL
+        WHERE
+          id = ?
+      `)
+      .run(id);
   }
 
   transaction(callback: () => void): void {

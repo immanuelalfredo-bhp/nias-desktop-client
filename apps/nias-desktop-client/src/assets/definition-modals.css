@@ -1,0 +1,124 @@
+/* Vendor Modal Layout & Components */
+.vendor-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 12px;
+}
+
+.vendor-form-grid input {
+  width: 100%;
+}
+
+.vendor-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 75px;
+  overflow-y: auto;
+  min-height: 40px;
+  padding: 6px;
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: 4px;
+}
+
+.vendor-tag-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary-bg, #e0f2fe);
+  color: var(--primary-color, #0369a1);
+  padding: 0px 8px;
+  height: 24px; /* Forces an explicit compact height */
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.vendor-tag-remove-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  color: inherit;
+  font-size: 13px;
+  padding: 0;
+  line-height: 1;
+}
+
+/* Static Header Table Wrapper */
+.vendor-brand-table-header {
+  border: 1px solid var(--border-color, #ccc);
+  border-bottom: none;
+  background: var(--card-bg, #ffffff);
+}
+
+.vendor-brand-table-header table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.vendor-brand-table-header th {
+  text-align: left;
+  padding: 8px;
+}
+
+/* Scrollable Body Table Wrapper */
+.vendor-brand-table-wrap {
+  max-height: 130px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  border: 1px solid var(--border-color, #ccc);
+}
+
+.vendor-brand-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.vendor-brand-table-wrap td {
+  padding: 8px;
+}
+
+.vendor-brand-row {
+  cursor: pointer;
+}
+
+.vendor-brand-row.selected {
+  background-color: var(--selection-bg, rgba(3, 105, 161, 0.1));
+}
+
+.vendor-spacer {
+  margin: 12px 0;
+}
+
+.vendor-section-group {
+  margin-bottom: 10px;
+}
+
+.vendor-label-block {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.vendor-muted-text {
+  font-size: 12px;
+  align-self: center;
+}
+
+.vendor-search-input {
+  width: 100%;
+}
+
+.vendor-empty-cell {
+  text-align: center;
+  padding: 10px;
+}
+
+/* --- ADD THIS WIDE MODIFIER FOR THE ITEM WORKSPACE MODAL --- */
+.modal-card.modal-card-wide {
+  width: 92vw;
+  max-width: 1350px;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+}

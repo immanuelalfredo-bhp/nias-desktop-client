@@ -65,7 +65,7 @@ export function registerSystemIpcHandlers(userDb: UserDatabase, userId: string):
 
   ipcMain.handle(
     'system:get-by-id',
-    async (_event, systemId: string): Promise<Envelope<attribute.System | null>> => {
+    async (_event, systemId: string): Promise<Envelope<attribute.System>> => {
       try {
         const system = userDb.system.getById(systemId);
         if (!system) {
@@ -331,6 +331,44 @@ export function registerSystemIpcHandlers(userDb: UserDatabase, userId: string):
         return {
           success: false,
           message: 'Failed to upsert systems',
+        };
+      }
+    },
+  );
+  
+  ipcMain.handle(
+    'system:get-by-item-id',
+    async (_event, itemId: string): Promise<Envelope<attribute.System[]>> => {
+      try {
+        const systems = userDb.system.getByItemId(itemId);
+        if (!systems || systems.length === 0) {
+          logger.error({ scope: 'system', itemId }, 'No systems found for the given item ID');
+          return {
+            success: true,
+            message: 'No systems found for the given item ID',
+            data: [],
+          };
+        }
+        logger.info({ scope: 'system', itemId, systemCount: systems?.length ?? 0 }, 'Systems retrieved successfully by item ID');
+        return {
+          success: true,
+          message: 'Systems retrieved successfully by item ID',
+          data: systems,
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'system',
+            itemId,
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to retrieve systems for the given item ID',
+        );
+        return {
+          success: false,
+          message: 'Failed to retrieve systems for the given item ID',
         };
       }
     },

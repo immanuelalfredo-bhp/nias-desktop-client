@@ -65,20 +65,20 @@ export function registerSystemMapsIpcHandlers(userDb: UserDatabase, userId: stri
 
   ipcMain.handle(
     'system-map:get-by-id',
-    async (_event, systemMapId: string): Promise<Envelope<item.SystemMap | null>> => {
+    async (_event, systemMapId: string): Promise<Envelope<item.SystemMap>> => {
       try {
         const systemMap = userDb.systemMap.getById(systemMapId);
         if (!systemMap) {
-          logger.error({ scope: 'system-map', systemMapId }, 'System value not found');
+          logger.error({ scope: 'system-map', systemMapId }, 'System map not found');
           return {
             success: false,
-            message: 'System value not found',
+            message: 'System map not found',
           };
         }
-        logger.info({ scope: 'system-map', systemMapId }, 'System value retrieved successfully');
+        logger.info({ scope: 'system-map', systemMapId }, 'System map retrieved successfully');
         return {
           success: true,
-          message: 'System value retrieved successfully',
+          message: 'System map retrieved successfully',
           data: systemMap,
         };
       } catch (error) {
@@ -105,6 +105,29 @@ export function registerSystemMapsIpcHandlers(userDb: UserDatabase, userId: stri
     async (_event, payload: item.CreateSystemMapInput): Promise<common.SuccessResponse> => {
       try {
         const parsed = item.CreateSystemMapInputSchema.parse(payload);
+
+        const existingDeleted = userDb.systemMap.getByIds(parsed.itemId, parsed.systemId);
+        if (existingDeleted) {
+          userDb.systemMap.restore(existingDeleted.id);
+          logger.info(
+            { scope: 'system-map', systemMapId: existingDeleted.id },
+            'Deleted system map restored successfully',
+          );
+          createAuditLog(userDb, userId, {
+            action: 'restore',
+            tableName: 'system_maps',
+            recordId: existingDeleted.id,
+            recordName: existingDeleted.id,
+          });
+          logger.info(
+            { scope: 'audit', systemMapId: existingDeleted.id },
+            'Audit log created for system map restoration',
+          );
+          return {
+            success: true,
+            message: 'Deleted system map restored successfully',
+          };
+        }
 
         const data: item.CreateSystemMap = {
           id: crypto.randomUUID(),
@@ -215,26 +238,26 @@ export function registerSystemMapsIpcHandlers(userDb: UserDatabase, userId: stri
 
   ipcMain.handle(
     'system-map:delete',
-    async (_event, systemMapId: string): Promise<common.SuccessResponse> => {
+    async (_event, itemId: string, systemId: string): Promise<common.SuccessResponse> => {
       try {
-        const existing = userDb.systemMap.getById(systemMapId);
+        const existing = userDb.systemMap.getByIds(itemId, systemId);
         if (!existing) {
-          logger.error({ scope: 'system-map', systemMapId }, 'System map not found for deletion');
+          logger.error({ scope: 'system-map', itemId, systemId }, 'System map not found for deletion');
           return {
             success: false,
             message: 'System map not found for deletion',
           };
         }
-        userDb.systemMap.delete(systemMapId);
-        logger.info({ scope: 'system-map', systemMapId }, 'System map deleted successfully');
+        userDb.systemMap.delete(existing.id);
+        logger.info({ scope: 'system-map', itemId, systemId }, 'System map deleted successfully');
 
         createAuditLog(userDb, userId, {
           action: 'delete',
           tableName: 'system_maps',
           recordName: existing.id,
-          recordId: systemMapId,
+          recordId: existing.id,
         });
-        logger.info({ scope: 'audit', systemMapId }, 'Audit log created for system map deletion');
+        logger.info({ scope: 'audit', systemMapId: existing.id }, 'Audit log created for system map deletion');
 
         return {
           success: true,
@@ -244,7 +267,6 @@ export function registerSystemMapsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'system-map',
-            systemMapId,
             errorMessage: (error as Error).message,
             errorStack: (error as Error).stack,
             rawError: error,
@@ -261,12 +283,12 @@ export function registerSystemMapsIpcHandlers(userDb: UserDatabase, userId: stri
 
   ipcMain.handle(
     'system-map:restore',
-    async (_event, systemMapId: string): Promise<common.SuccessResponse> => {
+    async (_event, itemId: string, systemId: string): Promise<common.SuccessResponse> => {
       try {
-        const existing = userDb.systemMap.getById(systemMapId);
+        const existing = userDb.systemMap.getByIds(itemId, systemId);
         if (!existing) {
           logger.error(
-            { scope: 'system-map', systemMapId },
+            { scope: 'system-map', itemId, systemId },
             'System map not found for restoration',
           );
           return {
@@ -274,17 +296,17 @@ export function registerSystemMapsIpcHandlers(userDb: UserDatabase, userId: stri
             message: 'System map not found for restoration',
           };
         }
-        userDb.systemMap.restore(systemMapId);
-        logger.info({ scope: 'system-map', systemMapId }, 'System map restored successfully');
+        userDb.systemMap.restore(existing.id);
+        logger.info({ scope: 'system-map', itemId, systemId }, 'System map restored successfully');
 
         createAuditLog(userDb, userId, {
           action: 'restore',
           tableName: 'system_maps',
           recordName: existing.id,
-          recordId: systemMapId,
+          recordId: existing.id,
         });
         logger.info(
-          { scope: 'audit', systemMapId },
+          { scope: 'audit', systemMapId: existing.id },
           'Audit log created for system map restoration',
         );
 
@@ -296,7 +318,6 @@ export function registerSystemMapsIpcHandlers(userDb: UserDatabase, userId: stri
         logger.error(
           {
             scope: 'system-map',
-            systemMapId,
             errorMessage: (error as Error).message,
             errorStack: (error as Error).stack,
             rawError: error,

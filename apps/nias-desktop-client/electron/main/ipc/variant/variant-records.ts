@@ -71,23 +71,23 @@ export function registerVariantsIpcHandlers(userDb: UserDatabase, userId: string
 
   ipcMain.handle(
     'variant:get-by-id',
-    async (_event, variantRecordId: string): Promise<Envelope<variant.VariantRecord | null>> => {
+    async (_event, variantRecordId: string): Promise<Envelope<variant.VariantRecord>> => {
       try {
         const variantRecord = userDb.variant.getById(variantRecordId);
         if (!variantRecord) {
-          logger.error({ scope: 'variant-record', variantRecordId }, 'Dimension value not found');
+          logger.error({ scope: 'variant-record', variantRecordId }, 'Variant record not found');
           return {
             success: false,
-            message: 'Dimension value not found',
+            message: 'Variant record not found',
           };
         }
         logger.info(
           { scope: 'variant-record', variantRecordId },
-          'Dimension value retrieved successfully',
+          'Variant record retrieved successfully',
         );
         return {
           success: true,
-          message: 'Dimension value retrieved successfully',
+          message: 'Variant record retrieved successfully',
           data: variantRecord,
         };
       } catch (error) {
@@ -386,6 +386,56 @@ export function registerVariantsIpcHandlers(userDb: UserDatabase, userId: string
         return {
           success: false,
           message: 'Failed to upsert variant records',
+        };
+      }
+    },
+  );
+  ipcMain.handle(
+    'variant:get-by-specifications',
+    async (
+      _event,
+      itemId: string,
+      brandId: string,
+      modeId: string,
+      uomId: string,
+      dimensionValueIds: string[]
+    ): Promise<Envelope<variant.VariantRecord[]>> => {
+      try {
+        const variantRecords = userDb.variant.getBySpecifications(
+          itemId,
+          brandId,
+          modeId,
+          uomId,
+          dimensionValueIds
+        );
+        if (!variantRecords) {
+          logger.error(
+            { scope: 'variant-record', itemId, brandId, modeId, uomId, dimensionValueIds },
+            'Variant records not found for the given specifications',
+          );
+          return {
+            success: false,
+            message: 'Variant records not found for the given specifications',
+          };
+        }
+        return {
+          success: true,
+          message: 'Variant records retrieved successfully',
+          data: variantRecords,
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'variant-record',
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to get variant record by specifications',
+        );
+        return {
+          success: false,
+          message: 'Failed to get variant record by specifications',
         };
       }
     },

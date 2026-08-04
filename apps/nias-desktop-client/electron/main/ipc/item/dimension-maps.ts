@@ -71,23 +71,23 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
 
   ipcMain.handle(
     'dimension-map:get-by-id',
-    async (_event, dimensionMapId: string): Promise<Envelope<item.DimensionMap | null>> => {
+    async (_event, dimensionMapId: string): Promise<Envelope<item.DimensionMap>> => {
       try {
         const dimensionMap = userDb.dimensionMap.getById(dimensionMapId);
         if (!dimensionMap) {
-          logger.error({ scope: 'dimension-map', dimensionMapId }, 'Dimension value not found');
+          logger.error({ scope: 'dimension-map', dimensionMapId }, 'Dimension map not found');
           return {
             success: false,
-            message: 'Dimension value not found',
+            message: 'Dimension map not found',
           };
         }
         logger.info(
           { scope: 'dimension-map', dimensionMapId },
-          'Dimension value retrieved successfully',
+          'Dimension map retrieved successfully',
         );
         return {
           success: true,
-          message: 'Dimension value retrieved successfully',
+          message: 'Dimension map retrieved successfully',
           data: dimensionMap,
         };
       } catch (error) {
@@ -114,6 +114,29 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
     async (_event, payload: item.CreateDimensionMapInput): Promise<common.SuccessResponse> => {
       try {
         const parsed = item.CreateDimensionMapInputSchema.parse(payload);
+
+        const existing = userDb.dimensionMap.getByIds(parsed.itemId, parsed.dimensionId);
+        if (existing) {
+          userDb.dimensionMap.restore(existing.id);
+          logger.info(
+            { scope: 'dimension-map', dimensionMapId: existing.id },
+            'Dimension map restored successfully',
+          );
+          createAuditLog(userDb, userId, {
+            action: 'restore',
+            tableName: 'dimension_maps',
+            recordId: existing.id,
+            recordName: existing.id,
+          });
+          logger.info(
+            { scope: 'audit', dimensionMapId: existing.id },
+            'Audit log created for dimension map restoration',
+          );
+          return {
+            success: true,
+            message: 'Dimension map restored successfully',
+          };
+        }
 
         const data: item.CreateDimensionMap = {
           id: crypto.randomUUID(),
@@ -224,12 +247,12 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
 
   ipcMain.handle(
     'dimension-map:delete',
-    async (_event, dimensionMapId: string): Promise<common.SuccessResponse> => {
+    async (_event, itemId: string, dimensionId: string): Promise<common.SuccessResponse> => {
       try {
-        const existing = userDb.dimensionMap.getById(dimensionMapId);
+        const existing = userDb.dimensionMap.getByIds(itemId, dimensionId);
         if (!existing) {
           logger.error(
-            { scope: 'dimension-map', dimensionMapId },
+            { scope: 'dimension-map', itemId, dimensionId },
             'Dimension map not found for deletion',
           );
           return {
@@ -237,9 +260,9 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
             message: 'Dimension map not found for deletion',
           };
         }
-        userDb.dimensionMap.delete(dimensionMapId);
+        userDb.dimensionMap.delete(existing.id);
         logger.info(
-          { scope: 'dimension-map', dimensionMapId },
+          { scope: 'dimension-map', itemId, dimensionId },
           'Dimension map deleted successfully',
         );
 
@@ -247,10 +270,10 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
           action: 'delete',
           tableName: 'dimension_maps',
           recordName: existing.id,
-          recordId: dimensionMapId,
+          recordId: existing.id,
         });
         logger.info(
-          { scope: 'audit', dimensionMapId },
+          { scope: 'audit', itemId, dimensionId },
           'Audit log created for dimension map deletion',
         );
 
@@ -262,7 +285,6 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'dimension-map',
-            dimensionMapId,
             errorMessage: (error as Error).message,
             errorStack: (error as Error).stack,
             rawError: error,
@@ -279,12 +301,12 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
 
   ipcMain.handle(
     'dimension-map:restore',
-    async (_event, dimensionMapId: string): Promise<common.SuccessResponse> => {
+    async (_event, itemId: string, dimensionId: string): Promise<common.SuccessResponse> => {
       try {
-        const existing = userDb.dimensionMap.getById(dimensionMapId);
+        const existing = userDb.dimensionMap.getByIds(itemId, dimensionId);
         if (!existing) {
           logger.error(
-            { scope: 'dimension-map', dimensionMapId },
+            { scope: 'dimension-map', itemId, dimensionId },
             'Dimension map not found for restoration',
           );
           return {
@@ -292,9 +314,9 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
             message: 'Dimension map not found for restoration',
           };
         }
-        userDb.dimensionMap.restore(dimensionMapId);
+        userDb.dimensionMap.restore(existing.id);
         logger.info(
-          { scope: 'dimension-map', dimensionMapId },
+          { scope: 'dimension-map', itemId, dimensionId },
           'Dimension map restored successfully',
         );
 
@@ -302,10 +324,10 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
           action: 'restore',
           tableName: 'dimension_maps',
           recordName: existing.id,
-          recordId: dimensionMapId,
+          recordId: existing.id,
         });
         logger.info(
-          { scope: 'audit', dimensionMapId },
+          { scope: 'audit', itemId, dimensionId },
           'Audit log created for dimension map restoration',
         );
 
@@ -317,7 +339,8 @@ export function registerDimensionMapsIpcHandlers(userDb: UserDatabase, userId: s
         logger.error(
           {
             scope: 'dimension-map',
-            dimensionMapId,
+            itemId,
+            dimensionId,
             errorMessage: (error as Error).message,
             errorStack: (error as Error).stack,
             rawError: error,

@@ -74,7 +74,7 @@ export function registerDimensionValueMapsIpcHandlers(userDb: UserDatabase, user
     async (
       _event,
       dimensionValueMapId: string,
-    ): Promise<Envelope<variant.DimensionValueMap | null>> => {
+    ): Promise<Envelope<variant.DimensionValueMap>> => {
       try {
         const dimensionValueMap = userDb.dimensionValueMap.getById(dimensionValueMapId);
         if (!dimensionValueMap) {

@@ -5,6 +5,7 @@
   "description": "",
   "main": "dist-electron/main/index.js",
   "scripts": {
+    "build:vite": "vite build",
     "build:shared": "npm run build --workspace=@nias/shared",
     "build": "npm run build:shared && vite build",
     "dev": "vite",

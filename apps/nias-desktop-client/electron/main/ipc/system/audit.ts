@@ -52,6 +52,27 @@ export function createAuditLog(
       throw new Error('Acting user not found. Sync user data.');
     }
 
+    const getActionPastTense = (action: string): string => {
+      switch (action.toLowerCase()) {
+        case 'create':
+          return 'created';
+        case 'update':
+          return 'updated';
+        case 'delete':
+          return 'deleted';
+        case 'restore':
+          return 'restored';
+        case 'upsert':
+          return 'upserted';
+        case 'generate':
+          return 'generated';
+        default:
+          return `${action.toLowerCase()}d`; // Fallback for other standard actions
+      }
+    };
+
+    const pastTenseAction = getActionPastTense(payload.action);
+
     const newAuditLog: system.CreateAudit = {
       id: crypto.randomUUID(),
       userId: userId,
@@ -59,7 +80,7 @@ export function createAuditLog(
       tableName: payload.tableName,
       recordId: payload.recordId,
       timestamp: new Date().toISOString(),
-      details: `${actor.displayName} ${payload.action}ed ${payload.recordName} in ${payload.tableName}`,
+      details: `${actor.displayName} ${pastTenseAction} ${payload.recordName} in ${payload.tableName}`,
     };
 
     userDb.audit.create(newAuditLog);

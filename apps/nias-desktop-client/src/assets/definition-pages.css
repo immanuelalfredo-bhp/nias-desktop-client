@@ -1,0 +1,131 @@
+/* Row container layout for Search, Dropdown Chip, and Toggle */
+.definition-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.search-input-wrapper {
+  flex: 1 1 220px;
+}
+
+.right-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Dropdown Chip Styles with constant width, rounded pill shape, and exact typography */
+.sync-dropdown-container {
+  position: relative;
+  display: inline-block;
+  width: 130px; /* Constant width */
+}
+
+.dropdown-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  cursor: pointer;
+  white-space: nowrap;
+  border-radius: 10px; /* More rounded pill shape */
+  font-size: 13px; /* Matches primary button / Create New Brand font size */
+  padding: 6px 12px;
+}
+
+.dropdown-arrow {
+  font-size: 9px;
+  transition: transform 0.2s ease;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  width: 100%; /* Matches constant container width */
+  background: var(--card, #fff);
+  border: 1px solid var(--secondary-border);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  background: transparent;
+  border: 0;
+  text-align: left;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.dropdown-item:hover {
+  background: var(--secondary-bg);
+}
+
+.dropdown-item.selected {
+  font-weight: bold;
+  color: var(--primary);
+}
+
+/* Segmented Toggle Styles for Active / Deleted (more rounded & matching typography) */
+.segmented-toggle {
+  display: inline-flex;
+  background: var(--secondary-bg);
+  border: 1px solid var(--secondary-border);
+  border-radius: 10px; /* More rounded pill shape */
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.segmented-btn {
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  margin: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px; /* Matches Create New Brand font size */
+  font-weight: normal;
+  line-height: normal;
+  transition: background 0.15s ease, color 0.15s ease;
+  box-shadow: none !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+}
+
+.segmented-btn:first-child {
+  border-radius: 10px 0 0 10px;
+}
+
+.segmented-btn:last-child {
+  border-radius: 0 10px 10px 0;
+}
+
+.segmented-btn:not(:last-child) {
+  border-right: 1px solid var(--secondary-border);
+}
+
+.segmented-btn.active {
+  background: var(--primary);
+  color: #fff;
+  font-weight: bold;
+}

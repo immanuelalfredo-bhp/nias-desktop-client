@@ -1,0 +1,43 @@
+.app-shell {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+.main-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  right: 0;
+  transition: left 0.2s ease;
+}
+
+.main-wrapper.sidebar-expanded {
+  left: 240px;
+}
+
+.main-wrapper.sidebar-collapsed {
+  left: 64px;
+}
+
+.content-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: auto;
+  background: transparent;
+}
+
+.content {
+  width: 100%;
+  min-height: 100%;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-x: hidden;
+}

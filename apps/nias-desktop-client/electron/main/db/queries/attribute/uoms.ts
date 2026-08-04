@@ -12,7 +12,13 @@ const COLUMNS = `
   updated_at AS updatedAt,
   deleted_at AS deletedAt,
   is_synced AS isSynced,
-  sync_version AS syncVersion`;
+  sync_version AS syncVersion
+`;
+
+const SORT_ORDER = `
+  sort_order DESC,
+  normalized_name ASC
+`;
 
 export class UomQueries extends BaseQueries<
   attribute.Uom,
@@ -20,18 +26,33 @@ export class UomQueries extends BaseQueries<
   attribute.UpdateUom
 > {
   constructor(db: Database.Database) {
-    super(db, 'uoms', COLUMNS);
+    super(db, 'uoms', COLUMNS, SORT_ORDER);
   }
   create(params: attribute.CreateUom): void {
     const now = new Date().toISOString();
     this.db
-      .prepare(
-        `
-        INSERT INTO uoms (
-          id, name, normalized_name, symbol, sort_order, created_at, updated_at) 
-        VALUES (
-          @id, @name, @normalizedName, @symbol, @sortOrder, @createdAt, @updatedAt)`,
-      )
+      .prepare(`
+        INSERT INTO
+          uoms (
+            id,
+            name,
+            normalized_name,
+            symbol,
+            sort_order,
+            created_at,
+            updated_at
+          )
+        VALUES
+          (
+            @id,
+            @name,
+            @normalizedName,
+            @symbol,
+            @sortOrder,
+            @createdAt,
+            @updatedAt
+          )
+      `)
       .run({ ...params, createdAt: now, updatedAt: now });
   }
   update(params: attribute.UpdateUom): void {
@@ -39,24 +60,51 @@ export class UomQueries extends BaseQueries<
     if (!existing) throw new Error('Not found');
 
     this.db
-      .prepare(
-        `
-        UPDATE uoms SET name = @name, normalized_name = @normalizedName, symbol = @symbol, 
-        sort_order = @sortOrder, updated_at = @updatedAt, is_synced = @isSynced WHERE id = @id`,
-      )
+      .prepare(`
+        UPDATE uoms
+        SET
+          name = @name,
+          normalized_name = @normalizedName,
+          symbol = @symbol,
+          sort_order = @sortOrder,
+          updated_at = @updatedAt,
+          is_synced = @isSynced
+        WHERE
+          id = @id
+      `)
       .run({ ...existing, ...params, updatedAt: new Date().toISOString(), isSynced: 0 });
   }
   upsert(params: attribute.Uom): void {
     this.db
-      .prepare(
-        `
-        INSERT INTO uoms (
-          id, name, normalized_name, symbol, sort_order, created_at, updated_at,
-          deleted_at, is_synced, sync_version) 
-        VALUES (
-          @id, @name, @normalizedName, @symbol, @sortOrder, @createdAt, @updatedAt,
-          @deletedAt, @isSynced, @syncVersion)
-        ON CONFLICT(id) DO UPDATE SET
+      .prepare(`
+        INSERT INTO
+          uoms (
+            id,
+            name,
+            normalized_name,
+            symbol,
+            sort_order,
+            created_at,
+            updated_at,
+            deleted_at,
+            is_synced,
+            sync_version
+          )
+        VALUES
+          (
+            @id,
+            @name,
+            @normalizedName,
+            @symbol,
+            @sortOrder,
+            @createdAt,
+            @updatedAt,
+            @deletedAt,
+            @isSynced,
+            @syncVersion
+          )
+        ON CONFLICT (id) DO UPDATE
+        SET
           name = excluded.name,
           normalized_name = excluded.normalized_name,
           symbol = excluded.symbol,
@@ -64,8 +112,35 @@ export class UomQueries extends BaseQueries<
           updated_at = excluded.updated_at,
           deleted_at = excluded.deleted_at,
           is_synced = excluded.is_synced,
-          sync_version = excluded.sync_version`,
-      )
+          sync_version = excluded.sync_version
+      `)
       .run({ ...params, isSynced: params.isSynced ? 1 : 0 });
+  }
+  getByItemId(itemId: string): attribute.Uom[] | null {
+    return this.db
+      .prepare(`
+        SELECT
+          u.id,
+          u.name,
+          u.normalized_name AS normalizedName,
+          u.symbol,
+          u.sort_order AS sortOrder,
+          u.created_at AS createdAt,
+          u.updated_at AS updatedAt,
+          u.deleted_at AS deletedAt,
+          u.is_synced AS isSynced,
+          u.sync_version AS syncVersion
+        FROM
+          uoms u
+        LEFT JOIN
+          generation_rules gr ON u.id = gr.uom_id
+        WHERE
+          gr.item_id = @itemId
+          AND u.deleted_at IS NULL
+          AND gr.deleted_at IS NULL
+        GROUP BY
+          u.id
+      `)
+      .all({ itemId }) as attribute.Uom[] | null;
   }
 }

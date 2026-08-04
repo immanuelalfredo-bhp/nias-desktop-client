@@ -71,7 +71,7 @@ export function registerCategoryIpcHandlers(userDb: UserDatabase, userId: string
 
   ipcMain.handle(
     'category:get-by-id',
-    async (_event, categoryId: string): Promise<Envelope<attribute.Category | null>> => {
+    async (_event, categoryId: string): Promise<Envelope<attribute.Category>> => {
       try {
         const category = userDb.category.getById(categoryId);
         if (!category) {

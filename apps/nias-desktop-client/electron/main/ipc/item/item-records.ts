@@ -71,23 +71,23 @@ export function registerItemsIpcHandlers(userDb: UserDatabase, userId: string): 
 
   ipcMain.handle(
     'item:get-by-id',
-    async (_event, itemRecordId: string): Promise<Envelope<item.ItemRecord | null>> => {
+    async (_event, itemRecordId: string): Promise<Envelope<item.ItemRecord>> => {
       try {
         const itemRecord = userDb.item.getById(itemRecordId);
         if (!itemRecord) {
-          logger.error({ scope: 'item-record', itemRecordId }, 'Dimension value not found');
+          logger.error({ scope: 'item-record', itemRecordId }, 'Item record not found');
           return {
             success: false,
-            message: 'Dimension value not found',
+            message: 'Item record not found',
           };
         }
         logger.info(
           { scope: 'item-record', itemRecordId },
-          'Dimension value retrieved successfully',
+          'Item record retrieved successfully',
         );
         return {
           success: true,
-          message: 'Dimension value retrieved successfully',
+          message: 'Item record retrieved successfully',
           data: itemRecord,
         };
       } catch (error) {
@@ -111,7 +111,7 @@ export function registerItemsIpcHandlers(userDb: UserDatabase, userId: string): 
 
   ipcMain.handle(
     'item:create',
-    async (_event, payload: item.CreateItemRecordInput): Promise<common.SuccessResponse> => {
+    async (_event, payload: item.CreateItemRecordInput): Promise<Envelope<item.ItemRecordId>> => {
       try {
         const parsed = item.CreateItemRecordInputSchema.parse(payload);
 
@@ -151,6 +151,9 @@ export function registerItemsIpcHandlers(userDb: UserDatabase, userId: string): 
         return {
           success: true,
           message: 'Item record created successfully',
+          data: {
+            id: data.id,
+          },
         };
       } catch (error) {
         logger.error(
@@ -385,6 +388,38 @@ export function registerItemsIpcHandlers(userDb: UserDatabase, userId: string): 
         return {
           success: false,
           message: 'Failed to upsert item records',
+        };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    'item:list-catalogue',
+    async (_event, showActive: boolean): Promise<Envelope<item.ItemRecord[]>> => {
+      try {
+        const itemRecords = userDb.item.listItemCatalogue(showActive);
+        logger.info(
+          { scope: 'item-record', itemRecordCount: itemRecords.length },
+          'Item catalogue retrieved successfully',
+        );
+        return {
+          success: true,
+          message: 'Item catalogue retrieved successfully',
+          data: itemRecords,
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'item-record',
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to retrieve item catalogue',
+        );
+        return {
+          success: false,
+          message: 'Failed to retrieve item catalogue',
         };
       }
     },

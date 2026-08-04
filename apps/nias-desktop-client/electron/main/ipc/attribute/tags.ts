@@ -59,7 +59,7 @@ export function registerTagIpcHandlers(userDb: UserDatabase, userId: string): vo
 
   ipcMain.handle(
     'tag:get-by-id',
-    async (_event, tagId: string): Promise<Envelope<attribute.Tag | null>> => {
+    async (_event, tagId: string): Promise<Envelope<attribute.Tag>> => {
       try {
         const tag = userDb.tag.getById(tagId);
         if (!tag) {
@@ -316,6 +316,46 @@ export function registerTagIpcHandlers(userDb: UserDatabase, userId: string): vo
         return {
           success: false,
           message: 'Failed to upsert tags',
+        };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    'tag:get-by-item-id',
+    async (_event, itemId: string): Promise<Envelope<attribute.Tag[]>> => {
+      try {
+        const tags = userDb.tag.getByItemId(itemId);
+        logger.info(
+          { scope: 'tag', itemId, tagCount: tags?.length ?? 0 },
+          'Tags retrieved by item ID successfully',
+        );
+        if (!tags || tags.length === 0) {
+          return {
+            success: true,
+            message: 'No tags found for the given item ID',
+            data: [],
+          };
+        }
+        return {
+          success: true,
+          message: 'Tags retrieved successfully for the given item ID',
+          data: tags,
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'tag',
+            itemId,
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to retrieve tags for the given item ID',
+        );
+        return {
+          success: false,
+          message: 'Failed to retrieve tags for the given item ID',
         };
       }
     },

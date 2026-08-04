@@ -65,7 +65,7 @@ export function registerModeIpcHandlers(userDb: UserDatabase, userId: string): v
 
   ipcMain.handle(
     'mode:get-by-id',
-    async (_event, modeId: string): Promise<Envelope<attribute.Mode | null>> => {
+    async (_event, modeId: string): Promise<Envelope<attribute.Mode>> => {
       try {
         const mode = userDb.mode.getById(modeId);
         if (!mode) {
@@ -325,6 +325,43 @@ export function registerModeIpcHandlers(userDb: UserDatabase, userId: string): v
         return {
           success: false,
           message: 'Failed to upsert modes',
+        };
+      }
+    },
+  );
+  ipcMain.handle(
+    'mode:get-by-item-id',
+    async (_event, itemId: string): Promise<Envelope<attribute.Mode[]>> => {
+      try {
+        const mode = userDb.mode.getByItemId(itemId);
+        if (!mode || mode.length === 0) {
+          logger.error({ scope: 'mode', itemId }, 'No modes found for item');
+          return {
+            success: true,
+            message: 'No modes found for item',
+            data: [],
+          };
+        }
+        logger.info({ scope: 'mode', itemId }, 'Mode retrieved successfully for item');
+        return {
+          success: true,
+          message: 'Mode retrieved successfully for item',
+          data: mode,
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'mode',
+            itemId,
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to retrieve mode for item',
+        );
+        return {
+          success: false,
+          message: 'Failed to retrieve mode for item',
         };
       }
     },

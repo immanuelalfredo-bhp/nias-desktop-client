@@ -65,7 +65,7 @@ export function registerVendorIpcHandlers(userDb: UserDatabase, userId: string):
 
   ipcMain.handle(
     'vendor:get-by-id',
-    async (_event, vendorId: string): Promise<Envelope<attribute.Vendor | null>> => {
+    async (_event, vendorId: string): Promise<Envelope<attribute.Vendor>> => {
       try {
         const vendor = userDb.vendor.getById(vendorId);
         if (!vendor) {
@@ -102,7 +102,7 @@ export function registerVendorIpcHandlers(userDb: UserDatabase, userId: string):
 
   ipcMain.handle(
     'vendor:create',
-    async (_event, payload: attribute.CreateVendorInput): Promise<common.SuccessResponse> => {
+    async (_event, payload: attribute.CreateVendorInput): Promise<Envelope<attribute.VendorId>> => {
       try {
         const parsed = attribute.CreateVendorInputSchema.parse(payload);
 
@@ -128,6 +128,7 @@ export function registerVendorIpcHandlers(userDb: UserDatabase, userId: string):
         return {
           success: true,
           message: 'Vendor created successfully',
+          data: { id: data.id },
         };
       } catch (error) {
         logger.error(

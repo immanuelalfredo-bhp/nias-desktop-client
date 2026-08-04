@@ -65,7 +65,7 @@ export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): 
 
   ipcMain.handle(
     'brand:get-by-id',
-    async (_event, brandId: string): Promise<Envelope<attribute.Brand | null>> => {
+    async (_event, brandId: string): Promise<Envelope<attribute.Brand>> => {
       try {
         const brand = userDb.brand.getById(brandId);
         if (!brand) {
@@ -333,6 +333,43 @@ export function registerBrandIpcHandlers(userDb: UserDatabase, userId: string): 
         return {
           success: false,
           message: 'Failed to upsert brands',
+        };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    'brand:get-by-item-id',
+    async (_event, itemId: string): Promise<Envelope<attribute.Brand[]>> => {
+      try {
+        const brands = userDb.brand.getByItemId(itemId);
+        logger.info({ scope: 'brand', itemId }, 'Brands retrieved by item ID successfully');
+        if (!brands || brands.length === 0) {
+          return {
+            success: true,
+            message: 'No brands found for the given item ID',
+            data: [],
+          };
+        }
+        return {
+          success: true,
+          message: 'Brands retrieved by item ID successfully',
+          data: brands,
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'brand',
+            itemId,
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to retrieve brands by item ID',
+        );
+        return {
+          success: false,
+          message: 'Failed to retrieve brands by item ID',
         };
       }
     },

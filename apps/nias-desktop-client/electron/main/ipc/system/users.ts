@@ -77,7 +77,7 @@ export function registerUserIpcHandlers(
 
   ipcMain.handle(
     'user:get-by-id',
-    async (_event, userId: string): Promise<Envelope<system.User | null>> => {
+    async (_event, userId: string): Promise<Envelope<system.User>> => {
       try {
         const user = userDb.user.getById(userId);
         if (!user) {

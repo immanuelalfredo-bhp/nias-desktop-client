@@ -65,20 +65,20 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
 
   ipcMain.handle(
     'tag-map:get-by-id',
-    async (_event, tagMapId: string): Promise<Envelope<item.TagMap | null>> => {
+    async (_event, tagMapId: string): Promise<Envelope<item.TagMap>> => {
       try {
         const tagMap = userDb.tagMap.getById(tagMapId);
         if (!tagMap) {
-          logger.error({ scope: 'tag-map', tagMapId }, 'Tag value not found');
+          logger.error({ scope: 'tag-map', tagMapId }, 'Tag map not found');
           return {
             success: false,
-            message: 'Tag value not found',
+            message: 'Tag map not found',
           };
         }
-        logger.info({ scope: 'tag-map', tagMapId }, 'Tag value retrieved successfully');
+        logger.info({ scope: 'tag-map', tagMapId }, 'Tag map retrieved successfully');
         return {
           success: true,
-          message: 'Tag value retrieved successfully',
+          message: 'Tag map retrieved successfully',
           data: tagMap,
         };
       } catch (error) {
@@ -105,6 +105,29 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
     async (_event, payload: item.CreateTagMapInput): Promise<common.SuccessResponse> => {
       try {
         const parsed = item.CreateTagMapInputSchema.parse(payload);
+
+        const existingDeleted = userDb.tagMap.getByIds(parsed.itemId, parsed.tagId);
+        if (existingDeleted) {
+          userDb.tagMap.restore(existingDeleted.id);
+          logger.info(
+            { scope: 'tag-map', tagMapId: existingDeleted.id },
+            'Tag map restored successfully',
+          );
+          createAuditLog(userDb, userId, {
+            action: 'restore',
+            tableName: 'tag_maps',
+            recordId: existingDeleted.id,
+            recordName: existingDeleted.id,
+          });
+          logger.info(
+            { scope: 'audit', tagMapId: existingDeleted.id },
+            'Audit log created for tag map restoration',
+          );
+          return {
+            success: true,
+            message: 'Tag map restored successfully',
+          };
+        }
 
         const data: item.CreateTagMap = {
           id: crypto.randomUUID(),
@@ -206,26 +229,26 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
 
   ipcMain.handle(
     'tag-map:delete',
-    async (_event, tagMapId: string): Promise<common.SuccessResponse> => {
+    async (_event, itemId: string, tagId: string): Promise<common.SuccessResponse> => {
       try {
-        const existing = userDb.tagMap.getById(tagMapId);
+        const existing = userDb.tagMap.getByIds(itemId, tagId);
         if (!existing) {
-          logger.error({ scope: 'tag-map', tagMapId }, 'Tag map not found for deletion');
+          logger.error({ scope: 'tag-map', itemId, tagId }, 'Tag map not found for deletion');
           return {
             success: false,
             message: 'Tag map not found for deletion',
           };
         }
-        userDb.tagMap.delete(tagMapId);
-        logger.info({ scope: 'tag-map', tagMapId }, 'Tag map deleted successfully');
+        userDb.tagMap.delete(existing.id);
+        logger.info({ scope: 'tag-map', itemId, tagId }, 'Tag map deleted successfully');
 
         createAuditLog(userDb, userId, {
           action: 'delete',
           tableName: 'tag_maps',
           recordName: existing.id,
-          recordId: tagMapId,
+          recordId: existing.id,
         });
-        logger.info({ scope: 'audit', tagMapId }, 'Audit log created for tag map deletion');
+        logger.info({ scope: 'audit', tagMapId: existing.id }, 'Audit log created for tag map deletion');
 
         return {
           success: true,
@@ -235,7 +258,6 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
         logger.error(
           {
             scope: 'tag-map',
-            tagMapId,
             errorMessage: (error as Error).message,
             errorStack: (error as Error).stack,
             rawError: error,
@@ -252,26 +274,26 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
 
   ipcMain.handle(
     'tag-map:restore',
-    async (_event, tagMapId: string): Promise<common.SuccessResponse> => {
+    async (_event, itemId: string, tagId: string): Promise<common.SuccessResponse> => {
       try {
-        const existing = userDb.tagMap.getById(tagMapId);
+        const existing = userDb.tagMap.getByIds(itemId, tagId);
         if (!existing) {
-          logger.error({ scope: 'tag-map', tagMapId }, 'Tag map not found for restoration');
+          logger.error({ scope: 'tag-map', itemId, tagId }, 'Tag map not found for restoration');
           return {
             success: false,
             message: 'Tag map not found for restoration',
           };
         }
-        userDb.tagMap.restore(tagMapId);
-        logger.info({ scope: 'tag-map', tagMapId }, 'Tag map restored successfully');
+        userDb.tagMap.restore(existing.id);
+        logger.info({ scope: 'tag-map', itemId, tagId }, 'Tag map restored successfully');
 
         createAuditLog(userDb, userId, {
           action: 'restore',
           tableName: 'tag_maps',
           recordName: existing.id,
-          recordId: tagMapId,
+          recordId: existing.id,
         });
-        logger.info({ scope: 'audit', tagMapId }, 'Audit log created for tag map restoration');
+        logger.info({ scope: 'audit', tagMapId: existing.id }, 'Audit log created for tag map restoration');
 
         return {
           success: true,
@@ -281,7 +303,6 @@ export function registerTagMapsIpcHandlers(userDb: UserDatabase, userId: string)
         logger.error(
           {
             scope: 'tag-map',
-            tagMapId,
             errorMessage: (error as Error).message,
             errorStack: (error as Error).stack,
             rawError: error,

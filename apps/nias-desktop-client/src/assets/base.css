@@ -1,0 +1,76 @@
+:root {
+  /* Core Brand Palette */
+  --primary: #0f766e;
+  --primary-hover: #0d635c;
+  --danger: #b91c1c;
+
+  /* Neutrals & Surfaces */
+  --card: #ffffff;
+  --bg-gradient-start: #e8eef7;
+  --background-tint: #f8fafc;
+  --bg-gradient-end: #e6eef4;
+  --ink: #1f2937;
+  --muted: #64748b;
+  --line: #e2e8f0;
+
+  /* Shell Themes */
+  --sidebar: #0f172a;
+  --sidebar-ink: #e2e8f0;
+  --sidebar-active: #155e75;
+  --sidebar-hover: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.05);
+  --sidebar-toggle-hover: rgba(255, 255, 255, 0.08);
+  --header: #1e293b;
+  --header-ink: #f8fafc;
+  --header-border: #334155;
+  --header-box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+
+  /* UI Interactive Tokens */
+  --secondary-bg: #f1f5f9;
+  --secondary-border: #cbd5e1;
+  --table-header-ink: #334155;
+  --hover-overlay: rgba(255, 255, 255, 0.05);
+  --active-cyan: #22d3ee;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(
+    135deg,
+    var(--bg-gradient-start) 0%,
+    var(--background-tint) 50%,
+    var(--bg-gradient-end) 100%
+  );
+  color: var(--ink);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
+}
+
+h1,
+h2 {
+  margin: 0 0 8px;
+}
+
+h1 {
+  font-size: 24px;
+}
+h2 {
+  font-size: 22px;
+}
+
+label {
+  display: block;
+  margin: 10px 0 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.muted {
+  color: var(--muted);
+}
