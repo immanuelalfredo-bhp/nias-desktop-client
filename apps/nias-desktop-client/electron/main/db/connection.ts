@@ -7,3 +7,10 @@ export function openEncryptedDatabase(dbPath: string, key: string): Database.Dat
   db.pragma('foreign_keys = ON');
   return db;
 }
+
+export function openUnencryptedDatabase(dbPath: string): Database.Database {
+  const db = new Database(dbPath);
+  db.pragma('journal_mode = WAL');
+  db.pragma('foreign_keys = ON');
+  return db;
+}

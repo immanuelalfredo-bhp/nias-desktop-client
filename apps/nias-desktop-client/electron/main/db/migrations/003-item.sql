@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS item_records (
 	display_name TEXT NOT NULL,
 	normalized_display_name TEXT NOT NULL,
 	sku_source TEXT NOT NULL,
-	sku_code TEXT NOT NULL UNIQUE,
+	sku_code TEXT NOT NULL,
 	material_type TEXT NOT NULL,
 	material_class TEXT NOT NULL,
 	creation_source TEXT NOT NULL,

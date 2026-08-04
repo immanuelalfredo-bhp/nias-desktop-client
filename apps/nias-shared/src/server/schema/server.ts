@@ -3,12 +3,6 @@ import { createSelectSchema } from 'drizzle-zod';
 import * as schemas from '../../common/defines.js';
 import {
   users,
-  roles,
-  projects,
-  roleCapabilities,
-  roleManagement,
-  roleMap,
-  projectMap,
   audit,
 } from './system.js';
 import {
@@ -20,7 +14,6 @@ import {
   systems,
   categories,
   vendors,
-  vendorMap,
   tags,
 } from './attribute.js';
 import {
@@ -34,11 +27,8 @@ import {
 import {
   variantRecords,
   dimensionValueMap,
-  componentMap,
-  switchMap,
-  vendorPrice,
 } from './variant.js';
-import { requests, requestItems } from './order.js';
+import { requestItems } from './order.js';
 
 export const authSchema = pgSchema('auth');
 export const syncSchema = pgSchema('sync');
@@ -63,12 +53,6 @@ export const syncChanges = syncSchema.table('changes', {
 
 export const SYNC_TABLE_MAP = [
   { key: 'users', tableName: 'users', table: users },
-  { key: 'roles', tableName: 'roles', table: roles },
-  { key: 'projects', tableName: 'projects', table: projects },
-  { key: 'roleCapabilities', tableName: 'role_capabilities', table: roleCapabilities },
-  { key: 'roleManagement', tableName: 'role_management', table: roleManagement },
-  { key: 'roleMap', tableName: 'role_map', table: roleMap },
-  { key: 'projectMap', tableName: 'project_map', table: projectMap },
   { key: 'audit', tableName: 'audit', table: audit },
   { key: 'brands', tableName: 'brands', table: brands },
   { key: 'modes', tableName: 'modes', table: modes },
@@ -78,7 +62,6 @@ export const SYNC_TABLE_MAP = [
   { key: 'systems', tableName: 'systems', table: systems },
   { key: 'categories', tableName: 'categories', table: categories },
   { key: 'vendors', tableName: 'vendors', table: vendors },
-  { key: 'vendorMap', tableName: 'vendor_map', table: vendorMap },
   { key: 'tags', tableName: 'tags', table: tags },
   { key: 'itemRecords', tableName: 'item_records', table: itemRecords },
   { key: 'aliases', tableName: 'aliases', table: aliases },
@@ -88,11 +71,6 @@ export const SYNC_TABLE_MAP = [
   { key: 'generationRules', tableName: 'generation_rules', table: generationRules },
   { key: 'variantRecords', tableName: 'variant_records', table: variantRecords },
   { key: 'dimensionValueMap', tableName: 'dimension_value_map', table: dimensionValueMap },
-  { key: 'componentMap', tableName: 'component_map', table: componentMap },
-  { key: 'switchMap', tableName: 'switch_map', table: switchMap },
-  { key: 'vendorPrice', tableName: 'vendor_price', table: vendorPrice },
-  { key: 'requests', tableName: 'requests', table: requests },
-  { key: 'requestItems', tableName: 'request_items', table: requestItems },
 ] as const;
 
 export const SyncChangeSchema = createSelectSchema(syncChanges, {

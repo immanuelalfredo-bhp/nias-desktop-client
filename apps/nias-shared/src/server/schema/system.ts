@@ -1,4 +1,4 @@
-import { boolean, jsonb, integer, pgSchema, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, jsonb, integer, pgSchema, text, timestamp, uuid, real } from 'drizzle-orm/pg-core';
 import { createSelectSchema } from 'drizzle-zod';
 import * as schemas from '../../common/defines.js';
 
@@ -27,44 +27,6 @@ export const users = systemSchema.table('users', {
   isManagedBy: uuid('is_managed_by'),
 });
 
-export const roles = systemSchema.table('roles', {
-  ...systemBaseFields,
-  name: text('name').notNull(),
-  normalizedName: text('normalized_name').notNull(),
-});
-
-export const projects = systemSchema.table('projects', {
-  ...systemBaseFields,
-  name: text('name').notNull(),
-  normalizedName: text('normalized_name').notNull(),
-  soNumber: text('so_number'),
-  poNumber: text('po_number'),
-});
-
-export const roleCapabilities = systemSchema.table('role_capabilities', {
-  ...systemBaseFields,
-  roleId: uuid('role_id').notNull(),
-  capability: text('capability').notNull(),
-});
-
-export const roleManagement = systemSchema.table('role_management', {
-  ...systemBaseFields,
-  roleId: uuid('role_id').notNull(),
-  managedRoleId: uuid('managed_role_id').notNull(),
-});
-
-export const roleMap = systemSchema.table('role_map', {
-  ...systemBaseFields,
-  userId: uuid('user_id').notNull(),
-  roleId: uuid('role_id').notNull(),
-});
-
-export const projectMap = systemSchema.table('project_map', {
-  ...systemBaseFields,
-  userId: uuid('user_id').notNull(),
-  projectId: uuid('project_id').notNull(),
-});
-
 export const audit = systemSchema.table('audit', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull(),
@@ -84,37 +46,6 @@ export const UserSchema = createSelectSchema(users, {
   passwordHash: schemas.passwordHash,
 });
 
-export const RoleSchema = createSelectSchema(roles, {
-  ...systemOverrides,
-  name: schemas.string,
-  normalizedName: schemas.slug,
-});
-
-export const ProjectSchema = createSelectSchema(projects, {
-  ...systemOverrides,
-  name: schemas.string,
-  normalizedName: schemas.slug,
-  soNumber: schemas.string.nullable(),
-  poNumber: schemas.string.nullable(),
-});
-
-export const RoleCapabilitiesSchema = createSelectSchema(roleCapabilities, {
-  ...systemOverrides,
-  capability: schemas.string,
-});
-
-export const RoleManagementSchema = createSelectSchema(roleManagement, {
-  ...systemOverrides,
-});
-
-export const RoleMapSchema = createSelectSchema(roleMap, {
-  ...systemOverrides,
-});
-
-export const ProjectMapSchema = createSelectSchema(projectMap, {
-  ...systemOverrides,
-});
-
 export const AuditSchema = createSelectSchema(audit, {
   action: schemas.string,
   tableName: schemas.string,
@@ -124,10 +55,4 @@ export const AuditSchema = createSelectSchema(audit, {
 });
 
 export type User = typeof users.$inferSelect;
-export type Role = typeof roles.$inferSelect;
-export type Project = typeof projects.$inferSelect;
-export type RoleCapabilities = typeof roleCapabilities.$inferSelect;
-export type RoleManagement = typeof roleManagement.$inferSelect;
-export type RoleMap = typeof roleMap.$inferSelect;
-export type ProjectMap = typeof projectMap.$inferSelect;
 export type Audit = typeof audit.$inferSelect;

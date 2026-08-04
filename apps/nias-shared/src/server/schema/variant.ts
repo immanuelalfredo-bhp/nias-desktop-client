@@ -46,32 +46,6 @@ export const dimensionValueMap = variantSchema.table('dimension_value_map', {
   dimensionValueId: uuid('dimension_value_id').notNull(),
 });
 
-export const componentMap = variantSchema.table('component_map', {
-  ...variantBaseFields,
-  variantId: uuid('variant_id').notNull(),
-  componentId: uuid('component_id').notNull(),
-  quantity: integer('quantity').notNull(),
-});
-
-export const switchMap = variantSchema.table('switch_map', {
-  ...variantBaseFields,
-  variantId: uuid('variant_id').notNull(),
-  assemblyId: uuid('assembly_id').notNull(),
-});
-
-export const vendorPrice = variantSchema.table('vendor_price', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  variantId: uuid('variant_id').notNull(),
-  vendorId: uuid('vendor_id').notNull(),
-  originalPrice: real('original_price').notNull(),
-  discountedPrice: real('discounted_price').notNull(),
-  discountRate: real('discount_rate').notNull(),
-  effectiveDate: timestamp('effective_date', { mode: 'string' }).notNull(),
-  expirationDate: timestamp('expiration_date', { mode: 'string' }),
-  isSynced: boolean('is_synced').default(false).notNull(),
-  syncVersion: integer('sync_version').notNull(),
-});
-
 // Only include fields with specific validation rules.
 export const VariantRecordSchema = createSelectSchema(variantRecords, {
   ...variantOverrides,
@@ -84,24 +58,5 @@ export const DimensionValueMapSchema = createSelectSchema(dimensionValueMap, {
   ...variantOverrides,
 });
 
-export const ComponentMapSchema = createSelectSchema(componentMap, {
-  ...variantOverrides,
-});
-
-export const SwitchMapSchema = createSelectSchema(switchMap, {
-  ...variantOverrides,
-});
-
-export const VendorPriceSchema = createSelectSchema(vendorPrice, {
-  originalPrice: schemas.float,
-  discountedPrice: schemas.float,
-  discountRate: schemas.float,
-  effectiveDate: schemas.dateTime,
-  expirationDate: schemas.dateTime.nullable(),
-});
-
 export type VariantRecord = typeof variantRecords.$inferSelect;
 export type DimensionValueMap = typeof dimensionValueMap.$inferSelect;
-export type ComponentMap = typeof componentMap.$inferSelect;
-export type SwitchMap = typeof switchMap.$inferSelect;
-export type VendorPrice = typeof vendorPrice.$inferSelect;

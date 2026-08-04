@@ -11,81 +11,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('user:update-self', payload),
   userUpdatePassword: (payload: system.UpdateUserPasswordInput) =>
     ipcRenderer.invoke('user:update-password', payload),
-  userDelete: (payload: system.UserId) => ipcRenderer.invoke('user:delete', payload),
-  userRestore: (payload: system.UserId) => ipcRenderer.invoke('user:restore', payload),
+  userDelete: (payload: string) => ipcRenderer.invoke('user:delete', payload),
+  userRestore: (payload: string) => ipcRenderer.invoke('user:restore', payload),
   userUpsert: (payload: system.CreateUserPayload[]) => ipcRenderer.invoke('user:upsert', payload),
-
-  // Role IPC handlers
-  roleListActive: () => ipcRenderer.invoke('role:list-active'),
-  roleListDeleted: () => ipcRenderer.invoke('role:list-deleted'),
-  roleCreate: (payload: system.CreateRoleInput) => ipcRenderer.invoke('role:create', payload),
-  roleUpdate: (payload: system.UpdateRoleInput) => ipcRenderer.invoke('role:update', payload),
-  roleDelete: (payload: system.RoleId) => ipcRenderer.invoke('role:delete', payload),
-  roleRestore: (payload: system.RoleId) => ipcRenderer.invoke('role:restore', payload),
-  roleUpsert: (payload: system.Role[]) => ipcRenderer.invoke('role:upsert', payload),
-
-  // Project IPC handlers
-  projectListActive: () => ipcRenderer.invoke('project:list-active'),
-  projectListDeleted: () => ipcRenderer.invoke('project:list-deleted'),
-  projectCreate: (payload: system.CreateProjectInput) =>
-    ipcRenderer.invoke('project:create', payload),
-  projectUpdate: (payload: system.UpdateProjectInput) =>
-    ipcRenderer.invoke('project:update', payload),
-  projectDelete: (payload: system.ProjectId) => ipcRenderer.invoke('project:delete', payload),
-  projectRestore: (payload: system.ProjectId) => ipcRenderer.invoke('project:restore', payload),
-  projectUpsert: (payload: system.Project[]) => ipcRenderer.invoke('project:upsert', payload),
-
-  // Role Capability IPC handlers
-  roleCapabilityListActive: () => ipcRenderer.invoke('role-capability:list-active'),
-  roleCapabilityListDeleted: () => ipcRenderer.invoke('role-capability:list-deleted'),
-  roleCapabilityCreate: (payload: system.CreateRoleCapabilityInput) =>
-    ipcRenderer.invoke('role-capability:create', payload),
-  roleCapabilityUpdate: (payload: system.UpdateRoleCapability) =>
-    ipcRenderer.invoke('role-capability:update', payload),
-  roleCapabilityDelete: (payload: system.RoleCapabilityId) =>
-    ipcRenderer.invoke('role-capability:delete', payload),
-  roleCapabilityRestore: (payload: system.RoleCapabilityId) =>
-    ipcRenderer.invoke('role-capability:restore', payload),
-  roleCapabilityUpsert: (payload: system.RoleCapability[]) =>
-    ipcRenderer.invoke('role-capability:upsert', payload),
-
-  // Role Management IPC handlers
-  roleManagementListActive: () => ipcRenderer.invoke('role-capability:list-active'),
-  roleManagementListDeleted: () => ipcRenderer.invoke('role-capability:list-deleted'),
-  roleManagementCreate: (payload: system.CreateRoleManagementInput) =>
-    ipcRenderer.invoke('role-capability:create', payload),
-  roleManagementUpdate: (payload: system.UpdateRoleManagement) =>
-    ipcRenderer.invoke('role-capability:update', payload),
-  roleManagementDelete: (payload: system.RoleManagementId) =>
-    ipcRenderer.invoke('role-capability:delete', payload),
-  roleManagementRestore: (payload: system.RoleManagementId) =>
-    ipcRenderer.invoke('role-capability:restore', payload),
-  roleManagementUpsert: (payload: system.RoleManagement[]) =>
-    ipcRenderer.invoke('role-capability:upsert', payload),
-
-  // Role Map IPC handlers
-  roleMapListActive: () => ipcRenderer.invoke('role-map:list-active'),
-  roleMapListDeleted: () => ipcRenderer.invoke('role-map:list-deleted'),
-  roleMapCreate: (payload: system.CreateRoleMapInput) =>
-    ipcRenderer.invoke('role-map:create', payload),
-  roleMapUpdate: (payload: system.UpdateRoleMap) => ipcRenderer.invoke('role-map:update', payload),
-  roleMapDelete: (payload: system.RoleMapId) => ipcRenderer.invoke('role-map:delete', payload),
-  roleMapRestore: (payload: system.RoleMapId) => ipcRenderer.invoke('role-map:restore', payload),
-  roleMapUpsert: (payload: system.RoleMap[]) => ipcRenderer.invoke('role-map:upsert', payload),
-
-  // Project Map IPC handlers
-  projectMapListActive: () => ipcRenderer.invoke('project-map:list-active'),
-  projectMapListDeleted: () => ipcRenderer.invoke('project-map:list-deleted'),
-  projectMapCreate: (payload: system.CreateProjectMapInput) =>
-    ipcRenderer.invoke('project-map:create', payload),
-  projectMapUpdate: (payload: system.UpdateProjectMap) =>
-    ipcRenderer.invoke('project-map:update', payload),
-  projectMapDelete: (payload: system.ProjectMapId) =>
-    ipcRenderer.invoke('project-map:delete', payload),
-  projectMapRestore: (payload: system.ProjectMapId) =>
-    ipcRenderer.invoke('project-map:restore', payload),
-  projectMapUpsert: (payload: system.ProjectMap[]) =>
-    ipcRenderer.invoke('project-map:upsert', payload),
 
   // Audit IPC handlers
   auditList: () => ipcRenderer.invoke('audit:list'),
@@ -95,55 +23,69 @@ contextBridge.exposeInMainWorld('electronAPI', {
   brandListDeleted: () => ipcRenderer.invoke('brand:list-deleted'),
   brandCreate: (payload: attribute.CreateBrandInput) => ipcRenderer.invoke('brand:create', payload),
   brandUpdate: (payload: attribute.UpdateBrandInput) => ipcRenderer.invoke('brand:update', payload),
-  brandDelete: (payload: attribute.BrandId) => ipcRenderer.invoke('brand:delete', payload),
-  brandRestore: (payload: attribute.BrandId) => ipcRenderer.invoke('brand:restore', payload),
+  brandDelete: (payload: string) => ipcRenderer.invoke('brand:delete', payload),
+  brandRestore: (payload: string) => ipcRenderer.invoke('brand:restore', payload),
   brandUpsert: (payload: attribute.Brand[]) => ipcRenderer.invoke('brand:upsert', payload),
+  brandGetByItemId: (itemId: string) => ipcRenderer.invoke('brand:get-by-item-id', itemId),
 
   // Mode IPC handlers
   modeListActive: () => ipcRenderer.invoke('mode:list-active'),
   modeListDeleted: () => ipcRenderer.invoke('mode:list-deleted'),
   modeCreate: (payload: attribute.CreateModeInput) => ipcRenderer.invoke('mode:create', payload),
   modeUpdate: (payload: attribute.UpdateModeInput) => ipcRenderer.invoke('mode:update', payload),
-  modeDelete: (payload: attribute.ModeId) => ipcRenderer.invoke('mode:delete', payload),
-  modeRestore: (payload: attribute.ModeId) => ipcRenderer.invoke('mode:restore', payload),
+  modeDelete: (payload: string) => ipcRenderer.invoke('mode:delete', payload),
+  modeRestore: (payload: string) => ipcRenderer.invoke('mode:restore', payload),
   modeUpsert: (payload: attribute.Mode[]) => ipcRenderer.invoke('mode:upsert', payload),
+  modeGetByItemId: (itemId: string) => ipcRenderer.invoke('mode:get-by-item-id', itemId),
 
   // UoM IPC handlers
   uomListActive: () => ipcRenderer.invoke('uom:list-active'),
   uomListDeleted: () => ipcRenderer.invoke('uom:list-deleted'),
   uomCreate: (payload: attribute.CreateUomInput) => ipcRenderer.invoke('uom:create', payload),
   uomUpdate: (payload: attribute.UpdateUomInput) => ipcRenderer.invoke('uom:update', payload),
-  uomDelete: (payload: attribute.UomId) => ipcRenderer.invoke('uom:delete', payload),
-  uomRestore: (payload: attribute.UomId) => ipcRenderer.invoke('uom:restore', payload),
+  uomDelete: (payload: string) => ipcRenderer.invoke('uom:delete', payload),
+  uomRestore: (payload: string) => ipcRenderer.invoke('uom:restore', payload),
   uomUpsert: (payload: attribute.Uom[]) => ipcRenderer.invoke('uom:upsert', payload),
+  uomGetByItemId: (itemId: string) => ipcRenderer.invoke('uom:get-by-item-id', itemId),
 
   // Dimension IPC handlers
   dimensionListActive: () => ipcRenderer.invoke('dimension:list-active'),
   dimensionListDeleted: () => ipcRenderer.invoke('dimension:list-deleted'),
+  dimensionGetById: (dimensionId: string) => ipcRenderer.invoke('dimension:get-by-id', dimensionId),
   dimensionCreate: (payload: attribute.CreateDimensionInput) =>
     ipcRenderer.invoke('dimension:create', payload),
   dimensionUpdate: (payload: attribute.UpdateDimensionInput) =>
     ipcRenderer.invoke('dimension:update', payload),
-  dimensionDelete: (payload: attribute.DimensionId) =>
-    ipcRenderer.invoke('dimension:delete', payload),
-  dimensionRestore: (payload: attribute.DimensionId) =>
-    ipcRenderer.invoke('dimension:restore', payload),
+  dimensionDelete: (payload: string) => ipcRenderer.invoke('dimension:delete', payload),
+  dimensionRestore: (payload: string) => ipcRenderer.invoke('dimension:restore', payload),
   dimensionUpsert: (payload: attribute.Dimension[]) =>
     ipcRenderer.invoke('dimension:upsert', payload),
+  dimensionGetByItemId: (itemId: string) => ipcRenderer.invoke('dimension:get-by-item-id', itemId),
 
   // Dimension Value IPC handlers
   dimensionValueListActive: () => ipcRenderer.invoke('dimension-value:list-active'),
   dimensionValueListDeleted: () => ipcRenderer.invoke('dimension-value:list-deleted'),
+  dimensionValueGetActiveByDimensionId: (dimensionId: string) =>
+    ipcRenderer.invoke('dimension-value:get-active-by-dimension-id', dimensionId),
+  dimensionValueGetDeletedByDimensionId: (dimensionId: string) =>
+    ipcRenderer.invoke('dimension-value:get-deleted-by-dimension-id', dimensionId),
+  dimensionValueGetIs: (dimensionId: string, value: string | number) =>
+    ipcRenderer.invoke('dimension-value:get-is', dimensionId, value),
+  dimensionValueGetBetween: (dimensionId: string, min: number, max: number) =>
+    ipcRenderer.invoke('dimension-value:get-between', dimensionId, min, max),
+  dimensionValueGetInclude: (dimensionId: string, values: (string | number)[]) =>
+    ipcRenderer.invoke('dimension-value:get-include', dimensionId, values),
   dimensionValueCreate: (payload: attribute.CreateDimensionValueInput) =>
     ipcRenderer.invoke('dimension-value:create', payload),
   dimensionValueUpdate: (payload: attribute.UpdateDimensionValue) =>
     ipcRenderer.invoke('dimension-value:update', payload),
-  dimensionValueDelete: (payload: attribute.DimensionValueId) =>
-    ipcRenderer.invoke('dimension-value:delete', payload),
-  dimensionValueRestore: (payload: attribute.DimensionValueId) =>
+  dimensionValueDelete: (payload: string) => ipcRenderer.invoke('dimension-value:delete', payload),
+  dimensionValueRestore: (payload: string) =>
     ipcRenderer.invoke('dimension-value:restore', payload),
   dimensionValueUpsert: (payload: attribute.DimensionValue[]) =>
     ipcRenderer.invoke('dimension-value:upsert', payload),
+  dimensionValueGetByVariantIds: (variantIds: string[]) =>
+    ipcRenderer.invoke('dimension-value:get-by-variant-ids', variantIds),
 
   // System IPC handlers
   systemListActive: () => ipcRenderer.invoke('system:list-active'),
@@ -152,9 +94,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('system:create', payload),
   systemUpdate: (payload: attribute.UpdateSystemInput) =>
     ipcRenderer.invoke('system:update', payload),
-  systemDelete: (payload: attribute.SystemId) => ipcRenderer.invoke('system:delete', payload),
-  systemRestore: (payload: attribute.SystemId) => ipcRenderer.invoke('system:restore', payload),
+  systemDelete: (payload: string) => ipcRenderer.invoke('system:delete', payload),
+  systemRestore: (payload: string) => ipcRenderer.invoke('system:restore', payload),
   systemUpsert: (payload: attribute.System[]) => ipcRenderer.invoke('system:upsert', payload),
+  systemGetByItemId: (itemId: string) => ipcRenderer.invoke('system:get-by-item-id', itemId),
 
   // Category IPC handlers
   categoryListActive: () => ipcRenderer.invoke('category:list-active'),
@@ -163,9 +106,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('category:create', payload),
   categoryUpdate: (payload: attribute.UpdateCategoryInput) =>
     ipcRenderer.invoke('category:update', payload),
-  categoryDelete: (payload: attribute.CategoryId) => ipcRenderer.invoke('category:delete', payload),
-  categoryRestore: (payload: attribute.CategoryId) =>
-    ipcRenderer.invoke('category:restore', payload),
+  categoryDelete: (payload: string) => ipcRenderer.invoke('category:delete', payload),
+  categoryRestore: (payload: string) => ipcRenderer.invoke('category:restore', payload),
   categoryUpsert: (payload: attribute.Category[]) => ipcRenderer.invoke('category:upsert', payload),
 
   // Vendor IPC handlers
@@ -175,48 +117,41 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('vendor:create', payload),
   vendorUpdate: (payload: attribute.UpdateVendorInput) =>
     ipcRenderer.invoke('vendor:update', payload),
-  vendorDelete: (payload: attribute.VendorId) => ipcRenderer.invoke('vendor:delete', payload),
-  vendorRestore: (payload: attribute.VendorId) => ipcRenderer.invoke('vendor:restore', payload),
+  vendorDelete: (payload: string) => ipcRenderer.invoke('vendor:delete', payload),
+  vendorRestore: (payload: string) => ipcRenderer.invoke('vendor:restore', payload),
   vendorUpsert: (payload: attribute.Vendor[]) => ipcRenderer.invoke('vendor:upsert', payload),
-
-  // Vendor Map IPC handlers
-  vendorMapListActive: () => ipcRenderer.invoke('vendor-map:list-active'),
-  vendorMapListDeleted: () => ipcRenderer.invoke('vendor-map:list-deleted'),
-  vendorMapCreate: (payload: attribute.CreateVendorMapInput) =>
-    ipcRenderer.invoke('vendor-map:create', payload),
-  vendorMapUpdate: (payload: attribute.UpdateVendorMap) =>
-    ipcRenderer.invoke('vendor-map:update', payload),
-  vendorMapDelete: (payload: attribute.VendorMapId) => ipcRenderer.invoke('vendor-map:delete', payload),
-  vendorMapRestore: (payload: attribute.VendorMapId) =>
-    ipcRenderer.invoke('vendor-map:restore', payload),
-  vendorMapUpsert: (payload: attribute.VendorMap[]) => ipcRenderer.invoke('vendor-map:upsert', payload),
 
   // Tag IPC handlers
   tagListActive: () => ipcRenderer.invoke('tag:list-active'),
   tagListDeleted: () => ipcRenderer.invoke('tag:list-deleted'),
   tagCreate: (payload: attribute.CreateTagInput) => ipcRenderer.invoke('tag:create', payload),
   tagUpdate: (payload: attribute.UpdateTagInput) => ipcRenderer.invoke('tag:update', payload),
-  tagDelete: (payload: attribute.TagId) => ipcRenderer.invoke('tag:delete', payload),
-  tagRestore: (payload: attribute.TagId) => ipcRenderer.invoke('tag:restore', payload),
+  tagDelete: (payload: string) => ipcRenderer.invoke('tag:delete', payload),
+  tagRestore: (payload: string) => ipcRenderer.invoke('tag:restore', payload),
   tagUpsert: (payload: attribute.Tag[]) => ipcRenderer.invoke('tag:upsert', payload),
+  tagGetByItemId: (itemId: string) => ipcRenderer.invoke('tag:get-by-item-id', itemId),
 
   // Item Record IPC handlers
   itemListActive: () => ipcRenderer.invoke('item:list-active'),
   itemListDeleted: () => ipcRenderer.invoke('item:list-deleted'),
   itemCreate: (payload: item.CreateItemRecordInput) => ipcRenderer.invoke('item:create', payload),
   itemUpdate: (payload: item.UpdateItemRecordInput) => ipcRenderer.invoke('item:update', payload),
-  itemDelete: (payload: item.ItemRecordId) => ipcRenderer.invoke('item:delete', payload),
-  itemRestore: (payload: item.ItemRecordId) => ipcRenderer.invoke('item:restore', payload),
+  itemDelete: (payload: string) => ipcRenderer.invoke('item:delete', payload),
+  itemRestore: (payload: string) => ipcRenderer.invoke('item:restore', payload),
   itemUpsert: (payload: item.ItemRecord[]) => ipcRenderer.invoke('item:upsert', payload),
+  itemListCatalogue: (payload: boolean) => ipcRenderer.invoke('item:list-catalogue', payload),
 
   // Alias IPC handlers
   aliasListActive: () => ipcRenderer.invoke('alias:list-active'),
   aliasListDeleted: () => ipcRenderer.invoke('alias:list-deleted'),
   aliasCreate: (payload: item.CreateAliasInput) => ipcRenderer.invoke('alias:create', payload),
   aliasUpdate: (payload: item.UpdateAliasInput) => ipcRenderer.invoke('alias:update', payload),
-  aliasDelete: (payload: item.AliasId) => ipcRenderer.invoke('alias:delete', payload),
-  aliasRestore: (payload: item.AliasId) => ipcRenderer.invoke('alias:restore', payload),
+  aliasDelete: (itemId: string, alias: string) =>
+    ipcRenderer.invoke('alias:delete', itemId, alias),
+  aliasRestore: (itemId: string, alias: string) =>
+    ipcRenderer.invoke('alias:restore', itemId, alias),
   aliasUpsert: (payload: item.Alias[]) => ipcRenderer.invoke('alias:upsert', payload),
+  aliasGetByItemId: (itemId: string) => ipcRenderer.invoke('alias:get-by-item-id', itemId),
 
   // Dimension Map IPC handlers
   dimensionMapListActive: () => ipcRenderer.invoke('dimension-map:list-active'),
@@ -225,10 +160,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('dimension-map:create', payload),
   dimensionMapUpdate: (payload: item.UpdateDimensionMap) =>
     ipcRenderer.invoke('dimension-map:update', payload),
-  dimensionMapDelete: (payload: item.DimensionMapId) =>
-    ipcRenderer.invoke('dimension-map:delete', payload),
-  dimensionMapRestore: (payload: item.DimensionMapId) =>
-    ipcRenderer.invoke('dimension-map:restore', payload),
+  dimensionMapDelete: (itemId: string, dimensionId: string) =>
+    ipcRenderer.invoke('dimension-map:delete', itemId, dimensionId),
+  dimensionMapRestore: (itemId: string, dimensionId: string) =>
+    ipcRenderer.invoke('dimension-map:restore', itemId, dimensionId),
   dimensionMapUpsert: (payload: item.DimensionMap[]) =>
     ipcRenderer.invoke('dimension-map:upsert', payload),
 
@@ -239,9 +174,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('system-map:create', payload),
   systemMapUpdate: (payload: item.UpdateSystemMap) =>
     ipcRenderer.invoke('system-map:update', payload),
-  systemMapDelete: (payload: item.SystemMapId) => ipcRenderer.invoke('system-map:delete', payload),
-  systemMapRestore: (payload: item.SystemMapId) =>
-    ipcRenderer.invoke('system-map:restore', payload),
+  systemMapDelete: (itemId: string, systemId: string) =>
+    ipcRenderer.invoke('system-map:delete', itemId, systemId),
+  systemMapRestore: (itemId: string, systemId: string) =>
+    ipcRenderer.invoke('system-map:restore', itemId, systemId),
   systemMapUpsert: (payload: item.SystemMap[]) => ipcRenderer.invoke('system-map:upsert', payload),
 
   // Tag Map IPC handlers
@@ -249,24 +185,30 @@ contextBridge.exposeInMainWorld('electronAPI', {
   tagMapListDeleted: () => ipcRenderer.invoke('tag-map:list-deleted'),
   tagMapCreate: (payload: item.CreateTagMapInput) => ipcRenderer.invoke('tag-map:create', payload),
   tagMapUpdate: (payload: item.UpdateTagMap) => ipcRenderer.invoke('tag-map:update', payload),
-  tagMapDelete: (payload: item.TagMapId) => ipcRenderer.invoke('tag-map:delete', payload),
-  tagMapRestore: (payload: item.TagMapId) => ipcRenderer.invoke('tag-map:restore', payload),
+  tagMapDelete: (itemId: string, tagId: string) =>
+    ipcRenderer.invoke('tag-map:delete', itemId, tagId),
+  tagMapRestore: (itemId: string, tagId: string) =>
+    ipcRenderer.invoke('tag-map:restore', itemId, tagId),
   tagMapUpsert: (payload: item.TagMap[]) => ipcRenderer.invoke('tag-map:upsert', payload),
 
   // Generation Rules IPC handlers
   generationRuleListActive: () => ipcRenderer.invoke('generation-rule:list-active'),
   generationRuleListDeleted: () => ipcRenderer.invoke('generation-rule:list-deleted'),
-  generationRuleListDirty: () => ipcRenderer.invoke('generation-rule:list-dirty'),
+  generationRuleListDirtyComponents: () =>
+    ipcRenderer.invoke('generation-rule:list-dirty-components'),
+  generationRuleListWithNames: (showActive: boolean) =>
+    ipcRenderer.invoke('generation-rule:list-with-names', showActive),
   generationRuleCreate: (payload: item.CreateGenerationRuleInput) =>
     ipcRenderer.invoke('generation-rule:create', payload),
   generationRuleUpdate: (payload: item.UpdateGenerationRule) =>
     ipcRenderer.invoke('generation-rule:update', payload),
-  generationRuleDelete: (payload: item.GenerationRulesId) =>
-    ipcRenderer.invoke('generation-rule:delete', payload),
-  generationRuleRestore: (payload: item.GenerationRulesId) =>
+  generationRuleDelete: (payload: string) => ipcRenderer.invoke('generation-rule:delete', payload),
+  generationRuleRestore: (payload: string) =>
     ipcRenderer.invoke('generation-rule:restore', payload),
   generationRuleUpsert: (payload: item.GenerationRules[]) =>
     ipcRenderer.invoke('generation-rule:upsert', payload),
+  generationRuleMarkAsClean: (payload: string) =>
+    ipcRenderer.invoke('generation-rule:mark-as-clean', payload),
 
   // Variant Generator IPC handlers
   variantGeneratorRun: () => ipcRenderer.invoke('variant-generator:run'),
@@ -278,26 +220,25 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('variant:create', payload),
   variantUpdate: (payload: variant.UpdateVariantRecord) =>
     ipcRenderer.invoke('variant:update', payload),
-  variantDelete: (payload: variant.VariantRecordId) =>
-    ipcRenderer.invoke('variant:delete', payload),
-  variantRestore: (payload: variant.VariantRecordId) =>
-    ipcRenderer.invoke('variant:restore', payload),
+  variantDelete: (payload: string) => ipcRenderer.invoke('variant:delete', payload),
+  variantRestore: (payload: string) => ipcRenderer.invoke('variant:restore', payload),
   variantUpsert: (payload: variant.VariantRecord[]) =>
     ipcRenderer.invoke('variant:upsert', payload),
-
-  // Component Map IPC handlers
-  componentMapListActive: () => ipcRenderer.invoke('component-map:list-active'),
-  componentMapListDeleted: () => ipcRenderer.invoke('component-map:list-deleted'),
-  componentMapCreate: (payload: variant.CreateComponentMapInput) =>
-    ipcRenderer.invoke('component-map:create', payload),
-  componentMapUpdate: (payload: variant.UpdateComponentMap) =>
-    ipcRenderer.invoke('component-map:update', payload),
-  componentMapDelete: (payload: variant.ComponentMapId) =>
-    ipcRenderer.invoke('component-map:delete', payload),
-  componentMapRestore: (payload: variant.ComponentMapId) =>
-    ipcRenderer.invoke('component-map:restore', payload),
-  componentMapUpsert: (payload: variant.ComponentMap[]) =>
-    ipcRenderer.invoke('component-map:upsert', payload),
+  variantGetBySpecifications: (
+    itemId: string,
+    brandId: string,
+    modeId: string,
+    uomId: string,
+    dimensionValueIds: string[],
+  ) =>
+    ipcRenderer.invoke(
+      'variant:get-by-specifications',
+      itemId,
+      brandId,
+      modeId,
+      uomId,
+      dimensionValueIds,
+    ),
 
   // Dimension Value Map IPC handlers
   dimensionValueMapListActive: () => ipcRenderer.invoke('dimension-value-map:list-active'),
@@ -306,50 +247,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('dimension-value-map:create', payload),
   dimensionValueMapUpdate: (payload: variant.UpdateDimensionValueMap) =>
     ipcRenderer.invoke('dimension-value-map:update', payload),
-  dimensionValueMapDelete: (payload: variant.DimensionValueMapId) =>
+  dimensionValueMapDelete: (payload: string) =>
     ipcRenderer.invoke('dimension-value-map:delete', payload),
-  dimensionValueMapRestore: (payload: variant.DimensionValueMapId) =>
+  dimensionValueMapRestore: (payload: string) =>
     ipcRenderer.invoke('dimension-value-map:restore', payload),
   dimensionValueMapUpsert: (payload: variant.DimensionValueMap[]) =>
     ipcRenderer.invoke('dimension-value-map:upsert', payload),
-
-  // Switch Map IPC handlers
-  switchMapListActive: () => ipcRenderer.invoke('switch-map:list-active'),
-  switchMapListDeleted: () => ipcRenderer.invoke('switch-map:list-deleted'),
-  switchMapCreate: (payload: variant.CreateSwitchMapInput) =>
-    ipcRenderer.invoke('switch-map:create', payload),
-  switchMapUpdate: (payload: variant.UpdateSwitchMap) =>
-    ipcRenderer.invoke('switch-map:update', payload),
-  switchMapDelete: (payload: variant.SwitchMapId) =>
-    ipcRenderer.invoke('switch-map:delete', payload),
-  switchMapRestore: (payload: variant.SwitchMapId) =>
-    ipcRenderer.invoke('switch-map:restore', payload),
-  switchMapUpsert: (payload: variant.SwitchMap[]) =>
-    ipcRenderer.invoke('switch-map:upsert', payload),
-
-  // Vendor Price IPC handlers
-  vendorPriceListActive: () => ipcRenderer.invoke('vendor-price:list-active'),
-  vendorPriceListDeleted: () => ipcRenderer.invoke('vendor-price:list-deleted'),
-  vendorPriceCreate: (payload: variant.CreateVendorPriceInput) =>
-    ipcRenderer.invoke('vendor-price:create', payload),
-  vendorPriceUpdate: (payload: variant.UpdateVendorPrice) =>
-    ipcRenderer.invoke('vendor-price:update', payload),
-  vendorPriceDelete: (payload: variant.VendorPriceId) =>
-    ipcRenderer.invoke('vendor-price:delete', payload),
-  vendorPriceRestore: (payload: variant.VendorPriceId) =>
-    ipcRenderer.invoke('vendor-price:restore', payload),
-  vendorPriceUpsert: (payload: variant.VendorPrice[]) =>
-    ipcRenderer.invoke('vendor-price:upsert', payload),
-
-  // Request IPC handlers
-  requestListActive: () => ipcRenderer.invoke('request:list-active'),
-  requestListDeleted: () => ipcRenderer.invoke('request:list-deleted'),
-  requestCreate: (payload: order.CreateRequestInput) =>
-    ipcRenderer.invoke('request:create', payload),
-  requestUpdate: (payload: order.UpdateRequest) => ipcRenderer.invoke('request:update', payload),
-  requestDelete: (payload: order.RequestId) => ipcRenderer.invoke('request:delete', payload),
-  requestRestore: (payload: order.RequestId) => ipcRenderer.invoke('request:restore', payload),
-  requestUpsert: (payload: order.Request[]) => ipcRenderer.invoke('request:upsert', payload),
 
   // Request Item IPC handlers
   requestItemListActive: () => ipcRenderer.invoke('request-item:list-active'),
@@ -358,10 +261,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('request-item:create', payload),
   requestItemUpdate: (payload: order.UpdateRequestItem) =>
     ipcRenderer.invoke('request-item:update', payload),
-  requestItemDelete: (payload: order.RequestItemId) =>
-    ipcRenderer.invoke('request-item:delete', payload),
-  requestItemRestore: (payload: order.RequestItemId) =>
-    ipcRenderer.invoke('request-item:restore', payload),
+  requestItemDelete: (payload: string) => ipcRenderer.invoke('request-item:delete', payload),
+  requestItemRestore: (payload: string) => ipcRenderer.invoke('request-item:restore', payload),
   requestItemUpsert: (payload: order.RequestItem[]) =>
     ipcRenderer.invoke('request-item:upsert', payload),
 

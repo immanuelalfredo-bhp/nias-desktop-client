@@ -6,12 +6,6 @@ import { logger } from '@nias/shared/server';
 import {
   // System queries
   UserQueries,
-  RoleQueries,
-  ProjectQueries,
-  RoleCapabilityQueries,
-  RoleManagementQueries,
-  RoleMapQueries,
-  ProjectMapQueries,
   AuditQueries,
 
   // Attribute queries
@@ -28,7 +22,6 @@ import {
   // Item queries
   ItemRecordQueries,
   AliasQueries,
-  VendorMapQueries,
   DimensionMapQueries,
   SystemMapQueries,
   TagMapQueries,
@@ -36,20 +29,16 @@ import {
 
   // Variant queries
   VariantRecordQueries,
-  ComponentMapQueries,
   DimensionValueMapQueries,
-  SwitchMapQueries,
-  VendorPriceQueries,
 
   // Order queries
-  RequestQueries,
   RequestItemQueries,
 
   // Other queries
   SyncQueries,
   LocalQueries,
 } from './queries/index.js';
-import { openEncryptedDatabase } from './connection.js';
+import { openEncryptedDatabase, openUnencryptedDatabase } from './connection.js';
 import { backupArtifacts, ensureAuthDbSchema, runMigrations, setupNewDb } from './migrations.js';
 import { getOrGenerateKey } from './keyring.js';
 
@@ -72,12 +61,6 @@ export class UserDatabase {
 
   // System queries
   readonly user: UserQueries;
-  readonly role: RoleQueries;
-  readonly project: ProjectQueries;
-  readonly roleCapability: RoleCapabilityQueries;
-  readonly roleManagement: RoleManagementQueries;
-  readonly roleMap: RoleMapQueries;
-  readonly projectMap: ProjectMapQueries;
   readonly audit: AuditQueries;
 
   // Sync queries
@@ -97,34 +80,23 @@ export class UserDatabase {
   // Item queries
   readonly item: ItemRecordQueries;
   readonly alias: AliasQueries;
-  readonly vendorMap: VendorMapQueries;
   readonly dimensionMap: DimensionMapQueries;
   readonly systemMap: SystemMapQueries;
   readonly tagMap: TagMapQueries;
   readonly generationRules: GenerationRulesQueries;
 
   // Order queries
-  readonly request: RequestQueries;
   readonly requestItem: RequestItemQueries;
 
   // Variant queries
   readonly variant: VariantRecordQueries;
-  readonly componentMap: ComponentMapQueries;
   readonly dimensionValueMap: DimensionValueMapQueries;
-  readonly switchMap: SwitchMapQueries;
-  readonly vendorPrice: VendorPriceQueries;
 
   constructor(dbPath: string, key: string) {
-    this.db = openEncryptedDatabase(dbPath, key);
+    this.db = openUnencryptedDatabase(dbPath);
 
     // System queries
     this.user = new UserQueries(this.db);
-    this.role = new RoleQueries(this.db);
-    this.project = new ProjectQueries(this.db);
-    this.roleCapability = new RoleCapabilityQueries(this.db);
-    this.roleManagement = new RoleManagementQueries(this.db);
-    this.roleMap = new RoleMapQueries(this.db);
-    this.projectMap = new ProjectMapQueries(this.db);
     this.audit = new AuditQueries(this.db);
 
     // Sync queries
@@ -144,22 +116,17 @@ export class UserDatabase {
     // Item queries
     this.item = new ItemRecordQueries(this.db);
     this.alias = new AliasQueries(this.db);
-    this.vendorMap = new VendorMapQueries(this.db);
     this.dimensionMap = new DimensionMapQueries(this.db);
     this.systemMap = new SystemMapQueries(this.db);
     this.tagMap = new TagMapQueries(this.db);
     this.generationRules = new GenerationRulesQueries(this.db);
 
     // Order queries
-    this.request = new RequestQueries(this.db);
     this.requestItem = new RequestItemQueries(this.db);
 
     // Variant queries
     this.variant = new VariantRecordQueries(this.db);
-    this.componentMap = new ComponentMapQueries(this.db);
     this.dimensionValueMap = new DimensionValueMapQueries(this.db);
-    this.switchMap = new SwitchMapQueries(this.db);
-    this.vendorPrice = new VendorPriceQueries(this.db);
   }
 
   close(): void {
@@ -220,7 +187,8 @@ export function initializeUserDatabase(uuid: string): UserDatabase {
     );
   }
 
-  let key = getOrGenerateKey('user', uuid);
+  let key ='';
+  // let key = getOrGenerateKey('user', uuid);
   let db: Database.Database | undefined;
 
   try {
@@ -228,7 +196,7 @@ export function initializeUserDatabase(uuid: string): UserDatabase {
     db = new Database(userDbPath);
 
     if (dbExists) {
-      db.pragma(`key = '${key}'`);
+      // db.pragma(`key = '${key}'`);
       db.prepare('SELECT count(*) FROM sqlite_master').get();
       runMigrations(db);
       logger.info(
@@ -256,7 +224,7 @@ export function initializeUserDatabase(uuid: string): UserDatabase {
     );
     backupArtifacts('user', userDbPath, uuid);
 
-    key = getOrGenerateKey('user', uuid);
+    // key = getOrGenerateKey('user', uuid);
     db = new Database(userDbPath);
     setupNewDb('user', db, key);
     logger.info(

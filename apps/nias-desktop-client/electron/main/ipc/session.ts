@@ -4,12 +4,6 @@ import { AuthDatabase, UserDatabase } from '../db/database.js';
 // System IPC handlers
 import { registerAuditIpcHandlers } from './system/audit.js';
 import { registerUserIpcHandlers } from './system/users.js';
-import { registerRoleIpcHandlers } from './system/roles.js';
-import { registerProjectIpcHandlers } from './system/projects.js';
-import { registerRoleCapabilitiesIpcHandlers } from './system/role-capabilities.js';
-import { registerRoleManagementIpcHandlers } from './system/role-management.js';
-import { registerRoleMapsIpcHandlers } from './system/role-maps.js';
-import { registerProjectMapsIpcHandlers } from './system/project-maps.js';
 
 // Attribute IPC handlers
 import { registerBrandIpcHandlers } from './attribute/brands.js';
@@ -20,7 +14,6 @@ import { registerDimensionValuesIpcHandlers } from './attribute/dimension-values
 import { registerSystemIpcHandlers } from './attribute/systems.js';
 import { registerCategoryIpcHandlers } from './attribute/categories.js';
 import { registerVendorIpcHandlers } from './attribute/vendors.js';
-import { registerVendorMapsIpcHandlers } from './attribute/vendor-maps.js'
 import { registerTagIpcHandlers } from './attribute/tags.js';
 
 // Item IPC handlers
@@ -34,13 +27,9 @@ import { registerGenerationRulesIpcHandlers } from './item/generation-rules.js';
 // Variant IPC handlers
 import { registerVariantsIpcHandlers } from './variant/variant-records.js';
 import { registerDimensionValueMapsIpcHandlers } from './variant/dimension-value-maps.js';
-import { registerComponentMapsIpcHandlers } from './variant/component-maps.js';
-import { registerSwitchMapsIpcHandlers } from './variant/switch-maps.js';
-import { registerVendorPriceIpcHandlers } from './variant/vendor-prices.js';
 import { registerVariantGeneratorIpcHandlers } from './variant/variant-generator.js';
 
 // Order IPC handlers
-import { registerRequestIpcHandlers } from './order/requests.js';
 import { registerRequestItemIpcHandlers } from './order/request-items.js';
 
 // Other IPC handlers
@@ -77,12 +66,6 @@ export function registerSessionIpcHandlers(authDb: AuthDatabase, userDb: UserDat
     // System IPC handlers
     registerAuditIpcHandlers(userDb);
     registerUserIpcHandlers(authDb, userDb, userId);
-    registerRoleIpcHandlers(userDb, userId);
-    registerProjectIpcHandlers(userDb, userId);
-    registerRoleCapabilitiesIpcHandlers(userDb, userId);
-    registerRoleManagementIpcHandlers(userDb, userId);
-    registerRoleMapsIpcHandlers(userDb, userId);
-    registerProjectMapsIpcHandlers(userDb, userId);
 
     // Attribute IPC handlers
     registerBrandIpcHandlers(userDb, userId);
@@ -93,7 +76,6 @@ export function registerSessionIpcHandlers(authDb: AuthDatabase, userDb: UserDat
     registerSystemIpcHandlers(userDb, userId);
     registerCategoryIpcHandlers(userDb, userId);
     registerVendorIpcHandlers(userDb, userId);
-    registerVendorMapsIpcHandlers(userDb, userId);
     registerTagIpcHandlers(userDb, userId);
 
     // Item IPC handlers
@@ -107,13 +89,9 @@ export function registerSessionIpcHandlers(authDb: AuthDatabase, userDb: UserDat
     // Variant IPC handlers
     registerVariantsIpcHandlers(userDb, userId);
     registerDimensionValueMapsIpcHandlers(userDb, userId);
-    registerComponentMapsIpcHandlers(userDb, userId);
-    registerSwitchMapsIpcHandlers(userDb, userId);
-    registerVendorPriceIpcHandlers(userDb, userId);
     registerVariantGeneratorIpcHandlers(userDb, userId);
 
     // Order IPC handlers
-    registerRequestIpcHandlers(userDb, userId);
     registerRequestItemIpcHandlers(userDb, userId);
 
     // Other IPC handlers

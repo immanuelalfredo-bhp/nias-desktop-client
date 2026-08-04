@@ -8,12 +8,6 @@ import {
 import * as schemas from './defines.js';
 import {
   UserSchema,
-  RoleSchema,
-  ProjectSchema,
-  RoleCapabilitiesSchema,
-  RoleManagementSchema,
-  RoleMapSchema,
-  ProjectMapSchema,
   AuditSchema,
 } from '../server/schema/system.js';
 import {
@@ -25,7 +19,6 @@ import {
   SystemSchema,
   CategorySchema,
   VendorSchema,
-  VendorMapSchema,
   TagSchema,
 } from '../server/schema/attribute.js';
 import {
@@ -39,23 +32,14 @@ import {
 import {
   VariantRecordSchema,
   DimensionValueMapSchema,
-  ComponentMapSchema,
-  SwitchMapSchema,
-  VendorPriceSchema,
 } from '../server/schema/variant.js';
-import { RequestSchema, RequestItemSchema } from '../server/schema/order.js';
+import { RequestItemSchema } from '../server/schema/order.js';
 
 export const SyncMetadataSchema = schemas.syncMetadata;
 export type SyncMetadata = DrizzleSyncMetadata;
 
 const PayloadSchemaByTableName = {
   users: UserSchema,
-  roles: RoleSchema,
-  projects: ProjectSchema,
-  role_capabilities: RoleCapabilitiesSchema,
-  role_management: RoleManagementSchema,
-  role_map: RoleMapSchema,
-  project_map: ProjectMapSchema,
   audit: AuditSchema,
   brands: BrandSchema,
   modes: ModeSchema,
@@ -65,7 +49,6 @@ const PayloadSchemaByTableName = {
   systems: SystemSchema,
   categories: CategorySchema,
   vendors: VendorSchema,
-  vendor_map: VendorMapSchema,
   tags: TagSchema,
   item_records: ItemRecordSchema,
   aliases: AliasSchema,
@@ -75,11 +58,6 @@ const PayloadSchemaByTableName = {
   generation_rules: GenerationRulesSchema,
   variant_records: VariantRecordSchema,
   dimension_value_map: DimensionValueMapSchema,
-  component_map: ComponentMapSchema,
-  switch_map: SwitchMapSchema,
-  vendor_price: VendorPriceSchema,
-  requests: RequestSchema,
-  request_items: RequestItemSchema,
 } as const satisfies Record<SyncTableName, z.ZodTypeAny>;
 
 const PushChangeSchemaList = SYNC_TABLE_MAP.map(({ tableName }) =>
