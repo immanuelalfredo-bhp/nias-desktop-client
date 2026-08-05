@@ -76,6 +76,9 @@ export const validate = <T>(schema: ZodType<T>): RequestHandler => {
         success: false,
         message: 'Invalid request body',
         details: result.error.issues,
+        errorMessage: result.error.message,
+        errorStack: result.error.stack,
+        rawError: result.error,
       });
     }
 

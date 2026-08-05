@@ -76,12 +76,24 @@ export class SyncQueries {
     const variantRecordQueries = new VariantRecordQueries(this.db);
     const dimensionValueMapQueries = new DimensionValueMapQueries(this.db);
 
+    const normalizePayload = <T extends Record<string, unknown>>(payload: T): T => ({
+      ...payload,
+      isSynced:
+        typeof payload.isSynced === 'number'
+          ? payload.isSynced === 1
+          : payload.isSynced,
+      isDirty:
+        typeof payload.isDirty === 'number'
+          ? payload.isDirty === 1
+          : payload.isDirty,
+    });
+
     const appendChanges = <T extends { id: string }>(tableName: SyncTableName, rows: T[]): void => {
       for (const row of rows) {
         changes.push({
           id: row.id,
           tableName,
-          payload: row,
+          payload: normalizePayload(row),
         });
       }
     };
