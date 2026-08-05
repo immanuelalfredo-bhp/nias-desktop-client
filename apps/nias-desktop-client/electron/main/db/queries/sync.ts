@@ -86,6 +86,10 @@ export class SyncQueries {
         typeof payload.isDirty === 'number'
           ? payload.isDirty === 1
           : payload.isDirty,
+      hasAutoAssemblyTrigger:
+        typeof payload.hasAutoAssemblyTrigger === 'number'
+          ? payload.hasAutoAssemblyTrigger === 1
+          : payload.hasAutoAssemblyTrigger,
     });
 
     const appendChanges = <T extends { id: string }>(tableName: SyncTableName, rows: T[]): void => {

@@ -43,7 +43,7 @@ export function registerVariantGeneratorIpcHandlers(userDb: UserDatabase, userId
       createAuditLog(userDb, userId, {
         action: 'generate',
         tableName: 'variant_records',
-        recordId: '',
+        recordId: '00000000-0000-0000-0000-000000000000',
         recordName: '',
       });
 
