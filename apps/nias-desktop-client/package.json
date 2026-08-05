@@ -18,7 +18,7 @@
     "publish": {
       "provider": "github",
       "owner": "immanuelalfredo-bhp",
-      "repo": "nias"
+      "repo": "nias-desktop-client"
     },
     "nsis": {
       "perMachine": false
@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
-    "@nias/shared": "file:../nias-shared",
+    "@nias/shared": "github:immanuelalfredo-bhp/nias-shared",
     "axios": "^1.18.0",
     "better-sqlite3-multiple-ciphers": "^12.11.1",
     "electron-updater": "^6.8.9",
