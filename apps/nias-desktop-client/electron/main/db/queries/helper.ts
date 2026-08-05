@@ -45,6 +45,21 @@ export abstract class BaseQueries<T, CreateParams, UpdateParams> {
       .all() as T[];
   }
 
+  listDirty(): T[] {
+    return this.db
+      .prepare(`
+        SELECT
+          ${this.columns}
+        FROM
+          ${this.tableName}
+        WHERE
+          is_synced = 0
+        ORDER BY
+          ${this.tableOrder}
+      `)
+      .all() as T[];
+  }
+
   getById(id: string): T | null {
     return (
       (this.db
@@ -65,6 +80,7 @@ export abstract class BaseQueries<T, CreateParams, UpdateParams> {
       .prepare(`
         UPDATE ${this.tableName}
         SET
+          is_synced = 0,
           deleted_at = ?
         WHERE
           id = ?
@@ -77,6 +93,7 @@ export abstract class BaseQueries<T, CreateParams, UpdateParams> {
       .prepare(`
         UPDATE ${this.tableName}
         SET
+          is_synced = 0,
           deleted_at = NULL
         WHERE
           id = ?

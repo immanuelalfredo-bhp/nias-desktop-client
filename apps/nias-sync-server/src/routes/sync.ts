@@ -8,6 +8,30 @@ import { db } from '../db.js';
 import { defaultRegistry, upsertSyncRecords } from '../utils.js';
 import { supabase } from '../supabase.js';
 
+export function getSyncTableOrder(): Array<(typeof SYNC_TABLE_MAP)[number]['tableName']> {
+  return [
+    'users',
+    'audit',
+    'brands',
+    'modes',
+    'uoms',
+    'dimensions',
+    'dimension_values',
+    'systems',
+    'categories',
+    'vendors',
+    'tags',
+    'item_records',
+    'aliases',
+    'dimension_map',
+    'system_map',
+    'tag_map',
+    'generation_rules',
+    'variant_records',
+    'dimension_value_map',
+  ];
+}
+
 async function getSyncDelta(
   clientVersions: server.SyncMetadata,
   context?: { log?: Logger; userId?: string },
@@ -144,6 +168,96 @@ export async function handlePull(
   }
 }
 
+export async function handlePush(
+  payload: any,
+  context?: { log?: Logger; userId?: string },
+): Promise<Envelope<any>> {
+  try {
+    context?.log?.info(
+      { scope: 'sync', actorId: payload.actorId, changes: payload.changes.length },
+      'Starting sync push',
+    );
+
+    return await db.transaction(async (tx) => {
+      const metadataRows = await tx.select().from(syncMetadata);
+      const registry: Record<string, number> = { ...defaultRegistry };
+      for (const row of metadataRows) {
+        if (row.tableName) {
+          registry[row.tableName] = row.syncVersion ?? 0;
+        }
+      }
+
+      const changesByTable = payload.changes.reduce(
+        (acc: Record<string, any[]>, change: any) => {
+          if (!acc[change.tableName]) {
+            acc[change.tableName] = [];
+          }
+          acc[change.tableName]?.push(change);
+          return acc;
+        },
+        {} as Record<string, any[]>,
+      );
+
+      const processedItems: any[] = [];
+      for (const tableName of getSyncTableOrder()) {
+        const changes = changesByTable[tableName];
+        if (!changes?.length) {
+          continue;
+        }
+
+        const tableInfo = SYNC_TABLE_MAP.find((entry) => entry.tableName === tableName);
+        if (!tableInfo) {
+          context?.log?.warn({ scope: 'sync', tableName, actorId: payload.actorId }, 'Unknown table in sync change, skipping');
+          continue;
+        }
+
+        const newVersion = (registry[tableInfo.key] ?? 0) + changes.length;
+        registry[tableInfo.key] = newVersion;
+
+        const updated = await upsertSyncRecords(
+          tx,
+          tableInfo.table,
+          changes.map((change: any) => ({
+            ...change.payload,
+            id: change.id,
+            isSynced: true,
+            syncVersion: newVersion,
+          })),
+          newVersion,
+        );
+        processedItems.push({ table: tableName, data: updated });
+
+        await tx
+          .insert(syncMetadata)
+          .values({ tableName: tableInfo.tableName, syncVersion: newVersion })
+          .onConflictDoUpdate({
+            target: syncMetadata.tableName,
+            set: { syncVersion: newVersion },
+          });
+      }
+
+      context?.log?.info(
+        {
+          scope: 'sync',
+          actorId: payload.actorId,
+          changes: payload.changes.length,
+          processed: processedItems.length,
+        },
+        'Completed sync push',
+      );
+
+      return {
+        success: true,
+        message: 'Sync push completed successfully',
+        data: { syncedItems: processedItems },
+      };
+    });
+  } catch (error) {
+    context?.log?.error({ scope: 'sync', error }, 'Error handling sync push');
+    return { success: false, message: 'Failed to process sync push' };
+  }
+}
+
 export async function refreshUserToken(
   params: server.RefreshToken,
   context?: { log?: Logger },
@@ -200,99 +314,3 @@ export async function refreshUserToken(
     };
   }
 }
-
-// export async function handlePush(
-//   payload: sync.PushPayload,
-//   context?: { log?: Logger; userId?: string },
-// ): Promise<Envelope<sync.PushResponse>> {
-//   try {
-//     context?.log?.info(
-//       {
-//         scope: 'sync',
-//         actorId: payload.actorId,
-//         changes: payload.changes.length,
-//       },
-//       'Starting sync push',
-//     );
-
-//     return await db.transaction(async (tx) => {
-//       // We lock the metadata row to ensure that concurrent sync pushes
-//       // do not result in race conditions when calculating the next version number.
-//       const [syncRow] = await tx.select().from(syncMetadata).for('update').limit(1);
-
-//       const registry: sync.SyncMetadata = {
-//         ...defaultRegistry,
-//         ...(syncRow ?? {}),
-//       };
-
-//       const changesByTable = payload.changes.reduce(
-//         (acc, change) => {
-//           if (!acc[change.tableName]) {
-//             acc[change.tableName] = [];
-//           }
-//           acc[change.tableName]?.push(change);
-//           return acc;
-//         },
-//         {} as Record<string, typeof payload.changes>,
-//       );
-//       const processedItems = [];
-
-//       for (const [tableName, changes] of Object.entries(changesByTable)) {
-//         const tableInfo = TABLE_MAP.find((t) => t.tableName === tableName);
-//         if (!tableInfo) {
-//           context?.log?.warn(
-//             { scope: 'sync', tableName, actorId: payload.actorId },
-//             'Unknown table in sync change, skipping',
-//           );
-//           continue;
-//         }
-
-//         // Increment the global table version by the number of changes processed
-//         // to ensure every distinct batch of updates receives a unique version watermark.
-//         const newVersion = (registry[tableInfo.key] ?? 0) + changes.length;
-//         registry[tableInfo.key] = newVersion;
-
-//         const updated = await upsertSyncRecords(
-//           tx,
-//           tableInfo.table,
-//           changes.map((c) => c.payload),
-//           newVersion,
-//         );
-//         processedItems.push({ table: tableName, data: updated });
-
-//         // We record processed changes in a history table for auditability
-//         // and to allow for potential future "undo" or conflict resolution features.
-//         await tx.insert(changelog).values(
-//           changes.map((c) => ({
-//             id: c.id,
-//             userId: payload.actorId,
-//             tableName: c.tableName,
-//             payload: JSON.stringify(c.payload),
-//             processedAt: new Date().toISOString(),
-//           })),
-//         );
-//       }
-
-//       await tx.update(syncMetadata).set(registry as typeof syncMetadata.$inferInsert);
-
-//       context?.log?.info(
-//         {
-//           scope: 'sync',
-//           actorId: payload.actorId,
-//           changes: payload.changes.length,
-//           processed: processedItems.length,
-//         },
-//         'Completed sync push',
-//       );
-
-//       return {
-//         success: true,
-//         message: 'Sync push completed successfully',
-//         data: { syncedItems: processedItems },
-//       };
-//     });
-//   } catch (error) {
-//     context?.log?.error({ scope: 'sync', error }, 'Error handling sync push');
-//     return { success: false, message: 'Failed to process sync push' };
-//   }
-// }

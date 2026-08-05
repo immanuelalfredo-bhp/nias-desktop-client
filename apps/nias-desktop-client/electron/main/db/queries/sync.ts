@@ -1,5 +1,7 @@
 import Database from 'better-sqlite3-multiple-ciphers';
 import { system, attribute, item, variant, order, server } from '@nias/shared';
+
+type SyncTableName = server.PushPayload['changes'][number]['tableName'];
 import { logger } from '@nias/shared/server';
 import {
   // System queries
@@ -28,9 +30,6 @@ import {
   // Variant queries
   VariantRecordQueries,
   DimensionValueMapQueries,
-
-  // Order queries
-  RequestItemQueries,
 } from './index.js';
 
 export class SyncQueries {
@@ -48,6 +47,106 @@ export class SyncQueries {
       }
       return acc;
     }, {} as server.SyncMetadata);
+  }
+
+  buildPushPayload(actorId: string): server.PushPayload {
+    const changes: Array<{
+      id: string;
+      tableName: SyncTableName;
+      payload: Record<string, unknown>;
+    }> = [];
+
+    const userQueries = new UserQueries(this.db);
+    const auditQueries = new AuditQueries(this.db);
+    const brandQueries = new BrandQueries(this.db);
+    const modeQueries = new ModeQueries(this.db);
+    const uomQueries = new UomQueries(this.db);
+    const dimensionQueries = new DimensionQueries(this.db);
+    const dimensionValueQueries = new DimensionValuesQueries(this.db);
+    const systemQueries = new SystemQueries(this.db);
+    const categoryQueries = new CategoryQueries(this.db);
+    const vendorQueries = new VendorQueries(this.db);
+    const tagQueries = new TagQueries(this.db);
+    const itemRecordQueries = new ItemRecordQueries(this.db);
+    const aliasQueries = new AliasQueries(this.db);
+    const dimensionMapQueries = new DimensionMapQueries(this.db);
+    const systemMapQueries = new SystemMapQueries(this.db);
+    const tagMapQueries = new TagMapQueries(this.db);
+    const generationRulesQueries = new GenerationRulesQueries(this.db);
+    const variantRecordQueries = new VariantRecordQueries(this.db);
+    const dimensionValueMapQueries = new DimensionValueMapQueries(this.db);
+
+    const appendChanges = <T extends { id: string }>(tableName: SyncTableName, rows: T[]): void => {
+      for (const row of rows) {
+        changes.push({
+          id: row.id,
+          tableName,
+          payload: row,
+        });
+      }
+    };
+
+    appendChanges('users', userQueries.listDirty() as system.User[]);
+    appendChanges('audit', auditQueries.listDirty() as system.Audit[]);
+    appendChanges('brands', brandQueries.listDirty() as attribute.Brand[]);
+    appendChanges('modes', modeQueries.listDirty() as attribute.Mode[]);
+    appendChanges('uoms', uomQueries.listDirty() as attribute.Uom[]);
+    appendChanges('dimensions', dimensionQueries.listDirty() as attribute.Dimension[]);
+    appendChanges(
+      'dimension_values',
+      dimensionValueQueries.listDirty() as attribute.DimensionValue[],
+    );
+    appendChanges('systems', systemQueries.listDirty() as attribute.System[]);
+    appendChanges('categories', categoryQueries.listDirty() as attribute.Category[]);
+    appendChanges('vendors', vendorQueries.listDirty() as attribute.Vendor[]);
+    appendChanges('tags', tagQueries.listDirty() as attribute.Tag[]);
+    appendChanges('item_records', itemRecordQueries.listDirty() as item.ItemRecord[]);
+    appendChanges('aliases', aliasQueries.listDirty() as item.Alias[]);
+    appendChanges('dimension_map', dimensionMapQueries.listDirty() as item.DimensionMap[]);
+    appendChanges('system_map', systemMapQueries.listDirty() as item.SystemMap[]);
+    appendChanges('tag_map', tagMapQueries.listDirty() as item.TagMap[]);
+    appendChanges(
+      'generation_rules',
+      generationRulesQueries.listDirty() as item.GenerationRules[],
+    );
+    appendChanges('variant_records', variantRecordQueries.listDirty() as variant.VariantRecord[]);
+    appendChanges(
+      'dimension_value_map',
+      dimensionValueMapQueries.listDirty() as variant.DimensionValueMap[],
+    );
+
+    return {
+      id: crypto.randomUUID(),
+      actorId,
+      changes: changes as unknown as server.PushPayload['changes'],
+    };
+  }
+
+  markChangesAsSynced(payload: server.PushPayload): void {
+    const changesByTable = payload.changes.reduce(
+      (acc, change) => {
+        if (!acc[change.tableName]) {
+          acc[change.tableName] = [];
+        }
+        acc[change.tableName]?.push(change);
+        return acc;
+      },
+      {} as Record<SyncTableName, typeof payload.changes>,
+    );
+
+    for (const [tableName, changes] of Object.entries(changesByTable)) {
+      const targetIds = changes.map((change) => change.id);
+      if (!targetIds.length) {
+        continue;
+      }
+
+      const stmt = this.db.prepare(`
+        UPDATE ${tableName}
+        SET is_synced = 1
+        WHERE id IN (${targetIds.map(() => '?').join(', ')})
+      `);
+      stmt.run(...targetIds);
+    }
   }
 
   applyChanges(manifest: server.PullResponse): server.SyncMetadata {
@@ -74,7 +173,6 @@ export class SyncQueries {
       const generationRulesQueries = new GenerationRulesQueries(this.db);
       const variantRecordQueries = new VariantRecordQueries(this.db);
       const dimensionValueMapQueries = new DimensionValueMapQueries(this.db);
-      const requestItemQueries = new RequestItemQueries(this.db);
 
       const tx = this.db.transaction(() => {
         for (const user of manifest.changes.users as system.User[]) {

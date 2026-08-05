@@ -12,7 +12,7 @@ import {
 } from './middleware.js';
 import { getBootstrapStatus, handleBootstrap } from './routes/bootstrap.js';
 import { initialLogin, syncLocalUsers } from './routes/login.js';
-import { handlePull, refreshUserToken } from './routes/sync.js';
+import { handlePull, handlePush, refreshUserToken } from './routes/sync.js';
 import { handleCreateUser } from './routes/database.js';
 
 const shutdownTimeout = SHUTDOWN_TIMEOUT;
@@ -26,16 +26,16 @@ app.post('/api/sync/pull', userAuthenticate, validate(server.SyncMetadataSchema)
   handlePull(req, res).catch(next),
 );
 
-// app.post('/api/sync/push', userAuthenticate, validate(sync.PushPayloadSchema), (req, res, next) => {
-//   const context = {
-//     log: req.log,
-//     ...(req.user?.id ? { userId: req.user.id } : {}),
-//   };
+app.post('/api/sync/push', userAuthenticate, validate(server.PushPayloadSchema), (req, res, next) => {
+  const context = {
+    log: req.log,
+    ...(req.user?.id ? { userId: req.user.id } : {}),
+  };
 
-//   return handlePush(req.validatedBody as sync.PushPayload, context)
-//     .then((result) => res.json(result))
-//     .catch(next);
-// });
+  return handlePush(req.validatedBody as server.PushPayload, context)
+    .then((result) => res.status(result.success ? 200 : 400).json(result))
+    .catch(next);
+});
 
 app.post(
   '/api/sync/refresh-token',

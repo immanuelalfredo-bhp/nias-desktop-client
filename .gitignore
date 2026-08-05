@@ -22,3 +22,4 @@ Thumbs.db
 **/.env
 **/.env.*
 apps/nias-desktop-client/stats.html
+apps/nias-sync-server/src/routes/sync.test.ts

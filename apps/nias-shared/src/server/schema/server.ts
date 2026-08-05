@@ -28,7 +28,6 @@ import {
   variantRecords,
   dimensionValueMap,
 } from './variant.js';
-import { requestItems } from './order.js';
 
 export const authSchema = pgSchema('auth');
 export const syncSchema = pgSchema('sync');

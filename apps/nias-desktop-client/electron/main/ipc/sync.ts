@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { ipcMain } from 'electron';
 import { server, local, common } from '@nias/shared';
 import { handleResponse, isSuccess, logger, type Envelope } from '@nias/shared/server';
@@ -15,6 +16,30 @@ export const registerSyncIpcHandlers = (
       if (!accessToken) {
         logger.error({ scope: 'sync' }, 'Sync pull failed: missing access token');
         return { success: false, message: 'Sync pull failed: missing access token' };
+      }
+
+      const pushPayload = userDb.sync.buildPushPayload(userId);
+      const pushId = randomUUID();
+      pushPayload.id = pushId;
+      pushPayload.actorId = userId;
+
+      if (pushPayload.changes.length > 0) {
+        logger.info({ scope: 'sync', changes: pushPayload.changes.length }, 'Sync push requested');
+        const pushResponse = await fetch(`${SYNC_SERVER_URL}/api/sync/push`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(pushPayload),
+        });
+        const pushData = await handleResponse(pushResponse, server.PushResponseSchema, 'sync');
+        if (!isSuccess(pushData)) {
+          logger.error({ scope: 'sync' }, 'Sync push failed');
+          return { success: false, message: 'Sync push failed' };
+        }
+
+        userDb.sync.markChangesAsSynced(pushPayload);
       }
 
       let cursor = userDb.sync.getSyncVersion();
@@ -110,14 +135,6 @@ export const registerSyncIpcHandlers = (
       return { success: false, message: 'Sync pull failed' };
     }
   });
-
-  // ipcMain.handle('sync:push', async (_event, payload: server.PushPayload): Promise<Envelope<server.SyncMetadata>> => {
-  //   try {
-  //     const accessToken = await resolveUserAccessToken(authDb, userId);
-  //     if (!accessToken) {
-  //       logger.error({ scope: 'sync' }, 'Sync push failed: missing access token');
-  //       return { success: false, message: 'Sync push failed: missing access token' };
-  //     }
 };
 
 function hasUsableToken(user: local.User | null): user is local.User {

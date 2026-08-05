@@ -15,6 +15,11 @@
   },
   "build": {
     "appId": "NiasClient",
+    "productName": "NI Auxiliary System",
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
     "publish": {
       "provider": "github",
       "owner": "immanuelalfredo-bhp",
