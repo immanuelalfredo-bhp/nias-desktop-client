@@ -1,0 +1,41 @@
+name: Sync Desktop Client to Public Repo
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/nias-desktop-client/**'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout private repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Filter and push to public repo
+        env:
+          PUBLIC_REPO_URL: https://x-access-token:${{ secrets.SYNC_PUBLIC_REPO_TOKEN }}@github.com/immanuelalfredo-bhp/nias-desktop-client.git
+        run: |
+          # Create a temporary directory for the filtered repo
+          mkdir -p /tmp/sync-repo
+          cd /tmp/sync-repo
+          
+          # Clone the repo with all history
+          git clone --mirror ${{ github.server_url }}/${{ github.repository }}.git
+          cd nias.git
+          
+          # Filter to only the nias-desktop-client subdirectory
+          git filter-repo --subdirectory-filter apps/nias-desktop-client --force
+          
+          # Push to public repo
+          git push --mirror "$PUBLIC_REPO_URL"
