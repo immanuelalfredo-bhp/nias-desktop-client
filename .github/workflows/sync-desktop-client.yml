@@ -23,6 +23,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Install git-filter-repo
+        run: |
+          pip install git-filter-repo
+
       - name: Filter and push to public repo
         env:
           PUBLIC_REPO_URL: https://x-access-token:${{ secrets.SYNC_PUBLIC_REPO_TOKEN }}@github.com/immanuelalfredo-bhp/nias-desktop-client.git
