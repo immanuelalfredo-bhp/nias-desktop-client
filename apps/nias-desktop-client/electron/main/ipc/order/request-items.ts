@@ -117,11 +117,8 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
 
         const data: order.CreateRequestItem = {
           id: crypto.randomUUID(),
-          requestId: parsed.requestId,
           variantId: parsed.variantId,
           quantity: parsed.quantity,
-          price: parsed.price,
-          total: parsed.total,
           comments: parsed.comments,
         };
 
@@ -183,11 +180,8 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
 
         const updatedData: order.UpdateRequestItem = {
           id: parsed.id,
-          requestId: existing.requestId,
           variantId: parsed.variantId ?? existing.variantId,
           quantity: parsed.quantity ?? existing.quantity,
-          price: parsed.price ?? existing.price,
-          total: parsed.total ?? existing.total,
           comments: parsed.comments ?? existing.comments,
         };
 
@@ -376,6 +370,121 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
         return {
           success: false,
           message: 'Failed to upsert request items',
+        };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    'request-item:list-with-info',
+    async (_event): Promise<Envelope<any[]>> => {
+      try {
+        const requestItemsWithInfo = userDb.requestItem.listWithInfo();
+        logger.info(
+          { scope: 'request-item', requestItemCount: requestItemsWithInfo.length },
+          'Request items with info retrieved successfully',
+        );
+        return {
+          success: true,
+          message: 'Request items with info retrieved successfully',
+          data: requestItemsWithInfo,
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'request-item',
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to retrieve request items with info',
+        );
+        return {
+          success: false,
+          message: 'Failed to retrieve request items with info',
+        };
+      }
+    },
+  );
+  ipcMain.handle(
+    'request-item:hard-delete',
+    async (_event, requestItemId: string): Promise<common.SuccessResponse> => {
+      try {
+        const existing = userDb.requestItem.getById(requestItemId);
+        if (!existing) {
+          logger.error(
+            { scope: 'request-item', requestItemId },
+            'Request item not found for hard deletion',
+          );
+          return {
+            success: false,
+            message: 'Request item not found for hard deletion',
+          };
+        }
+        userDb.requestItem.hardDelete(requestItemId);
+        logger.info(
+          { scope: 'request-item', requestItemId },
+          'Request item hard deleted successfully',
+        );
+        return {
+          success: true,
+          message: 'Request item hard deleted successfully',
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'request-item',
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to hard delete request item',
+        );
+        return {
+          success: false,
+          message: 'Failed to hard delete request item',
+        };
+      }
+    },
+  );
+  ipcMain.handle(
+    'request-item:edit-quantity',
+    async (_event, payload: { id: string; newQuantity: number }): Promise<common.SuccessResponse> => {
+      try {
+        const { id, newQuantity } = payload;
+        const existing = userDb.requestItem.getById(id);
+        if (!existing) {
+          logger.error(
+            { scope: 'request-item', requestItemId: id },
+            'Request item not found for quantity edit',
+          );
+          return {
+            success: false,
+            message: 'Request item not found for quantity edit',
+          };
+        }
+        userDb.requestItem.editQuantity(id, newQuantity);
+        logger.info(
+          { scope: 'request-item', requestItemId: id },
+          'Request item quantity edited successfully',
+        );
+        return {
+          success: true,
+          message: 'Request item quantity edited successfully',
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'request-item',
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to edit request item quantity',
+        );
+        return {
+          success: false,
+          message: 'Failed to edit request item quantity',
         };
       }
     },

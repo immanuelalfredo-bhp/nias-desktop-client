@@ -6,7 +6,6 @@ const COLUMNS = `
   id,
   variant_id AS variantId,
   quantity,
-  total,
   comments,
   created_at AS createdAt,
   updated_at AS updatedAt,
@@ -32,7 +31,6 @@ export class RequestItemQueries extends BaseQueries<
             id,
             variant_id,
             quantity,
-            total,
             comments,
             created_at,
             updated_at
@@ -42,7 +40,6 @@ export class RequestItemQueries extends BaseQueries<
             @id,
             @variantId,
             @quantity,
-            @total,
             @comments,
             @createdAt,
             @updatedAt
@@ -60,7 +57,6 @@ export class RequestItemQueries extends BaseQueries<
         SET
           variant_id = @variantId,
           quantity = @quantity,
-          total = @total,
           comments = @comments,
           updated_at = @updatedAt
         WHERE
@@ -76,7 +72,6 @@ export class RequestItemQueries extends BaseQueries<
             id,
             variant_id,
             quantity,
-            total,
             comments,
             created_at,
             updated_at,
@@ -87,7 +82,6 @@ export class RequestItemQueries extends BaseQueries<
             @id,
             @variantId,
             @quantity,
-            @total,
             @comments,
             @createdAt,
             @updatedAt,
@@ -97,11 +91,55 @@ export class RequestItemQueries extends BaseQueries<
         SET
           variant_id = excluded.variant_id,
           quantity = excluded.quantity,
-          total = excluded.total,
           comments = excluded.comments,
           updated_at = excluded.updated_at,
           deleted_at = excluded.deleted_at
       `)
       .run({ ...params});
+  }
+  listWithInfo(): any[] {
+    return this.db
+      .prepare(`
+        SELECT
+          pr.id,
+          pr.variant_id AS variantId,
+          pr.quantity,
+          pr.comments,
+          pr.created_at AS createdAt,
+          pr.updated_at AS updatedAt,
+          pr.deleted_at AS deletedAt,
+          v.sku_code AS skuCode,
+          v.description AS variantName,
+          u.symbol AS uomSymbol
+        FROM
+          provisional_request pr
+        LEFT JOIN
+          variant_records v ON pr.variant_id = v.id
+        LEFT JOIN
+          uoms u ON v.uom_id = u.id
+        WHERE
+          pr.deleted_at IS NULL
+        ORDER BY
+          pr.created_at ASC
+      `)
+      .all();
+  }
+  hardDelete(id: string): void {
+    this.db
+      .prepare(`
+        DELETE FROM provisional_request
+        WHERE id = @id
+      `)
+      .run({ id });
+  }
+  editQuantity(id: string, newQuantity: number): void {
+    this.db
+      .prepare(`
+        UPDATE provisional_request
+        SET quantity = @newQuantity,
+            updated_at = @updatedAt
+        WHERE id = @id
+      `)
+      .run({ id, newQuantity, updatedAt: new Date().toISOString() });
   }
 }

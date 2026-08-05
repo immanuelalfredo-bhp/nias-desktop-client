@@ -353,4 +353,46 @@ export function registerCategoryIpcHandlers(userDb: UserDatabase, userId: string
       }
     },
   );
+  ipcMain.handle(
+    'category:get-by-norm',
+    async (_event, normalizedName: string): Promise<Envelope<attribute.Category>> => {
+      try {
+        const category = userDb.category.getByNorm(normalizedName);
+        if (!category) {
+          logger.error(
+            { scope: 'category', normalizedName },
+            'Category not found by normalized name',
+          );
+          return {
+            success: false,
+            message: 'Category not found by normalized name',
+          };
+        }
+        logger.info(
+          { scope: 'category', normalizedName },
+          'Category retrieved successfully by normalized name',
+        );
+        return {
+          success: true,
+          message: 'Category retrieved successfully by normalized name',
+          data: category,
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'category',
+            normalizedName,
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to retrieve category by normalized name',
+        );
+        return {
+          success: false,
+          message: 'Failed to retrieve category by normalized name',
+        };
+      }
+    },
+  );
 }

@@ -136,9 +136,6 @@ export class SyncQueries {
           .dimensionValueMap as variant.DimensionValueMap[]) {
           dimensionValueMapQueries.upsert(dimensionValueMap);
         }
-        for (const requestItem of manifest.changes.requestItems as order.RequestItem[]) {
-          requestItemQueries.upsert(requestItem);
-        }
         // Update sync versions for each table
         for (const [tableName, syncVersion] of Object.entries(manifest.latestVersions)) {
           const updateStmt = this.db.prepare(

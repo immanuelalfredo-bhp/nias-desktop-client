@@ -2,21 +2,38 @@
   "name": "@nias/desktop-client",
   "version": "0.1.0",
   "type": "module",
-  "description": "",
+  "author": "Immanuel Alfredo",
+  "description": "NIAS Desktop Client Application",
   "main": "dist-electron/main/index.js",
   "scripts": {
     "build:vite": "vite build",
     "build:shared": "npm run build --workspace=@nias/shared",
     "build": "npm run build:shared && vite build",
+    "release": "electron-builder --publish always",
     "dev": "vite",
     "start": "electron ."
+  },
+  "build": {
+    "appId": "NiasClient",
+    "publish": {
+      "provider": "github",
+      "owner": "immanuelalfredo-bhp",
+      "repo": "nias"
+    },
+    "nsis": {
+      "perMachine": false
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
     "@nias/shared": "file:../nias-shared",
     "axios": "^1.18.0",
     "better-sqlite3-multiple-ciphers": "^12.11.1",
-    "electron": "^42.4.0",
     "electron-updater": "^6.8.9",
     "react-hook-form": "^7.81.0",
     "react-router-dom": "^7.18.1",
@@ -24,12 +41,13 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@electron/rebuild": "^4.0.4",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.9.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
+    "electron": "42.4.0",
+    "electron-builder": "^26.15.3",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "rollup-plugin-copy": "^3.5.0",

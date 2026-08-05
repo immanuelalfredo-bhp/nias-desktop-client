@@ -103,7 +103,9 @@ export default function MainLayout() {
               transform: isOrderPanelOpen ? 'translateX(0)' : 'translateX(100%)',
               transition: 'transform 0.25s ease-in-out',
               boxShadow: '-4px 0 12px rgba(0,0,0,0.08)',
-              background: 'var(--panel-bg, #ffffff)'
+              background: 'var(--panel-bg, #ffffff)',
+              boxSizing: 'border-box',
+              borderLeft: '1px solid var(--border-color, #e2e8f0)',
             }}
           >
             <OrderPanel onClose={() => setIsOrderPanelOpen(false)} />

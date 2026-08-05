@@ -87,7 +87,7 @@ export interface ElectronAPI {
   brandDelete: (payload: string) => Promise<common.SuccessResponse>;
   brandRestore: (payload: string) => Promise<common.SuccessResponse>;
   brandUpsert: (payload: attribute.Brand[]) => Promise<common.SuccessResponse>;
-  brandGetByItemId: (itemId: string) => Promise<Envelope<attribute.Brand[]|null>>;
+  brandGetByItemId: (itemId: string) => Promise<Envelope<attribute.Brand[]>>;
 
   // Mode IPC handlers
   modeListActive: () => Promise<Envelope<attribute.Mode[]>>;
@@ -97,8 +97,9 @@ export interface ElectronAPI {
   modeDelete: (payload: string) => Promise<common.SuccessResponse>;
   modeRestore: (payload: string) => Promise<common.SuccessResponse>;
   modeUpsert: (payload: attribute.Mode[]) => Promise<common.SuccessResponse>;
-  modeGetByItemId: (itemId: string) => Promise<Envelope<attribute.Mode[] | null>>;
-  
+  modeGetByItemId: (itemId: string) => Promise<Envelope<attribute.Mode[]>>;
+  modeGetByNorm: (normalizedName: string) => Promise<Envelope<attribute.Mode>>;
+
   // UoM IPC handlers
   uomListActive: () => Promise<Envelope<attribute.Uom[]>>;
   uomListDeleted: () => Promise<Envelope<attribute.Uom[]>>;
@@ -107,7 +108,7 @@ export interface ElectronAPI {
   uomDelete: (payload: string) => Promise<common.SuccessResponse>;
   uomRestore: (payload: string) => Promise<common.SuccessResponse>;
   uomUpsert: (payload: attribute.Uom[]) => Promise<common.SuccessResponse>;
-  uomGetByItemId: (itemId: string) => Promise<Envelope<attribute.Uom[] | null>>;
+  uomGetByItemId: (itemId: string) => Promise<Envelope<attribute.Uom[]>>;
 
   // Dimension IPC handlers
   dimensionListActive: () => Promise<Envelope<attribute.Dimension[]>>;
@@ -117,7 +118,7 @@ export interface ElectronAPI {
   dimensionDelete: (payload: string) => Promise<common.SuccessResponse>;
   dimensionRestore: (payload: string) => Promise<common.SuccessResponse>;
   dimensionUpsert: (payload: attribute.Dimension[]) => Promise<common.SuccessResponse>;
-  dimensionGetByItemId: (itemId: string) => Promise<Envelope<attribute.Dimension[]|null>>;
+  dimensionGetByItemId: (itemId: string) => Promise<Envelope<attribute.Dimension[]>>;
 
   // Dimension Value IPC handlers
   dimensionValueListActive: () => Promise<Envelope<attribute.DimensionValue[]>>;
@@ -134,7 +135,7 @@ export interface ElectronAPI {
   dimensionValueGetIs: (
     dimensionId: string,
     value: string | number,
-  ) => Promise<Envelope<attribute.DimensionValue | null>>;
+  ) => Promise<Envelope<attribute.DimensionValue>>;
   dimensionValueGetBetween: (
     dimensionId: string,
     min: number,
@@ -153,9 +154,7 @@ export interface ElectronAPI {
   dimensionValueDelete: (payload: string) => Promise<common.SuccessResponse>;
   dimensionValueRestore: (payload: string) => Promise<common.SuccessResponse>;
   dimensionValueUpsert: (payload: attribute.DimensionValue[]) => Promise<common.SuccessResponse>;
-  dimensionValueGetByVariantIds: (
-    variantIds: string[],
-  ) => Promise<Envelope<any[]>>;
+  dimensionValueGetByVariantIds: (variantIds: string[]) => Promise<Envelope<any[]>>;
 
   // System IPC handlers
   systemListActive: () => Promise<Envelope<attribute.System[]>>;
@@ -165,7 +164,7 @@ export interface ElectronAPI {
   systemDelete: (payload: string) => Promise<common.SuccessResponse>;
   systemRestore: (payload: string) => Promise<common.SuccessResponse>;
   systemUpsert: (payload: attribute.System[]) => Promise<common.SuccessResponse>;
-  systemGetByItemId: (itemId: string) => Promise<Envelope<attribute.System[]|null>>;
+  systemGetByItemId: (itemId: string) => Promise<Envelope<attribute.System[]>>;
 
   // Category IPC handlers
   categoryListActive: () => Promise<Envelope<attribute.Category[]>>;
@@ -175,6 +174,7 @@ export interface ElectronAPI {
   categoryDelete: (payload: string) => Promise<common.SuccessResponse>;
   categoryRestore: (payload: string) => Promise<common.SuccessResponse>;
   categoryUpsert: (payload: attribute.Category[]) => Promise<common.SuccessResponse>;
+  categoryGetByNorm: (normalizedName: string) => Promise<Envelope<attribute.Category>>;
 
   // Vendor IPC handlers
   vendorListActive: () => Promise<Envelope<attribute.Vendor[]>>;
@@ -193,7 +193,7 @@ export interface ElectronAPI {
   tagDelete: (payload: string) => Promise<common.SuccessResponse>;
   tagRestore: (payload: string) => Promise<common.SuccessResponse>;
   tagUpsert: (payload: attribute.Tag[]) => Promise<common.SuccessResponse>;
-  tagGetByItemId: (itemId: string) => Promise<Envelope<attribute.Tag[]|null>>;
+  tagGetByItemId: (itemId: string) => Promise<Envelope<attribute.Tag[]>>;
 
   // Item Record IPC handlers
   itemListActive: () => Promise<Envelope<item.ItemRecord[]>>;
@@ -213,7 +213,7 @@ export interface ElectronAPI {
   aliasDelete: (itemId: string, alias: string) => Promise<common.SuccessResponse>;
   aliasRestore: (itemId: string, alias: string) => Promise<common.SuccessResponse>;
   aliasUpsert: (payload: item.Alias[]) => Promise<common.SuccessResponse>;
-  aliasGetByItemId: (itemId: string) => Promise<Envelope<item.Alias[]|null>>;
+  aliasGetByItemId: (itemId: string) => Promise<Envelope<item.Alias[]>>;
 
   // System Map IPC handlers
   systemMapListActive: () => Promise<Envelope<item.SystemMap[]>>;
@@ -261,6 +261,7 @@ export interface ElectronAPI {
 
   // Variant Generator IPC handlers
   variantGeneratorRun: () => Promise<common.SuccessResponse>;
+  variantGeneratorUuid: (name: string, namespace: string) => Promise<Envelope<string>>;
 
   // Variant IPC handlers
   variantListActive: () => Promise<Envelope<variant.VariantRecord[]>>;
@@ -295,6 +296,27 @@ export interface ElectronAPI {
   dimensionMapDelete: (itemId: string, dimensionId: string) => Promise<common.SuccessResponse>;
   dimensionMapRestore: (itemId: string, dimensionId: string) => Promise<common.SuccessResponse>;
   dimensionMapUpsert: (payload: variant.DimensionMap[]) => Promise<common.SuccessResponse>;
+
+  // Dimension Value Map IPC handlers
+  dimensionValueMapListActive: () => Promise<Envelope<variant.DimensionValueMap[]>>;
+  dimensionValueMapListDeleted: () => Promise<Envelope<variant.DimensionValueMap[]>>;
+  dimensionValueMapCreate: (
+    payload: variant.CreateDimensionValueMapInput,
+  ) => Promise<common.SuccessResponse>;
+  dimensionValueMapUpdate: (
+    payload: variant.UpdateDimensionValueMapInput,
+  ) => Promise<common.SuccessResponse>;
+  dimensionValueMapDelete: (
+    variantId: string,
+    dimensionValueId: string,
+  ) => Promise<common.SuccessResponse>;
+  dimensionValueMapRestore: (
+    variantId: string,
+    dimensionValueId: string,
+  ) => Promise<common.SuccessResponse>;
+  dimensionValueMapUpsert: (
+    payload: variant.DimensionValueMap[],
+  ) => Promise<common.SuccessResponse>;
 
   // Switch IPC handlers
   switchListActive: () => Promise<Envelope<variant.SwitchRecord[]>>;
@@ -331,6 +353,12 @@ export interface ElectronAPI {
   requestItemDelete: (payload: string) => Promise<common.SuccessResponse>;
   requestItemRestore: (payload: string) => Promise<common.SuccessResponse>;
   requestItemUpsert: (payload: order.RequestItem[]) => Promise<common.SuccessResponse>;
+  requestItemListWithInfo: () => Promise<Envelope<any[]>>;
+  requestItemHardDelete: (payload: string) => Promise<common.SuccessResponse>;
+  requestItemEditQuantity: (payload: {
+    id: string;
+    newQuantity: number;
+  }) => Promise<common.SuccessResponse>;
 
   // Authentication IPC handlers
   authStatus: () => Promise<Envelope<local.BootstrapStatus>>;

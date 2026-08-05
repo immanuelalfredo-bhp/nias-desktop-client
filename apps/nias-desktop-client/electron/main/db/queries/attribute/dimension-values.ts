@@ -160,6 +160,17 @@ export class DimensionValuesQueries extends BaseQueries<
       .all({ dimensionId, min, max }) as attribute.DimensionValue[];
   }
   getInclude(dimensionId: string, values: (string | number)[]): attribute.DimensionValue[] {
+    if (!values || values.length === 0) return [];
+
+    // Create unique placeholders for each value (e.g., @val_0, @val_1)
+    const placeholders = values.map((_, index) => `@val_${index}`).join(', ');
+
+    // Build the parameters object dynamically
+    const params: Record<string, any> = { dimensionId };
+    values.forEach((val, index) => {
+      params[`val_${index}`] = val;
+    });
+    
     return this.db
       .prepare(`
         SELECT
@@ -169,14 +180,14 @@ export class DimensionValuesQueries extends BaseQueries<
         WHERE
           dimension_id = @dimensionId
           AND (
-            name IN (@values)
-            OR sku_code IN (@values)
-            OR numeric_value IN (@values)
+            name IN (${placeholders})
+            OR sku_code IN (${placeholders})
+            OR numeric_value IN (${placeholders})
           )
         ORDER BY
           ${this.tableOrder}
       `)
-      .all({ dimensionId, values }) as attribute.DimensionValue[];
+      .all(params) as attribute.DimensionValue[];
   }
   getActiveByDimensionId(dimensionId: string): attribute.DimensionValue[] {
     return this.db

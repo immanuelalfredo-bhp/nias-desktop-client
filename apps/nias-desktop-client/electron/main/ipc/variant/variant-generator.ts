@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { variant, attribute, common } from '@nias/shared';
-import { logger } from '@nias/shared/server';
+import { logger, type Envelope } from '@nias/shared/server';
 import { UserDatabase } from '../../db/database';
 import { createAuditLog } from '../system/audit';
 
@@ -61,6 +61,27 @@ export function registerVariantGeneratorIpcHandlers(userDb: UserDatabase, userId
       return { success: false, message: 'Failed to generate variant records' };
     }
   });
+
+  ipcMain.handle(
+    'variant-generator:uuid',
+    async (_event, name: string, namespace: string): Promise<Envelope<string>> => {
+      try {
+        const uuid = generateUuidV5(name, namespace);
+        return { success: true, message: 'UUID generated successfully', data: uuid };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'variant-record',
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to generate UUID v5',
+        );
+        return { success: false, message: 'Failed to generate UUID v5'};
+      }
+    },
+  );
 }
 
 function generateComponents(userDb: UserDatabase) {
@@ -204,7 +225,7 @@ function generateComponents(userDb: UserDatabase) {
           ...dimensionIds,
         ].join('-');
         const uuid = generateUuidV5(name, namespace);
-        
+
         const itemSkuCode = userDb.item.getById(record.itemId)?.skuCode;
         const brandSkuCode = userDb.brand.getById(record.brandId)?.skuCode;
 
@@ -230,8 +251,10 @@ function generateComponents(userDb: UserDatabase) {
           skuCodePrefixSuffixParts.join(''),
           ...skuCodeDimensionParts,
           ...skuCodeEndParts,
-          brandSkuCode
-        ].filter((part): part is string => Boolean(part && part.trim() !== '')).join('-');
+          brandSkuCode,
+        ]
+          .filter((part): part is string => Boolean(part && part.trim() !== ''))
+          .join('-');
 
         const baseItemName = userDb.item.getById(record.itemId)?.baseName;
         const delimiterType = userDb.item.getById(record.itemId)?.delimiterType;
@@ -274,8 +297,10 @@ function generateComponents(userDb: UserDatabase) {
           baseItemName,
           formattedDimensions,
           ...descEndParts,
-          ...descSuffixParts
-        ].filter((part): part is string => Boolean(part && part.trim() !== '')).join(' ');
+          ...descSuffixParts,
+        ]
+          .filter((part): part is string => Boolean(part && part.trim() !== ''))
+          .join(' ');
 
         const variantRecord: variant.VariantRecord = {
           id: uuid,
@@ -284,6 +309,7 @@ function generateComponents(userDb: UserDatabase) {
           brandId: record.brandId,
           modeId: record.modeId,
           uomId: record.uomId,
+          dimensionIds: dimensionIds.flatMap((id) => [id]).join(','),
           skuCode: skuCode,
           description: description,
           details: null,
@@ -369,6 +395,7 @@ function resolveDimensionValues(
       { scope: 'variant-record', dimensionName, includeValues: condition.include },
       'Resolving dimension values for include condition',
     );
+
     return userDb.dimensionValue.getInclude(dimensionId, condition.include);
   }
 
@@ -403,7 +430,7 @@ function generateUuidV5(name: string, namespace: string): string {
   buffer[6] = (buffer[6] & 0x0f) | 0x50;
   buffer[8] = (buffer[8] & 0x3f) | 0x80;
 
-  const hex = buffer.toString('hex');
+  const hex = buffer.toString('hex').slice(0, 32);
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 

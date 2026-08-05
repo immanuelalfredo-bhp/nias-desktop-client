@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { item, attribute, variant } from '@nias/shared';
+import { item, attribute, variant, order } from '@nias/shared';
 import ModalTemplate from '../../components/templates/Modal';
 
 interface AliasItem {
@@ -58,12 +58,6 @@ export default function ItemWorkspaceModal({
   const [itemBrands, setItemBrands] = useState<attribute.Brand[]>([]);
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
 
-  // Mode & UOM Selector States (Hardcoded definitions)
-  const [itemModes] = useState<attribute.Mode[]>([
-    { id: 'default', name: 'Default', formName: 'Default' } as any,
-  ]);
-  const [selectedModeId, setSelectedModeId] = useState<string | null>('default');
-
   // --- UOM Selector States ---
   const [activeApiUoms, setActiveApiUoms] = useState<attribute.Uom[]>([]);
   const [selectedUomId, setSelectedUomId] = useState<string | null>(null);
@@ -78,8 +72,6 @@ export default function ItemWorkspaceModal({
   const [dimensionValuesMap, setDimensionValuesMap] = useState<
     Record<string, attribute.DimensionValue[]>
   >({});
-
-  const [resolvedVariant, setResolvedVariant] = useState<variant.VariantRecord | null>(null);
 
   // Comments State
   const [commentsValue, setCommentsValue] = useState<string>('');
@@ -157,15 +149,12 @@ export default function ItemWorkspaceModal({
 
         if (response && response.success && Array.isArray(response.data)) {
           setAvailableDimensions(response.data);
-          setResolvedVariant({ id: itemId } as any);
         } else {
           setAvailableDimensions([]);
-          setResolvedVariant(null);
         }
       } catch (error) {
         console.error('Failed to fetch dimensions by item ID:', error);
         setAvailableDimensions([]);
-        setResolvedVariant(null);
       }
     };
 
@@ -215,51 +204,100 @@ export default function ItemWorkspaceModal({
   const handleSubmit = async () => {
     setIsBusy(true);
     try {
-      const payload: item.CreateItemRecordInput = {
-        displayName,
-        skuCode,
-        baseName,
-        skuSource,
-        materialType,
-        materialClass,
-        creationSource: initialData?.creationSource || 'user',
-        delimiterType,
-        hasAutoAssemblyTrigger,
-        imageUrl,
-      } as any;
+      const dimensionIds = Object.values(selectedDimensionValues).filter(Boolean).sort();
+      
+      const modeResponse = await window.electronAPI.modeGetByNorm('default');
+      const categoryResponse = await window.electronAPI.categoryGetByNorm('default');
 
-      const response = await window.electronAPI.itemCreate(payload);
-      if (response && !response.success) {
-        throw new Error(response.message || 'Failed to create item');
+      if (!modeResponse.success || !categoryResponse.success) {
+        throw new Error('Failed to fetch default mode or category.');
+      }
+      
+      console.log('Item ID:', itemId);
+      console.log('Mode Response:', modeResponse.data?.id);
+      console.log('Category Response:', categoryResponse.data?.id);
+      console.log('Selected UOM ID:', selectedUomId);
+      console.log('Selected Brand ID:', selectedBrandId);
+      console.log('Selected Dimension IDs:', dimensionIds);
+
+      const namespace = 'variant';
+      const name = [
+        itemId,
+        categoryResponse?.data?.id,
+        modeResponse?.data?.id,
+        selectedUomId,
+        selectedBrandId,
+        ...dimensionIds,
+      ].join('-');
+
+      console.log('Generating UUID with name:', name, 'and namespace:', namespace);
+
+      const uuid = await window.electronAPI.variantGeneratorUuid(name, namespace);
+      if (!uuid || !uuid.success || !uuid.data) {
+        throw new Error('Failed to generate UUID for the variant.');
       }
 
-      const createdItemId = response.data.id;
+      console.log('Generated UUID:', uuid.data);
 
-      await Promise.all([
-        selectedCreateSystemIds.length > 0
-          ? Promise.all(
-              selectedCreateSystemIds.map((systemId) =>
-                window.electronAPI.systemMapCreate({ systemId, itemId: createdItemId } as any),
-              ),
-            )
-          : Promise.resolve(),
-        selectedCreateTagIds.length > 0
-          ? Promise.all(
-              selectedCreateTagIds.map((tagId) =>
-                window.electronAPI.tagMapCreate({ tagId, itemId: createdItemId } as any),
-              ),
-            )
-          : Promise.resolve(),
-        aliases.length > 0
-          ? Promise.all(
-              aliases.map((aliasObj) =>
-                window.electronAPI.aliasCreate({ itemId: createdItemId, alias: aliasObj.alias }),
-              ),
-            )
-          : Promise.resolve(),
-      ]);
+      const variantPayload: variant.VariantRecord[] = [{
+        id: uuid.data,
+        itemId: itemId!,
+        categoryId: categoryResponse.data.id,
+        brandId: selectedBrandId!,
+        modeId: modeResponse.data.id,
+        uomId: selectedUomId!,
+        dimensionIds: dimensionIds.flatMap((id) => [id]).join(','),
+        skuCode: skuCode,
+        description: baseName,
+        details: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        deletedAt: null,
+        isSynced: false,
+        syncVersion: 0,
+      }];
 
-      onSuccess('Successfully created item!');
+      const response = await window.electronAPI.variantUpsert(variantPayload);
+      if (!response || !response.success) {
+        throw new Error(response?.message || 'Failed to create variant.');
+      }
+
+      let mappingPayload = []
+
+      for (const id of dimensionIds) {
+        if (id) {
+          const mappingRecord = {
+            id: crypto.randomUUID(),
+            variantId: uuid.data,
+            dimensionValueId: id,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            deletedAt: null,
+            isSynced: false,
+            syncVersion: 0,
+          };
+          mappingPayload.push(mappingRecord);
+        }
+      }
+
+      const mappingResponse = await window.electronAPI.dimensionValueMapUpsert(mappingPayload);
+      if (!mappingResponse || !mappingResponse.success) {
+        throw new Error(mappingResponse?.message || 'Failed to create dimension value mapping.');
+      }
+
+      const requestPayload: order.CreateRequestItem = {
+        id: crypto.randomUUID(),
+        variantId: uuid.data,
+        quantity: parseFloat(quantityValue) || 1,
+        comments: commentsValue.trim() === '' ? null : commentsValue,
+      };
+
+      const requestResponse = await window.electronAPI.requestItemCreate(requestPayload);
+      if (!requestResponse || !requestResponse.success) {
+        throw new Error(requestResponse?.message || 'Failed to create request item.');
+      }
+
+      onSuccess('Successfully added variant!');
       onClose();
     } catch (error: any) {
       console.error(error);
@@ -473,19 +511,13 @@ export default function ItemWorkspaceModal({
                 <div className="selectedTagsContainer specCard">
                   <span className="selectedTagsLabel specCardHeader">Mode</span>
                   <div className="tagsBox specTagsBox">
-                    {itemModes.map((mode) => {
-                      const isSelected = selectedModeId === mode.id;
-                      return (
-                        <button
-                          key={mode.id}
-                          type="button"
-                          onClick={() => setSelectedModeId(mode.id)}
-                          className={`tagBadge specBadge ${isSelected ? 'specBadgeSelected' : 'specBadgeUnselected'}`}
-                        >
-                          {(mode as any).formName || (mode as any).name || mode.id}
-                        </button>
-                      );
-                    })}
+                    <button
+                      key="default"
+                      type="button"
+                      className="tagBadge specBadge specBadgeSelected"
+                    >
+                      Default
+                    </button>
                   </div>
                 </div>
 
@@ -654,7 +686,7 @@ export default function ItemWorkspaceModal({
               type="button"
               className="primaryButton"
               onClick={handleSubmit}
-              disabled={isBusy || !resolvedVariant}
+              disabled={isBusy || !itemId || !selectedBrandId}
             >
               {isBusy ? 'Adding...' : 'Add Variant'}
             </button>

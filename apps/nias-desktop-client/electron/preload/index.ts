@@ -37,6 +37,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   modeRestore: (payload: string) => ipcRenderer.invoke('mode:restore', payload),
   modeUpsert: (payload: attribute.Mode[]) => ipcRenderer.invoke('mode:upsert', payload),
   modeGetByItemId: (itemId: string) => ipcRenderer.invoke('mode:get-by-item-id', itemId),
+  modeGetByNorm: (normalizedName: string) => ipcRenderer.invoke('mode:get-by-norm', normalizedName),
 
   // UoM IPC handlers
   uomListActive: () => ipcRenderer.invoke('uom:list-active'),
@@ -109,6 +110,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   categoryDelete: (payload: string) => ipcRenderer.invoke('category:delete', payload),
   categoryRestore: (payload: string) => ipcRenderer.invoke('category:restore', payload),
   categoryUpsert: (payload: attribute.Category[]) => ipcRenderer.invoke('category:upsert', payload),
+  categoryGetByNorm: (normalizedName: string) =>
+    ipcRenderer.invoke('category:get-by-norm', normalizedName),
 
   // Vendor IPC handlers
   vendorListActive: () => ipcRenderer.invoke('vendor:list-active'),
@@ -146,8 +149,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   aliasListDeleted: () => ipcRenderer.invoke('alias:list-deleted'),
   aliasCreate: (payload: item.CreateAliasInput) => ipcRenderer.invoke('alias:create', payload),
   aliasUpdate: (payload: item.UpdateAliasInput) => ipcRenderer.invoke('alias:update', payload),
-  aliasDelete: (itemId: string, alias: string) =>
-    ipcRenderer.invoke('alias:delete', itemId, alias),
+  aliasDelete: (itemId: string, alias: string) => ipcRenderer.invoke('alias:delete', itemId, alias),
   aliasRestore: (itemId: string, alias: string) =>
     ipcRenderer.invoke('alias:restore', itemId, alias),
   aliasUpsert: (payload: item.Alias[]) => ipcRenderer.invoke('alias:upsert', payload),
@@ -212,6 +214,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Variant Generator IPC handlers
   variantGeneratorRun: () => ipcRenderer.invoke('variant-generator:run'),
+  variantGeneratorUuid: (name: string, namespace: string) =>
+    ipcRenderer.invoke('variant-generator:uuid', name, namespace),
 
   // Variant Record IPC handlers
   variantListActive: () => ipcRenderer.invoke('variant:list-active'),
@@ -265,6 +269,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   requestItemRestore: (payload: string) => ipcRenderer.invoke('request-item:restore', payload),
   requestItemUpsert: (payload: order.RequestItem[]) =>
     ipcRenderer.invoke('request-item:upsert', payload),
+  requestItemListWithInfo: () => ipcRenderer.invoke('request-item:list-with-info'),
+  requestItemHardDelete: (payload: string) => ipcRenderer.invoke('request-item:hard-delete', payload),
+  requestItemEditQuantity: (payload: { id: string; newQuantity: number }) =>
+    ipcRenderer.invoke('request-item:edit-quantity', payload),
 
   // Authentication IPC handlers
   authStatus: () => ipcRenderer.invoke('auth:status'),

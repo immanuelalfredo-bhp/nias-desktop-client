@@ -2,7 +2,6 @@ CREATE TABLE IF NOT EXISTS provisional_request (
   id TEXT PRIMARY KEY,
   variant_id TEXT NOT NULL,
   quantity INTEGER NOT NULL,
-  total NUMERIC NOT NULL,
   comments TEXT,
   created_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%fZ', 'now')),
   updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%dT%H:%fZ', 'now')),

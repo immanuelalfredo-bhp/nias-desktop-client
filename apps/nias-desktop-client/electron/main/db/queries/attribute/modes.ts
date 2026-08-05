@@ -30,7 +30,8 @@ export class ModeQueries extends BaseQueries<
   create(params: attribute.CreateMode): void {
     const now = new Date().toISOString();
     this.db
-      .prepare(`
+      .prepare(
+        `
         INSERT INTO
           modes (
             id,
@@ -49,7 +50,8 @@ export class ModeQueries extends BaseQueries<
             @createdAt,
             @updatedAt
           )
-      `)
+      `,
+      )
       .run({ ...params, createdAt: now, updatedAt: now });
   }
   update(params: attribute.UpdateMode): void {
@@ -57,7 +59,8 @@ export class ModeQueries extends BaseQueries<
     if (!existing) throw new Error('Not found');
 
     this.db
-      .prepare(`
+      .prepare(
+        `
         UPDATE modes
         SET
           name = @name,
@@ -67,12 +70,14 @@ export class ModeQueries extends BaseQueries<
           is_synced = @isSynced
         WHERE
           id = @id
-      `)
+      `,
+      )
       .run({ ...existing, ...params, updatedAt: new Date().toISOString(), isSynced: 0 });
   }
   upsert(params: attribute.Mode): void {
     this.db
-      .prepare(`
+      .prepare(
+        `
         INSERT INTO
           modes (
             id,
@@ -106,12 +111,14 @@ export class ModeQueries extends BaseQueries<
           deleted_at = excluded.deleted_at,
           is_synced = excluded.is_synced,
           sync_version = excluded.sync_version
-      `)
+      `,
+      )
       .run({ ...params, isSynced: params.isSynced ? 1 : 0 });
   }
   getByItemId(itemId: string): attribute.Mode[] | null {
     return this.db
-      .prepare(`
+      .prepare(
+        `
         SELECT
           m.id,
           m.name,
@@ -132,7 +139,25 @@ export class ModeQueries extends BaseQueries<
           AND gr.deleted_at IS NULL
         GROUP BY
           m.id
-      `)
+      `,
+      )
       .all({ itemId }) as attribute.Mode[] | null;
+  }
+
+  getByNorm(normalizedName: string): attribute.Mode | null {
+    return (
+      (this.db
+        .prepare(
+          `
+          SELECT
+            ${this.columns}
+          FROM
+            ${this.tableName}
+          WHERE
+            normalized_name = ?
+        `,
+        )
+        .get(normalizedName) as attribute.Mode) || null
+    );
   }
 }

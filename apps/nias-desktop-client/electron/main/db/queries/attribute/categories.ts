@@ -109,4 +109,13 @@ export class CategoryQueries extends BaseQueries<
       `)
       .run({ ...params, isSynced: params.isSynced ? 1 : 0 });
   }
+  getByNorm(normalizedName: string): attribute.Category | null {
+    return this.db
+      .prepare(`
+        SELECT ${this.columns}
+        FROM ${this.tableName}
+        WHERE normalized_name = @normalizedName
+      `)
+      .get({ normalizedName }) as attribute.Category | null;
+  }
 }

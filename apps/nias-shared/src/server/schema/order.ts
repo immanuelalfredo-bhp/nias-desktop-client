@@ -21,7 +21,6 @@ export const requestItems = orderSchema.table('provisional_request', {
   ...orderBaseFields,
   variantId: uuid('variant_id').notNull(),
   quantity: integer('quantity').notNull(),
-  total: real('total').notNull(),
   comments: text('comments'),
 });
 

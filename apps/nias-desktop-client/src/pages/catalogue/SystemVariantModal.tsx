@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { item, attribute, variant } from '@nias/shared';
+import { order, attribute, variant } from '@nias/shared';
 import ModalTemplate from '../../components/templates/Modal';
 
 interface AliasItem {
@@ -289,51 +289,19 @@ export default function SystemVariantModal({
   const handleSubmit = async () => {
     setIsBusy(true);
     try {
-      const payload: item.CreateItemRecordInput = {
-        displayName,
-        skuCode,
-        baseName,
-        skuSource,
-        materialType,
-        materialClass,
-        creationSource: 'user',
-        delimiterType,
-        hasAutoAssemblyTrigger,
-        imageUrl,
-      } as any;
+      const requestPayload: order.CreateRequestItem = {
+        id: crypto.randomUUID(),
+        variantId: resolvedVariant?.id || '',
+        quantity: parseFloat(quantityValue) || 1,
+        comments: commentsValue.trim() === '' ? null : commentsValue,
+      };
 
-      const response = await window.electronAPI.itemCreate(payload);
-      if (response && !response.success) {
-        throw new Error(response.message || 'Failed to create item');
+      const requestResponse = await window.electronAPI.requestItemCreate(requestPayload);
+      if (!requestResponse || !requestResponse.success) {
+        throw new Error(requestResponse?.message || 'Failed to create request item.');
       }
 
-      const createdItemId = response.data.id;
-
-      await Promise.all([
-        selectedCreateSystemIds.length > 0
-          ? Promise.all(
-              selectedCreateSystemIds.map((systemId) =>
-                window.electronAPI.systemMapCreate({ systemId, itemId: createdItemId } as any),
-              ),
-            )
-          : Promise.resolve(),
-        selectedCreateTagIds.length > 0
-          ? Promise.all(
-              selectedCreateTagIds.map((tagId) =>
-                window.electronAPI.tagMapCreate({ tagId, itemId: createdItemId } as any),
-              ),
-            )
-          : Promise.resolve(),
-        aliases.length > 0
-          ? Promise.all(
-              aliases.map((aliasObj) =>
-                window.electronAPI.aliasCreate({ itemId: createdItemId, alias: aliasObj.alias }),
-              ),
-            )
-          : Promise.resolve(),
-      ]);
-
-      onSuccess('Successfully created item!');
+      onSuccess('Successfully added variant!');
       onClose();
     } catch (error: any) {
       console.error(error);
@@ -491,9 +459,7 @@ export default function SystemVariantModal({
               {activeTab === 'tags' && (
                 <div className="createTagsSection">
                   <div className="selectedTagsContainer">
-                    <span className="selectedTagsLabel">
-                      Tags ({selectedCreateTagIds.length})
-                    </span>
+                    <span className="selectedTagsLabel">Tags ({selectedCreateTagIds.length})</span>
                     <div className="tagsBox">
                       {selectedCreateTagIds.length === 0 ? (
                         <span className="emptyTagsText">No tags.</span>

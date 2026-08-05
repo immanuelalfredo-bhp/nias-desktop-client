@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS variant_records (
 	brand_id TEXT NOT NULL,
 	mode_id TEXT NOT NULL,
 	uom_id TEXT NOT NULL,
+	dimension_value_ids TEXT NOT NULL,
 	description TEXT NOT NULL,
 	sku_code TEXT NOT NULL UNIQUE,
 	details TEXT,
@@ -31,6 +32,8 @@ CREATE INDEX IF NOT EXISTS idx_variant_records_mode_id
 	ON variant_records (mode_id);
 CREATE INDEX IF NOT EXISTS idx_variant_records_uom_id
 	ON variant_records (uom_id);
+CREATE INDEX IF NOT EXISTS idx_variant_records_dimension_value_ids
+	ON variant_records (dimension_value_ids);
 CREATE INDEX IF NOT EXISTS idx_variant_records_sku_code
 	ON variant_records (sku_code);
 CREATE INDEX IF NOT EXISTS idx_variant_records_created_at

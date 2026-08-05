@@ -366,4 +366,43 @@ export function registerModeIpcHandlers(userDb: UserDatabase, userId: string): v
       }
     },
   );
+  ipcMain.handle(
+    'mode:get-by-norm',
+    async (_event, normalizedName: string): Promise<Envelope<attribute.Mode>> => {
+      try {
+        const mode = userDb.mode.getByNorm(normalizedName);
+        if (!mode) {
+          logger.error({ scope: 'mode', normalizedName }, 'Mode not found by normalized name');
+          return {
+            success: false,
+            message: 'Mode not found by normalized name',
+          };
+        }
+        logger.info(
+          { scope: 'mode', normalizedName },
+          'Mode retrieved successfully by normalized name',
+        );
+        return {
+          success: true,
+          message: 'Mode retrieved successfully by normalized name',
+          data: mode,
+        };
+      } catch (error) {
+        logger.error(
+          {
+            scope: 'mode',
+            normalizedName,
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack,
+            rawError: error,
+          },
+          'Failed to retrieve mode by normalized name',
+        );
+        return {
+          success: false,
+          message: 'Failed to retrieve mode by normalized name',
+        };
+      }
+    },
+  );
 }

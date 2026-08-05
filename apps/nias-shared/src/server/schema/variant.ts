@@ -35,6 +35,7 @@ export const variantRecords = variantSchema.table('records', {
   brandId: uuid('brand_id').notNull(),
   modeId: uuid('mode_id').notNull(),
   uomId: uuid('uom_id').notNull(),
+  dimensionIds: text('dimension_ids').notNull(),
   description: text('description').notNull(),
   skuCode: text('sku_code').notNull(),
   details: jsonb('details').notNull(),
