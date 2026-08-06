@@ -10,7 +10,7 @@ import Systems from './pages/definitions/systems/Systems';
 import Modes from './pages/definitions/modes/Modes';
 import Tags from './pages/definitions/tags/Tags';
 import Uoms from './pages/definitions/uoms/Uoms';
-import UsersPage from './pages/Users';
+import UsersPage from './pages/system/users/Users';
 import Audit from './pages/system/audit/Audit';
 import MainLayout from './components/layout/MainLayout';
 

@@ -110,13 +110,19 @@ export class RequestItemQueries extends BaseQueries<
           pr.deleted_at AS deletedAt,
           v.sku_code AS skuCode,
           v.description AS variantName,
-          u.symbol AS uomSymbol
+          u.symbol AS uomSymbol,
+          b.name AS brandName,
+          c.name AS categoryName
         FROM
           provisional_request pr
         LEFT JOIN
           variant_records v ON pr.variant_id = v.id
         LEFT JOIN
           uoms u ON v.uom_id = u.id
+        LEFT JOIN
+          brands b ON v.brand_id = b.id
+        LEFT JOIN
+          categories c ON v.category_id = c.id
         WHERE
           pr.deleted_at IS NULL
         ORDER BY
@@ -141,5 +147,12 @@ export class RequestItemQueries extends BaseQueries<
         WHERE id = @id
       `)
       .run({ id, newQuantity, updatedAt: new Date().toISOString() });
+  }
+  clear(): void {
+    this.db
+      .prepare(`
+        DELETE FROM provisional_request
+      `)
+      .run();
   }
 }

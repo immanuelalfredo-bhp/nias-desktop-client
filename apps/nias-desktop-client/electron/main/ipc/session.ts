@@ -34,6 +34,7 @@ import { registerRequestItemIpcHandlers } from './order/request-items.js';
 
 // Other IPC handlers
 import { registerSyncIpcHandlers } from './sync.js';
+import { registerExportIpcHandlers } from './export.js';
 
 const sessionChannels = new Set<string>();
 
@@ -96,5 +97,6 @@ export function registerSessionIpcHandlers(authDb: AuthDatabase, userDb: UserDat
 
     // Other IPC handlers
     registerSyncIpcHandlers(authDb, userDb, userId);
+    registerExportIpcHandlers(userDb);
   });
 }

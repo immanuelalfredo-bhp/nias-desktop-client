@@ -4,6 +4,10 @@
     "jsx": "react-jsx",
     "strict": true,
     "skipLibCheck": true,
+    "paths": {
+      "@nias/shared": ["../nias-shared/dist/index.common.d.ts"],
+      "@nias/shared/server": ["../nias-shared/dist/index.server.d.ts"]
+    },
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "sourceMap": true,

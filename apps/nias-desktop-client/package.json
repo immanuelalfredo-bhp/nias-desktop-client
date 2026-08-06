@@ -4,14 +4,16 @@
   "type": "module",
   "author": "Immanuel Alfredo",
   "description": "NIAS Desktop Client Application",
-  "main": "dist-electron/main/index.js",
+  "main": "dist-electron/main/index.cjs",
   "scripts": {
+    "shared:local": "node ./scripts/set-shared-source.mjs local",
+    "shared:github": "node ./scripts/set-shared-source.mjs github",
     "build:vite": "vite build",
     "build:shared": "npm run build --workspace=@nias/shared",
-    "build": "npm run build:shared && vite build",
-    "release": "electron-builder --publish always",
+    "build": "npm run shared:local && npm run build:shared && vite build",
+    "release": "npm run shared:github && npm run build:shared && npm install --ignore-scripts && vite build && electron-builder --publish always",
     "dev": "vite",
-    "start": "electron ."
+    "start": "npm run build && electron ."
   },
   "build": {
     "appId": "NiasClient",
@@ -36,7 +38,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
-    "@nias/shared": "github:immanuelalfredo-bhp/nias-shared",
+    "@nias/shared": "file:../nias-shared",
     "axios": "^1.18.0",
     "better-sqlite3-multiple-ciphers": "^12.11.1",
     "electron-updater": "^6.8.9",

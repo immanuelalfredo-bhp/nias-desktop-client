@@ -5,14 +5,12 @@ export interface ElectronAPI {
   // User IPC handlers
   userListActive: () => Promise<Envelope<system.User[]>>;
   userListDeleted: () => Promise<Envelope<system.User[]>>;
+  userGetSelf: () => Promise<Envelope<system.User>>;
   userCreate: (payload: system.CreateUserInput) => Promise<common.SuccessResponse>;
   userUpdate: (payload: system.UpdateUserInput) => Promise<common.SuccessResponse>;
-  userUpdateSelf: (payload: system.UpdateUserSelfInput) => Promise<common.SuccessResponse>;
-  userUpdatePassword: (payload: system.UpdateUserPasswordInput) => Promise<common.SuccessResponse>;
   userDelete: (payload: string) => Promise<common.SuccessResponse>;
   userRestore: (payload: string) => Promise<common.SuccessResponse>;
   userUpsert: (payload: system.User[]) => Promise<common.SuccessResponse>;
-  userUpdatePassword: (payload: system.UpdateUserPasswordInput) => Promise<common.SuccessResponse>;
 
   // Role IPC handlers
   roleListActive: () => Promise<Envelope<system.Role[]>>;
@@ -359,6 +357,7 @@ export interface ElectronAPI {
     id: string;
     newQuantity: number;
   }) => Promise<common.SuccessResponse>;
+  requestItemClear: () => Promise<common.SuccessResponse>;
 
   // Authentication IPC handlers
   authStatus: () => Promise<Envelope<local.BootstrapStatus>>;
@@ -374,7 +373,16 @@ export interface ElectronAPI {
   bootstrapExecute: (payload: local.BootstrapInput) => Promise<common.SuccessResponse>;
 
   // Sync IPC handlers
-  syncPull: () => Promise<Envelope<server.PullResponse>>;
+  syncRun: () => Promise<Envelope<server.PullResponse>>;
+
+  // Export IPC handlers
+  exportRequest: () => Promise<Envelope<any[]>>;
+
+  // Update IPC handlers
+  checkForUpdates: () => Promise<{ success: boolean; message?: string }>;
+  downloadUpdate: () => Promise<{ success: boolean; message?: string }>;
+  quitAndInstall: () => Promise<{ success: boolean; message?: string }>;
+  onUpdateStatus: (callback: (status: any) => void) => () => void;
 }
 
 declare global {

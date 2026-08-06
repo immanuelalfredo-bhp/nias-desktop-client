@@ -69,23 +69,6 @@ export class UserQueries extends BaseQueries<system.User, system.CreateUser, sys
       `)
       .run({ ...existing, ...params, updatedAt: new Date().toISOString(), isSynced: 0 });
   }
-  updatePassword(params: system.UpdateUserPassword): void {
-    const existing = this.getById(params.id);
-    if (!existing) throw new Error('Not found');
-
-    this.db
-      .prepare(`
-        UPDATE users
-        SET
-          password_hash = @passwordHash,
-          updated_at = @updatedAt,
-          is_synced = @isSynced,
-          sync_version = @syncVersion
-        WHERE
-          id = @id
-      `)
-      .run({ ...existing, ...params });
-  }
   upsert(params: system.User): void {
     this.db
       .prepare(`

@@ -112,6 +112,40 @@ export function registerUserIpcHandlers(
     },
   );
 
+  ipcMain.handle('user:get-self', async (): Promise<Envelope<system.User>> => {
+    try {
+      const user = userDb.user.getById(userId);
+      if (!user) {
+        logger.error({ scope: 'user', userId }, 'Current user not found');
+        return {
+          success: false,
+          message: 'Current user not found',
+        };
+      }
+
+      return {
+        success: true,
+        message: 'Current user retrieved successfully',
+        data: user,
+      };
+    } catch (error) {
+      logger.error(
+        {
+          scope: 'user',
+          userId,
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
+        },
+        'Failed to retrieve current user',
+      );
+      return {
+        success: false,
+        message: 'Failed to retrieve current user',
+      };
+    }
+  });
+
   ipcMain.handle(
     'user:create',
     async (_event, payload: system.CreateUserInput): Promise<common.SuccessResponse> => {
@@ -129,7 +163,7 @@ export function registerUserIpcHandlers(
         };
 
         // Send the request to the sync server to create the user
-        const response = await fetch(`${SYNC_SERVER_URL}/api/database/new-user`, {
+        const response = await fetch(`${SYNC_SERVER_URL}/api/database/create-user`, {
           method: 'POST',
           headers: {
             'content-type': 'application/json',
@@ -145,7 +179,7 @@ export function registerUserIpcHandlers(
         logger.info({ scope: 'user', userId: data.id }, 'User created successfully on sync server');
 
         try {
-          userDb.user.transaction(async () => {
+          userDb.user.transaction(() => {
             // Upsert the user into the local database
             userDb.user.upsert({
               id: data.id,
@@ -213,9 +247,9 @@ export function registerUserIpcHandlers(
 
   ipcMain.handle(
     'user:update',
-    async (_event, payload: system.UpdateUser): Promise<common.SuccessResponse> => {
+    async (_event, payload: system.UpdateUserInput): Promise<common.SuccessResponse> => {
       try {
-        const parsed = system.UpdateUserSchema.parse(payload);
+        const parsed = system.UpdateUserInputSchema.parse(payload);
         const existing = userDb.user.getById(parsed.id);
         if (!existing) {
           logger.error({ scope: 'user', userId: parsed.id }, 'User not found for update');
@@ -225,14 +259,41 @@ export function registerUserIpcHandlers(
           };
         }
 
-        const updatedData: system.UpdateUser = {
+        const passwordHash = parsed.password ? await hashPassword(parsed.password) : undefined;
+        const jwtToken = await resolveUserAccessToken(authDb, userId);
+
+        const serverPayload: system.UpdateUserPayload = {
           id: parsed.id,
           displayName: parsed.displayName,
           email: parsed.email,
-          isManagedBy: parsed.isManagedBy,
+          isManagedBy: parsed.isManagedBy ?? existing.isManagedBy ?? null,
+          ...(parsed.password ? { password: parsed.password, passwordHash } : {}),
         };
 
-        userDb.user.update(updatedData);
+        const response = await fetch(`${SYNC_SERVER_URL}/api/database/update-user`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            authorization: `Bearer ${jwtToken}`,
+          },
+          body: JSON.stringify(serverPayload),
+        });
+
+        const data = await handleResponse(response, system.UpdateUserResponseSchema, 'user');
+        if (!isSuccess(data)) {
+          return { success: false, message: data.message || 'User update failed' };
+        }
+
+        userDb.user.upsert({
+          ...existing,
+          email: parsed.email ?? existing.email,
+          displayName: parsed.displayName ?? existing.displayName,
+          isManagedBy: parsed.isManagedBy ?? existing.isManagedBy ?? null,
+          passwordHash: passwordHash ?? existing.passwordHash,
+          updatedAt: data.updatedAt,
+          syncVersion: data.syncVersion,
+          isSynced: true,
+        });
         logger.info({ scope: 'user', userId: parsed.id }, 'User updated successfully');
 
         createAuditLog(userDb, userId, {
@@ -261,202 +322,6 @@ export function registerUserIpcHandlers(
         return {
           success: false,
           message: 'Failed to update user',
-        };
-      }
-    },
-  );
-
-  ipcMain.handle(
-    'user:update-self',
-    async (_event, payload: system.UpdateSelfInput): Promise<common.SuccessResponse> => {
-      try {
-        const parsed = system.UpdateSelfInputSchema.parse(payload);
-        const existing = userDb.user.getById(userId);
-        if (!existing) {
-          logger.error({ scope: 'user', userId }, 'User not found for self-update');
-          return {
-            success: false,
-            message: 'User not found for self-update',
-          };
-        }
-
-        const updatedData: system.UpdateUser = {
-          id: userId,
-          displayName: parsed.displayName,
-          email: parsed.email,
-          isManagedBy: existing.isManagedBy,
-        };
-        userDb.user.update(updatedData);
-        logger.info({ scope: 'user', userId }, 'User updated successfully');
-
-        createAuditLog(userDb, userId, {
-          action: 'update',
-          tableName: 'users',
-          recordName: updatedData.displayName || existing.displayName,
-          recordId: userId,
-        });
-        logger.info({ scope: 'audit', userId }, 'Audit log created for user self-update');
-
-        return {
-          success: true,
-          message: 'User updated successfully',
-        };
-      } catch (error) {
-        logger.error(
-          {
-            scope: 'user',
-            userId,
-            errorMessage: (error as Error).message,
-            errorStack: (error as Error).stack,
-            rawError: error,
-          },
-          'Failed to update user',
-        );
-        return {
-          success: false,
-          message: 'Failed to update user',
-        };
-      }
-    },
-  );
-
-  ipcMain.handle(
-    'user:update-password',
-    async (_event, payload: system.UpdateUserPasswordInput): Promise<common.SuccessResponse> => {
-      try {
-        const parsed = system.UpdateUserPasswordInputSchema.parse(payload);
-        const existing = userDb.user.getById(parsed.id);
-        if (!existing) {
-          logger.error({ scope: 'user', userId: parsed.id }, 'User not found for password update');
-          return {
-            success: false,
-            message: 'User not found for password update',
-          };
-        }
-        const passwordHash = await hashPassword(parsed.password);
-        const jwtToken = await resolveUserAccessToken(authDb, parsed.id);
-
-        // Send the request to the sync server to update the user's password
-        const serverPayload: system.UpdateUserPasswordPayload = {
-          id: parsed.id,
-          password: parsed.password,
-          passwordHash: passwordHash,
-        };
-
-        const response = await fetch(`${SYNC_SERVER_URL}/api/database/update-password`, {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            authorization: `Bearer ${jwtToken}`,
-          },
-          body: JSON.stringify(serverPayload),
-        });
-
-        const data = await handleResponse(
-          response,
-          system.UpdateUserPasswordResponseSchema,
-          'user',
-        );
-        if (!isSuccess(data)) {
-          return { success: false, message: 'User password update failed' };
-        }
-        logger.info(
-          { scope: 'user', userId: parsed.id },
-          'User password updated successfully on sync server',
-        );
-
-        // Update the password in the local database within a transaction
-        try {
-          userDb.user.transaction(() => {
-            userDb.user.updatePassword({
-              id: parsed.id,
-              passwordHash,
-              updatedAt: data.updatedAt,
-              isSynced: true,
-              syncVersion: data.syncVersion,
-            });
-            logger.info({ scope: 'user', userId: parsed.id }, 'User password updated successfully');
-
-            createAuditLog(userDb, parsed.id, {
-              action: 'update-password',
-              tableName: 'users',
-              recordName: existing.displayName,
-              recordId: parsed.id,
-            });
-            logger.info(
-              { scope: 'audit', userId: parsed.id },
-              'Audit log created for user password update',
-            );
-          });
-        } catch (error) {
-          logger.error(
-            {
-              scope: 'user',
-              userId: parsed.id,
-              errorMessage: (error as Error).message,
-              errorStack: (error as Error).stack,
-              rawError: error,
-            },
-            'Failed to update user password in local database',
-          );
-          return {
-            success: false,
-            message: 'Failed to update user password in local database',
-          };
-        }
-
-        const authUser = authDb.main.getById(parsed.id);
-        // only update the password in the auth database if the user exists there
-        if (!authUser) {
-          logger.warn(
-            { scope: 'auth', userId: parsed.id },
-            'User not found in auth database, skipping password update',
-          );
-        } else {
-          try {
-            if (authUser) {
-              // Update the password in the auth database
-              authDb.main.updatePasswordHash(parsed.id, passwordHash, data.syncVersion);
-              logger.info(
-                { scope: 'auth', userId: parsed.id },
-                'User password updated successfully in auth database',
-              );
-            }
-          } catch (error) {
-            logger.error(
-              {
-                scope: 'auth',
-                userId: parsed.id,
-                errorMessage: (error as Error).message,
-                errorStack: (error as Error).stack,
-                rawError: error,
-              },
-              'Failed to update user password in auth database',
-            );
-            return {
-              success: false,
-              message: 'Failed to update user password in auth database',
-            };
-          }
-        }
-        return {
-          success: true,
-          message: 'User password updated successfully',
-        };
-      } catch (error) {
-        logger.error(
-          {
-            scope: 'user',
-            userId: payload.id,
-            errorMessage: (error as Error).message,
-            errorStack: (error as Error).stack,
-            rawError: error,
-          },
-          'Failed to update user password',
-        );
-        return {
-          success: false,
-          message: 'Failed to update user password',
         };
       }
     },

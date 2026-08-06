@@ -2,7 +2,6 @@ import { ipcMain } from 'electron';
 import { order, common } from '@nias/shared';
 import { logger, type Envelope } from '@nias/shared/server';
 import { UserDatabase } from '../../db/database';
-import { createAuditLog } from '../system/audit';
 
 export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: string): void {
   ipcMain.handle(
@@ -128,17 +127,6 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
           'Request item created successfully',
         );
 
-        createAuditLog(userDb, userId, {
-          action: 'create',
-          tableName: 'request_items',
-          recordId: data.id,
-          recordName: data.id,
-        });
-        logger.info(
-          { scope: 'audit', requestItemId: data.id },
-          'Audit log created for request item creation',
-        );
-
         return {
           success: true,
           message: 'Request item created successfully',
@@ -191,17 +179,6 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
           'Request item updated successfully',
         );
 
-        createAuditLog(userDb, userId, {
-          action: 'update',
-          tableName: 'request_items',
-          recordName: parsed.id,
-          recordId: parsed.id,
-        });
-        logger.info(
-          { scope: 'audit', requestItemId: parsed.id },
-          'Audit log created for request item update',
-        );
-
         return {
           success: true,
           message: 'Request item updated successfully',
@@ -241,17 +218,6 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
         }
         userDb.requestItem.delete(requestItemId);
         logger.info({ scope: 'request-item', requestItemId }, 'Request item deleted successfully');
-
-        createAuditLog(userDb, userId, {
-          action: 'delete',
-          tableName: 'request_items',
-          recordName: existing.id,
-          recordId: requestItemId,
-        });
-        logger.info(
-          { scope: 'audit', requestItemId },
-          'Audit log created for request item deletion',
-        );
 
         return {
           success: true,
@@ -294,17 +260,6 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
         userDb.requestItem.restore(requestItemId);
         logger.info({ scope: 'request-item', requestItemId }, 'Request item restored successfully');
 
-        createAuditLog(userDb, userId, {
-          action: 'restore',
-          tableName: 'request_items',
-          recordName: existing.id,
-          recordId: requestItemId,
-        });
-        logger.info(
-          { scope: 'audit', requestItemId },
-          'Audit log created for request item restoration',
-        );
-
         return {
           success: true,
           message: 'Request item restored successfully',
@@ -340,17 +295,6 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
               { scope: 'request-item', requestItemId: parsed.id },
               'Request item upserted successfully',
             );
-
-            createAuditLog(userDb, userId, {
-              action: 'upsert',
-              tableName: 'request_items',
-              recordName: parsed.id,
-              recordId: parsed.id,
-            });
-            logger.info(
-              { scope: 'audit', requestItemId: parsed.id },
-              'Audit log created for request item upsert',
-            );
           }
         });
         return {
@@ -375,37 +319,34 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
     },
   );
 
-  ipcMain.handle(
-    'request-item:list-with-info',
-    async (_event): Promise<Envelope<any[]>> => {
-      try {
-        const requestItemsWithInfo = userDb.requestItem.listWithInfo();
-        logger.info(
-          { scope: 'request-item', requestItemCount: requestItemsWithInfo.length },
-          'Request items with info retrieved successfully',
-        );
-        return {
-          success: true,
-          message: 'Request items with info retrieved successfully',
-          data: requestItemsWithInfo,
-        };
-      } catch (error) {
-        logger.error(
-          {
-            scope: 'request-item',
-            errorMessage: (error as Error).message,
-            errorStack: (error as Error).stack,
-            rawError: error,
-          },
-          'Failed to retrieve request items with info',
-        );
-        return {
-          success: false,
-          message: 'Failed to retrieve request items with info',
-        };
-      }
-    },
-  );
+  ipcMain.handle('request-item:list-with-info', async (_event): Promise<Envelope<any[]>> => {
+    try {
+      const requestItemsWithInfo = userDb.requestItem.listWithInfo();
+      logger.info(
+        { scope: 'request-item', requestItemCount: requestItemsWithInfo.length },
+        'Request items with info retrieved successfully',
+      );
+      return {
+        success: true,
+        message: 'Request items with info retrieved successfully',
+        data: requestItemsWithInfo,
+      };
+    } catch (error) {
+      logger.error(
+        {
+          scope: 'request-item',
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
+        },
+        'Failed to retrieve request items with info',
+      );
+      return {
+        success: false,
+        message: 'Failed to retrieve request items with info',
+      };
+    }
+  });
   ipcMain.handle(
     'request-item:hard-delete',
     async (_event, requestItemId: string): Promise<common.SuccessResponse> => {
@@ -449,7 +390,10 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
   );
   ipcMain.handle(
     'request-item:edit-quantity',
-    async (_event, payload: { id: string; newQuantity: number }): Promise<common.SuccessResponse> => {
+    async (
+      _event,
+      payload: { id: string; newQuantity: number },
+    ): Promise<common.SuccessResponse> => {
       try {
         const { id, newQuantity } = payload;
         const existing = userDb.requestItem.getById(id);
@@ -489,4 +433,28 @@ export function registerRequestItemIpcHandlers(userDb: UserDatabase, userId: str
       }
     },
   );
+  ipcMain.handle('request-item:clear', async (_event): Promise<common.SuccessResponse> => {
+    try {
+      userDb.requestItem.clear();
+      logger.info({ scope: 'request-item' }, 'All request items cleared successfully');
+      return {
+        success: true,
+        message: 'All request items cleared successfully',
+      };
+    } catch (error) {
+      logger.error(
+        {
+          scope: 'request-item',
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+          rawError: error,
+        },
+        'Failed to clear all request items',
+      );
+      return {
+        success: false,
+        message: 'Failed to clear all request items',
+      };
+    }
+  });
 }

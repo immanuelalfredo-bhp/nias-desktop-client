@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import ModalTemplate from '../../components/templates/Modal';
+import { notifyApp } from '../../lib/notifications';
 
 interface AutocompleteOption {
   id: string;
@@ -214,7 +215,7 @@ export default function EditRulesetModal({
       onClose();
     } catch (error: any) {
       console.error(error);
-      alert(error.message || 'An error occurred during submission.');
+      notifyApp(error.message || 'An error occurred during submission.', 'error');
     } finally {
       setIsBusy(false);
     }

@@ -1,13 +1,28 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import OrderPanel from '../../pages/catalogue/OrderPanel';
+import type { AppNotification } from '../../lib/notifications';
 
 export default function MainLayout() {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isOrderPanelOpen, setIsOrderPanelOpen] = useState(false);
+  const [notification, setNotification] = useState<AppNotification | null>(null);
   const location = useLocation();
+
+  useEffect(() => {
+    const handleAppNotification = (event: Event) => {
+      const customEvent = event as CustomEvent<AppNotification>;
+      if (!customEvent.detail) return;
+      setNotification(customEvent.detail);
+
+      window.setTimeout(() => setNotification(null), 4000);
+    };
+
+    window.addEventListener('app:notification', handleAppNotification);
+    return () => window.removeEventListener('app:notification', handleAppNotification);
+  }, []);
 
   const isCataloguePage = location.pathname.includes('/catalogue');
 
@@ -52,6 +67,31 @@ export default function MainLayout() {
           <div className="content" style={{ height: '100%', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
             <Outlet />
           </div>
+          {notification && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '12px',
+                right: '12px',
+                zIndex: 200,
+                padding: '12px 16px',
+                borderRadius: '10px',
+                background:
+                  notification.type === 'error'
+                    ? 'rgba(248, 113, 113, 0.95)'
+                    : notification.type === 'success'
+                    ? 'rgba(34, 197, 94, 0.95)'
+                    : 'rgba(59, 130, 246, 0.95)',
+                color: '#fff',
+                boxShadow: '0 8px 24px rgba(15, 23, 42, 0.12)',
+                maxWidth: '320px',
+                fontSize: '13px',
+                lineHeight: 1.4,
+              }}
+            >
+              {notification.message}
+            </div>
+          )}
         </main>
       </div>
 

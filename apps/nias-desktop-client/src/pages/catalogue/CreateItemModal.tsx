@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { item, attribute } from '@nias/shared';
 import ModalTemplate from '../../components/templates/Modal';
+import { notifyApp } from '../../lib/notifications';
 
 interface ApiDimension {
   id: string;
@@ -221,7 +222,7 @@ export default function ItemWorkspaceModal({
     );
 
     if (isDuplicate) {
-      alert('This alias already exists. Aliases must be unique.');
+      notifyApp('This alias already exists. Aliases must be unique.', 'error');
       return;
     }
 
@@ -351,7 +352,7 @@ export default function ItemWorkspaceModal({
       onClose();
     } catch (error: any) {
       console.error(error);
-      alert(error.message || 'An error occurred during submission.');
+      notifyApp(error.message || 'An error occurred during submission.', 'error');
     } finally {
       setIsBusy(false);
     }

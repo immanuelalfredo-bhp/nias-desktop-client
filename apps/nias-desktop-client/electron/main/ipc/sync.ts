@@ -10,12 +10,12 @@ export const registerSyncIpcHandlers = (
   userDb: UserDatabase,
   userId: string,
 ): void => {
-  ipcMain.handle('sync:pull', async (_event): Promise<Envelope<server.PullResponse>> => {
+  ipcMain.handle('sync:run', async (_event): Promise<Envelope<server.PullResponse>> => {
     try {
       const accessToken = await resolveUserAccessToken(authDb, userId);
       if (!accessToken) {
-        logger.error({ scope: 'sync' }, 'Sync pull failed: missing access token');
-        return { success: false, message: 'Sync pull failed: missing access token' };
+        logger.error({ scope: 'sync' }, 'Sync failed: missing access token');
+        return { success: false, message: 'Sync failed: missing access token' };
       }
 
       const pushPayload = userDb.sync.buildPushPayload(userId);
@@ -35,8 +35,8 @@ export const registerSyncIpcHandlers = (
         });
         const pushData = await handleResponse(pushResponse, server.PushResponseSchema, 'sync');
         if (!isSuccess(pushData)) {
-          logger.error({ scope: 'sync' }, 'Sync push failed');
-          return { success: false, message: 'Sync push failed' };
+          logger.error({ scope: 'sync' }, 'Sync failed: push failed');
+          return { success: false, message: 'Sync failed: push failed' };
         }
 
         userDb.sync.markChangesAsSynced(pushPayload);
@@ -71,7 +71,7 @@ export const registerSyncIpcHandlers = (
         });
         const data = await handleResponse(response, server.PullResponseSchema, 'sync');
         if (!isSuccess(data)) {
-          return { success: false, message: 'Sync pull failed' };
+          return { success: false, message: 'Sync failed: pull failed' };
         }
 
         const previousCursor = { ...cursor };
@@ -93,9 +93,9 @@ export const registerSyncIpcHandlers = (
         if (hasMore && JSON.stringify(previousCursor) === JSON.stringify(cursor)) {
           logger.error(
             { scope: 'sync', page, previousCursor, cursor },
-            'Sync pull failed: cursor did not advance despite hasMore being true',
+            'Sync failed: cursor did not advance despite hasMore being true',
           );
-          return { success: false, message: 'Sync pull failed: cursor did not advance' };
+          return { success: false, message: 'Sync failed: cursor did not advance' };
         }
       } while (hasMore);
 
@@ -114,12 +114,12 @@ export const registerSyncIpcHandlers = (
           ),
           finalVersions: mergedResponse.latestVersions,
         },
-        'Sync pull completed successfully',
+        'Sync completed successfully',
       );
 
       return {
         success: true,
-        message: 'Sync pull completed successfully',
+        message: 'Sync completed successfully',
         data: mergedResponse,
       };
     } catch (error) {
@@ -130,9 +130,9 @@ export const registerSyncIpcHandlers = (
           errorStack: (error as Error).stack,
           rawError: error,
         },
-        'Sync pull failed',
+        'Sync failed',
       );
-      return { success: false, message: 'Sync pull failed' };
+      return { success: false, message: 'Sync failed' };
     }
   });
 };

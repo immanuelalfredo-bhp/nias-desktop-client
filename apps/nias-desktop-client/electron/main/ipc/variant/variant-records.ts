@@ -122,6 +122,7 @@ export function registerVariantsIpcHandlers(userDb: UserDatabase, userId: string
           brandId: parsed.brandId,
           categoryId: parsed.categoryId,
           uomId: parsed.uomId,
+          dimensionIds: parsed.dimensionIds,
           description: parsed.description,
           skuCode: parsed.skuCode,
           details: parsed.details,

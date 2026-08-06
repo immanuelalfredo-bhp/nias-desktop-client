@@ -13,7 +13,7 @@ import {
 import { getBootstrapStatus, handleBootstrap } from './routes/bootstrap.js';
 import { initialLogin, syncLocalUsers } from './routes/login.js';
 import { handlePull, handlePush, refreshUserToken } from './routes/sync.js';
-import { handleCreateUser } from './routes/database.js';
+import { handleCreateUser, handleUpdateUser } from './routes/database.js';
 
 const shutdownTimeout = SHUTDOWN_TIMEOUT;
 const PORT = Number(process.env.PORT || 3000);
@@ -83,7 +83,7 @@ app.post(
   },
 );
 
-app.post('/api/database/new-user',
+app.post('/api/database/create-user',
   userAuthenticate,
   validate(system.CreateUserPayloadSchema),
   (req, res, next) => {
@@ -98,6 +98,21 @@ app.post('/api/database/new-user',
   },
 );
 
+
+app.post('/api/database/update-user',
+  userAuthenticate,
+  validate(system.UpdateUserPayloadSchema),
+  (req, res, next) => {
+    const context = {
+      log: req.log,
+      ...(req.user?.id ? { userId: req.user.id } : {}),
+    };
+
+    return handleUpdateUser(req.validatedBody as system.UpdateUserPayload, context)
+      .then((result) => res.status(result.success ? 200 : 400).json(result))
+      .catch(next);
+  },
+);
 app.post('/api/bootstrap/status', appAuthenticate, (req, res, next) =>
   getBootstrapStatus(req, res).catch(next),
 );

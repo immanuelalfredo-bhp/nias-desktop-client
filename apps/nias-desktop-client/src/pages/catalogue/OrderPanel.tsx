@@ -22,7 +22,7 @@ export default function OrderPanel({ onClose }: OrderPanelProps) {
         setQuantities(qtyMap);
       }
     } catch (error) {
-      console.error('Failed to fetch order items:', error);
+      console.error('Failed to fetch request items:', error);
     } finally {
       setIsLoading(false);
     }
@@ -30,6 +30,13 @@ export default function OrderPanel({ onClose }: OrderPanelProps) {
 
   useEffect(() => {
     fetchOrderItems();
+
+    const handleRefreshOrders = () => {
+      fetchOrderItems();
+    };
+
+    window.addEventListener('orders:refresh', handleRefreshOrders);
+    return () => window.removeEventListener('orders:refresh', handleRefreshOrders);
   }, []);
 
   const handleQuantityChange = (id: string, value: string) => {
@@ -58,6 +65,23 @@ export default function OrderPanel({ onClose }: OrderPanelProps) {
     }
   };
 
+  const handleClearAll = async () => {
+    try {
+      await window.electronAPI.requestItemClear();
+      fetchOrderItems();
+    } catch (error) {
+      console.error('Failed to clear request items:', error);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      await window.electronAPI.exportRequest();
+    } catch (error) {
+      console.error('Failed to export request:', error);
+    }
+  };
+
   return (
     <div
       style={{
@@ -79,25 +103,67 @@ export default function OrderPanel({ onClose }: OrderPanelProps) {
           justifyContent: 'space-between',
         }}
       >
-        <h3 style={{ margin: 0, fontSize: '15px' }}>Order Panel</h3>
-        <button
-          type="button"
-          onClick={onClose}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: 0 }}
-        >
-          ×
-        </button>
+        <h3 style={{ margin: 0, fontSize: '15px' }}>Request Panel</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            type="button"
+            onClick={handleExport}
+            title="Download Request"
+            style={{
+              background: 'none',
+              border: '1px solid var(--border-color, #cbd5e1)',
+              borderRadius: '3px',
+              cursor: 'pointer',
+              height: '24px',
+              padding: '0 6px',
+              fontSize: '11px',
+              color: 'var(--text-main, #334155)',
+            }}
+          >
+            📥
+          </button>
+          <button
+            type="button"
+            onClick={handleClearAll}
+            title="Delete All Items"
+            style={{
+              background: 'none',
+              border: '1px solid var(--border-color, #cbd5e1)',
+              borderRadius: '3px',
+              cursor: 'pointer',
+              height: '24px',
+              padding: '0 6px',
+              fontSize: '11px',
+              color: '#ef4444',
+            }}
+          >
+            🗑
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '16px',
+              padding: '0 0 0 4px',
+            }}
+          >
+            ×
+          </button>
+        </div>
       </div>
 
       {/* Content List */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px', boxSizing: 'border-box' }}>
         {isLoading ? (
           <p className="muted" style={{ fontSize: '13px', textAlign: 'center', marginTop: '40px' }}>
-            Loading order items...
+            Loading request items...
           </p>
         ) : items.length === 0 ? (
           <p className="muted" style={{ fontSize: '13px', textAlign: 'center', marginTop: '40px' }}>
-            No active order details. Review and manage orders here.
+            No active request details. Review and manage requests here.
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -118,17 +184,53 @@ export default function OrderPanel({ onClose }: OrderPanelProps) {
               >
                 {/* Row 1: SKU Code */}
                 <div style={{ margin: 0, lineHeight: 1.1 }}>
-                  <span style={{ fontWeight: 600, fontSize: '11px', color: 'var(--text-muted, #64748b)' }}>
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      fontSize: '11px',
+                      overflowWrap: 'break-word',
+                      wordBreak: 'break-word',
+                      whiteSpace: 'normal',
+                      color: 'var(--text-muted, #64748b)',
+                    }}
+                  >
                     {item.skuCode || 'N/A SKU'}
                   </span>
                 </div>
 
                 {/* Row 2: Variant Name, Editable Quantity, UOM, and Delete button */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px', margin: 0, lineHeight: 1.2 }}>
-                  <span style={{ fontSize: '13px', fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '6px',
+                    margin: 0,
+                    lineHeight: 1.2,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      flex: 1,
+                      overflowWrap: 'break-word',
+                      wordBreak: 'break-word',
+                      whiteSpace: 'normal',
+                      margin: 0,
+                    }}
+                  >
                     {item.variantName || 'Unnamed Variant'}
                   </span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, margin: 0 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      flexShrink: 0,
+                      margin: 0,
+                    }}
+                  >
                     <input
                       type="text"
                       value={quantities[item.id] ?? item.quantity}
@@ -170,7 +272,18 @@ export default function OrderPanel({ onClose }: OrderPanelProps) {
 
                 {/* Row 3: Comments */}
                 {item.comments && (
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted, #64748b)', fontStyle: 'italic', margin: 0, lineHeight: 1.1 }}>
+                  <div
+                    style={{
+                      fontSize: '11px',
+                      color: 'var(--text-muted, #64748b)',
+                      fontStyle: 'italic',
+                      margin: 0,
+                      overflowWrap: 'break-word',
+                      wordBreak: 'break-word',
+                      whiteSpace: 'normal',
+                      lineHeight: 1.1,
+                    }}
+                  >
                     {item.comments}
                   </div>
                 )}

@@ -5,12 +5,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // User IPC handlers
   userListActive: () => ipcRenderer.invoke('user:list-active'),
   userListDeleted: () => ipcRenderer.invoke('user:list-deleted'),
+  userGetSelf: () => ipcRenderer.invoke('user:get-self'),
   userCreate: (payload: system.CreateUserInput) => ipcRenderer.invoke('user:create', payload),
-  userUpdate: (payload: system.UpdateUser) => ipcRenderer.invoke('user:update', payload),
-  userUpdateSelf: (payload: system.UpdateSelfInput) =>
-    ipcRenderer.invoke('user:update-self', payload),
-  userUpdatePassword: (payload: system.UpdateUserPasswordInput) =>
-    ipcRenderer.invoke('user:update-password', payload),
+  userUpdate: (payload: system.UpdateUserInput) => ipcRenderer.invoke('user:update', payload),
   userDelete: (payload: string) => ipcRenderer.invoke('user:delete', payload),
   userRestore: (payload: string) => ipcRenderer.invoke('user:restore', payload),
   userUpsert: (payload: system.CreateUserPayload[]) => ipcRenderer.invoke('user:upsert', payload),
@@ -273,6 +270,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   requestItemHardDelete: (payload: string) => ipcRenderer.invoke('request-item:hard-delete', payload),
   requestItemEditQuantity: (payload: { id: string; newQuantity: number }) =>
     ipcRenderer.invoke('request-item:edit-quantity', payload),
+  requestItemClear: () => ipcRenderer.invoke('request-item:clear'),
 
   // Authentication IPC handlers
   authStatus: () => ipcRenderer.invoke('auth:status'),
@@ -287,7 +285,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('bootstrap:execute', payload),
 
   // Sync IPC handlers
-  syncPull: () => ipcRenderer.invoke('sync:pull'),
-  // syncPush: (payload: { email: string; password: string }) =>
-  //   ipcRenderer.invoke('sync:push', payload),
+  syncRun: () => ipcRenderer.invoke('sync:run'),
+
+  // Export IPC handlers
+  exportRequest: () => ipcRenderer.invoke('export:request'),
+
+  // Update IPC handlers
+  checkForUpdates: () => ipcRenderer.invoke('update:check'),
+  downloadUpdate: () => ipcRenderer.invoke('update:download'),
+  quitAndInstall: () => ipcRenderer.invoke('update:quit-and-install'),
+  onUpdateStatus: (callback: (status: any) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, data: any) => callback(data);
+    ipcRenderer.on('update-status', listener);
+    return () => ipcRenderer.removeListener('update-status', listener);
+  },
 });

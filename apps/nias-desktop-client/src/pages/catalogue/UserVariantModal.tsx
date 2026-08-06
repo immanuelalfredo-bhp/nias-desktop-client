@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { item, attribute, variant, order } from '@nias/shared';
 import ModalTemplate from '../../components/templates/Modal';
+import { notifyApp } from '../../lib/notifications';
 
 interface AliasItem {
   alias: string;
@@ -297,11 +298,12 @@ export default function ItemWorkspaceModal({
         throw new Error(requestResponse?.message || 'Failed to create request item.');
       }
 
+      window.dispatchEvent(new CustomEvent('orders:refresh'));
       onSuccess('Successfully added variant!');
       onClose();
     } catch (error: any) {
       console.error(error);
-      alert(error.message || 'An error occurred during submission.');
+      notifyApp(error.message || 'An error occurred during submission.', 'error');
     } finally {
       setIsBusy(false);
     }

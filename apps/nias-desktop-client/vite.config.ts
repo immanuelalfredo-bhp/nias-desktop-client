@@ -3,10 +3,21 @@ import react from '@vitejs/plugin-react';
 import electron from 'vite-plugin-electron';
 import copy from 'rollup-plugin-copy';
 import { visualizer } from "rollup-plugin-visualizer";
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const sharedCommonEntry = resolve(__dirname, '../nias-shared/dist/index.common.js');
 
 export default defineConfig({
   // Use relative asset URLs so renderer works from Electron file:// loading.
   base: './',
+  resolve: {
+    alias: {
+      '@nias/shared': sharedCommonEntry,
+    },
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
@@ -20,6 +31,11 @@ export default defineConfig({
         // Main Process
         entry: 'electron/main/index.ts',
         vite: {
+          resolve: {
+            alias: {
+              '@nias/shared': sharedCommonEntry,
+            },
+          },
           plugins: [
             copy({
               targets: [
@@ -33,7 +49,7 @@ export default defineConfig({
             lib: {
               entry: 'electron/main/index.ts',
               formats: ['cjs'], // FORCE CommonJS explicitly
-              fileName: () => 'index.js',
+              fileName: () => 'index.cjs',
             },
             emptyOutDir: true,
             rollupOptions: {
@@ -43,7 +59,7 @@ export default defineConfig({
               ],
               output: {
                 format: 'cjs',
-                entryFileNames: '[name].js',
+                entryFileNames: '[name].cjs',
               },
             },
           },
@@ -51,23 +67,28 @@ export default defineConfig({
       },
       {
         // Preload Script
-        entry: 'electron/preload/index.ts',
         onstart(options) {
           options.reload();
-        },vite: {
+        },
+        vite: {
+          resolve: {
+            alias: {
+              '@nias/shared': sharedCommonEntry,
+            },
+          },
           build: {
             outDir: 'dist-electron/preload',
             lib: {
               entry: 'electron/preload/index.ts',
               formats: ['cjs'], // FORCE CommonJS explicitly
-              fileName: () => 'index.js',
+              fileName: () => 'index.cjs',
             },
             emptyOutDir: true,
             rollupOptions: {
               external: ['electron'],
               output: {
                 format: 'cjs',
-                entryFileNames: '[name].js',
+                entryFileNames: '[name].cjs',
               },
             },
           },
