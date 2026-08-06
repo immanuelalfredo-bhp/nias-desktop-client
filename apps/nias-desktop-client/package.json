@@ -34,7 +34,9 @@
     "publish": {
       "provider": "github",
       "owner": "immanuelalfredo-bhp",
-      "repo": "nias-desktop-client"
+      "repo": "nias-desktop-client",
+      "private": false,
+      "releaseType": "release"
     },
     "nsis": {
       "perMachine": false

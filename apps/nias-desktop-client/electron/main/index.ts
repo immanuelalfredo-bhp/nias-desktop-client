@@ -9,11 +9,89 @@ import { registerBootstrapIpcHandlers, registerAuthIpcHandlers } from './ipc/loc
 import { registerUpdateIpcHandlers } from './ipc/update.js';
 
 let mainWindow: BrowserWindow | null = null;
+let updateCheckInterval: NodeJS.Timeout | null = null;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const UPDATE_REPO_OWNER = process.env.NIAS_UPDATER_OWNER || 'immanuelalfredo-bhp';
+const UPDATE_REPO_NAME = process.env.NIAS_UPDATER_REPO || 'nias-desktop-client';
+const UPDATE_CHECK_INTERVAL_MS = Number.parseInt(
+  process.env.NIAS_UPDATER_INTERVAL_MS || '21600000',
+  10,
+);
 
 function firstExistingPath(paths: string[]): string | undefined {
   return paths.find((candidate) => fs.existsSync(candidate));
+}
+
+function scheduleAutoUpdateChecks(): void {
+  if (!Number.isFinite(UPDATE_CHECK_INTERVAL_MS) || UPDATE_CHECK_INTERVAL_MS <= 0) {
+    logger.warn(
+      { scope: 'update', intervalMs: process.env.NIAS_UPDATER_INTERVAL_MS },
+      'Automatic update polling disabled because NIAS_UPDATER_INTERVAL_MS is invalid',
+    );
+    return;
+  }
+
+  if (updateCheckInterval) {
+    clearInterval(updateCheckInterval);
+  }
+
+  updateCheckInterval = setInterval(() => {
+    void autoUpdater.checkForUpdates().catch((error) => {
+      logger.error({ scope: 'update', error }, 'Scheduled update check failed');
+    });
+  }, UPDATE_CHECK_INTERVAL_MS);
+}
+
+function configureAutoUpdater(): void {
+  autoUpdater.logger = logger;
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.setFeedURL({
+    provider: 'github',
+    owner: UPDATE_REPO_OWNER,
+    repo: UPDATE_REPO_NAME,
+    private: false,
+  });
+
+  autoUpdater.on('checking-for-update', () => {
+    mainWindow?.webContents.send('update-status', { status: 'checking' });
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    mainWindow?.webContents.send('update-status', { status: 'available', info });
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    mainWindow?.webContents.send('update-status', { status: 'not-available' });
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    mainWindow?.webContents.send('update-status', { status: 'progress', progress });
+  });
+
+  autoUpdater.on('update-downloaded', () => {
+    mainWindow?.webContents.send('update-status', { status: 'downloaded' });
+  });
+
+  autoUpdater.on('error', (error) => {
+    mainWindow?.webContents.send('update-status', { status: 'error', error: error?.message });
+  });
+
+  if (!app.isPackaged) {
+    logger.info(
+      { scope: 'update' },
+      'Skipping automatic update checks because app is not packaged',
+    );
+    return;
+  }
+
+  void autoUpdater.checkForUpdates().catch((error) => {
+    logger.error({ scope: 'update', error }, 'Initial update check failed');
+  });
+
+  scheduleAutoUpdateChecks();
 }
 
 function createMainWindow(): void {
@@ -63,39 +141,6 @@ function createMainWindow(): void {
     });
   }
 
-  autoUpdater.logger = logger;
-  autoUpdater.autoDownload = false;
-
-  autoUpdater.setFeedURL({
-    provider: 'github',
-    owner: 'immanuelalfredo-bhp',
-    repo: 'nias-desktop-client',
-  });
-
-  autoUpdater.on('checking-for-update', () => {
-    mainWindow?.webContents.send('update-status', { status: 'checking' });
-  });
-
-  autoUpdater.on('update-available', (info) => {
-    mainWindow?.webContents.send('update-status', { status: 'available', info });
-  });
-
-  autoUpdater.on('update-not-available', () => {
-    mainWindow?.webContents.send('update-status', { status: 'not-available' });
-  });
-
-  autoUpdater.on('download-progress', (progress) => {
-    mainWindow?.webContents.send('update-status', { status: 'progress', progress });
-  });
-
-  autoUpdater.on('update-downloaded', () => {
-    mainWindow?.webContents.send('update-status', { status: 'downloaded' });
-  });
-
-  autoUpdater.on('error', (error) => {
-    mainWindow?.webContents.send('update-status', { status: 'error', error: error?.message });
-  });
-
   mainWindow.webContents.on('did-fail-load', (_event, code, description, validatedURL) => {
     logger.error(
       { scope: 'bootstrap', code, description, validatedURL },
@@ -128,6 +173,7 @@ app
     }
     registerUpdateIpcHandlers();
     createMainWindow();
+    configureAutoUpdater();
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {
@@ -146,6 +192,11 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
+  if (updateCheckInterval) {
+    clearInterval(updateCheckInterval);
+    updateCheckInterval = null;
+  }
+
   if (mainWindow) {
     mainWindow.removeAllListeners('close');
     mainWindow.close();

@@ -1,9 +1,16 @@
-import { ipcMain } from 'electron';
+import { app, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import { logger } from '@nias/shared/server';
 
 export const registerUpdateIpcHandlers = (): void => {
   ipcMain.handle('update:check', async () => {
+    if (!app.isPackaged) {
+      return {
+        success: false,
+        message: 'Update checks are only available in packaged builds.',
+      };
+    }
+
     try {
       await autoUpdater.checkForUpdates();
       return { success: true };
@@ -14,6 +21,13 @@ export const registerUpdateIpcHandlers = (): void => {
   });
 
   ipcMain.handle('update:download', async () => {
+    if (!app.isPackaged) {
+      return {
+        success: false,
+        message: 'Update downloads are only available in packaged builds.',
+      };
+    }
+
     try {
       await autoUpdater.downloadUpdate();
       return { success: true };
