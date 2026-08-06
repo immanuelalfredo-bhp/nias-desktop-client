@@ -1,6 +1,6 @@
 {
   "name": "@nias/desktop-client",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "type": "module",
   "author": "Immanuel Alfredo",
   "description": "NIAS Desktop Client Application",
@@ -8,10 +8,11 @@
   "scripts": {
     "shared:local": "node ./scripts/set-shared-source.mjs local",
     "shared:github": "node ./scripts/set-shared-source.mjs github",
+    "prepare:shared": "node ./scripts/prepare-shared-package.mjs",
     "build:vite": "vite build",
     "build:shared": "npm run build --workspace=@nias/shared",
-    "build": "npm run shared:local && npm run build:shared && vite build",
-    "release": "npm run shared:github && npm run build:shared && npm install --ignore-scripts && vite build && electron-builder --publish always",
+    "build": "npm run shared:local && npm run build:shared && npm run prepare:shared && vite build",
+    "release": "npm run shared:local && npm run build:shared && npm run prepare:shared && vite build && electron-builder --publish always",
     "dev": "vite",
     "start": "npm run build && electron ."
   },
@@ -20,7 +21,15 @@
     "productName": "NI Auxiliary System",
     "files": [
       "dist/**/*",
-      "dist-electron/**/*"
+      "dist-electron/**/*",
+      {
+        "from": "../nias-shared",
+        "to": "node_modules/@nias/shared",
+        "filter": [
+          "package.json",
+          "dist/**/*"
+        ]
+      }
     ],
     "publish": {
       "provider": "github",

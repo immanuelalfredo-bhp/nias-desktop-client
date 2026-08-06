@@ -8,6 +8,7 @@ node_modules/
 
 # Compiled Binary Output Envelopes
 apps/nias-desktop-client/dist-electron/
+apps/nias-desktop-client/dist-test/
 apps/nias-sync-server/dist/
 apps/nias-shared/dist/
 dist/

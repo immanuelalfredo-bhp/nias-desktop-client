@@ -39,6 +39,7 @@ function createMainWindow(): void {
     width: 1100,
     height: 720,
     webPreferences,
+    autoHideMenuBar: true,
   });
 
   const htmlPath = firstExistingPath([

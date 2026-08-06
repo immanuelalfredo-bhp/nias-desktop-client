@@ -38,7 +38,7 @@ import {
   SyncQueries,
   LocalQueries,
 } from './queries/index.js';
-import { openEncryptedDatabase, openUnencryptedDatabase } from './connection.js';
+import { openEncryptedDatabase } from './connection.js';
 import { backupArtifacts, ensureAuthDbSchema, runMigrations, setupNewDb } from './migrations.js';
 import { getOrGenerateKey } from './keyring.js';
 
@@ -93,7 +93,7 @@ export class UserDatabase {
   readonly dimensionValueMap: DimensionValueMapQueries;
 
   constructor(dbPath: string, key: string) {
-    this.db = openUnencryptedDatabase(dbPath);
+    this.db = openEncryptedDatabase(dbPath, key);
 
     // System queries
     this.user = new UserQueries(this.db);
@@ -187,8 +187,7 @@ export function initializeUserDatabase(uuid: string): UserDatabase {
     );
   }
 
-  let key ='';
-  // let key = getOrGenerateKey('user', uuid);
+  let key = getOrGenerateKey('user', uuid);
   let db: Database.Database | undefined;
 
   try {
@@ -196,7 +195,7 @@ export function initializeUserDatabase(uuid: string): UserDatabase {
     db = new Database(userDbPath);
 
     if (dbExists) {
-      // db.pragma(`key = '${key}'`);
+      db.pragma(`key = '${key}'`);
       db.prepare('SELECT count(*) FROM sqlite_master').get();
       runMigrations(db);
       logger.info(
@@ -224,7 +223,7 @@ export function initializeUserDatabase(uuid: string): UserDatabase {
     );
     backupArtifacts('user', userDbPath, uuid);
 
-    // key = getOrGenerateKey('user', uuid);
+    key = getOrGenerateKey('user', uuid);
     db = new Database(userDbPath);
     setupNewDb('user', db, key);
     logger.info(

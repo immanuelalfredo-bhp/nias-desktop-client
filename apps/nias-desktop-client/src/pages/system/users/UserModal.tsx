@@ -86,7 +86,7 @@ export default function UserModal({
         const payload: system.UpdateUserInput = {
           id: userToEdit.id,
           displayName: displayName.trim(),
-          email: email.trim(),
+          email: email.trim().toLowerCase(),
           ...(password ? { password } : {}),
         };
 
@@ -101,7 +101,7 @@ export default function UserModal({
       } else {
         const payload: system.CreateUserInput = {
           displayName: displayName.trim(),
-          email: email.trim(),
+          email: email.trim().toLowerCase(),
           isManagedBy: null,
           password,
         };
