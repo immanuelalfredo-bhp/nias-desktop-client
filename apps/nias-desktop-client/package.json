@@ -1,6 +1,6 @@
 {
   "name": "@nias/desktop-client",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "type": "module",
   "author": "Immanuel Alfredo",
   "description": "NIAS Desktop Client Application",

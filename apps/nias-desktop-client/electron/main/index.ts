@@ -29,10 +29,12 @@ function createMainWindow(): void {
 
   if (preloadPath) {
     webPreferences.preload = preloadPath;
-    logger.info({scope: 'main'}, `Preload script found at ${preloadPath}`);
+    logger.info({ scope: 'main' }, `Preload script found at ${preloadPath}`);
   } else {
-    logger.error({scope: 'bootstrap'},
-      'Preload script not found. Checked ../preload/index.cjs and ./preload/index.cjs');
+    logger.error(
+      { scope: 'bootstrap' },
+      'Preload script not found. Checked ../preload/index.cjs and ./preload/index.cjs',
+    );
   }
 
   mainWindow = new BrowserWindow({
@@ -48,17 +50,27 @@ function createMainWindow(): void {
   ]);
 
   if (!htmlPath) {
-    logger.error({scope: 'bootstrap'},
-      'Renderer build not found. Checked ../../dist/index.html and ../dist/index.html');
-    void mainWindow.loadURL('data:text/html,<h1>Renderer build not found</h1><p>Run npm.cmd run build in apps/nias-desktop-client.</p>');
+    logger.error(
+      { scope: 'bootstrap' },
+      'Renderer build not found. Checked ../../dist/index.html and ../dist/index.html',
+    );
+    void mainWindow.loadURL(
+      'data:text/html,<h1>Renderer build not found</h1><p>Run npm.cmd run build in apps/nias-desktop-client.</p>',
+    );
   } else {
     mainWindow.loadFile(htmlPath).catch((error) => {
-      logger.error({scope: 'bootstrap', error}, 'Failed to load renderer HTML');
+      logger.error({ scope: 'bootstrap', error }, 'Failed to load renderer HTML');
     });
   }
 
   autoUpdater.logger = logger;
   autoUpdater.autoDownload = false;
+
+  autoUpdater.setFeedURL({
+    provider: 'github',
+    owner: 'immanuelalfredo-bhp',
+    repo: 'nias-desktop-client',
+  });
 
   autoUpdater.on('checking-for-update', () => {
     mainWindow?.webContents.send('update-status', { status: 'checking' });
@@ -85,14 +97,14 @@ function createMainWindow(): void {
   });
 
   mainWindow.webContents.on('did-fail-load', (_event, code, description, validatedURL) => {
-    logger.error({scope: 'bootstrap', code, description, validatedURL}, 'Renderer failed to load');
+    logger.error(
+      { scope: 'bootstrap', code, description, validatedURL },
+      'Renderer failed to load',
+    );
   });
 
   mainWindow.webContents.on('console-message', (_event, level, message, line, sourceId) => {
-    logger.error(
-      { scope: 'renderer', level, message, line, sourceId },
-      'Renderer console message',
-    );
+    logger.error({ scope: 'renderer', level, message, line, sourceId }, 'Renderer console message');
   });
 
   mainWindow.webContents.on('render-process-gone', (_event, details) => {
@@ -106,7 +118,8 @@ function createMainWindow(): void {
 
 app.setAppUserModelId('NiasClient');
 
-app.whenReady()
+app
+  .whenReady()
   .then(() => {
     const authDb = initializeAuthDatabase();
     registerAuthIpcHandlers(authDb);
@@ -123,8 +136,8 @@ app.whenReady()
     });
   })
   .catch(() => {
-  app.quit();
-});
+    app.quit();
+  });
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
