@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - 'apps/nias-desktop-client/**'
-      - 'apps/nias-shared/**'
   workflow_dispatch:
 
 jobs:
@@ -28,7 +27,7 @@ jobs:
         run: |
           pip install git-filter-repo
 
-      - name: Filter and push to public repo
+      - name: Filter and push code & tags to public repo
         env:
           PUBLIC_REPO_URL: https://x-access-token:${{ secrets.SYNC_PUBLIC_REPO_TOKEN }}@github.com/immanuelalfredo-bhp/nias-desktop-client.git
         run: |
@@ -38,6 +37,23 @@ jobs:
           git clone --mirror https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/immanuelalfredo-bhp/nias.git nias.git
           cd nias.git
           
+          # Filter history down to just the desktop client app
           git filter-repo --subdirectory-filter apps/nias-desktop-client --force
           
-          git push --mirror "$PUBLIC_REPO_URL"
+          # Push the main branch code first
+          git remote add public "$PUBLIC_REPO_URL"
+          git push public main:main --force
+
+          # Extract version from package.json of the filtered commit
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v$VERSION"
+          echo "Detected version: $VERSION -> Tag will be: $TAG"
+
+          # Check if this tag already exists on the public repo
+          if git ls-remote --tags public | grep -q "refs/tags/$TAG"; then
+            echo "Tag $TAG already exists on public repo. Skipping tag creation."
+          else
+            echo "Creating and pushing new tag $TAG..."
+            git tag "$TAG"
+            git push public "$TAG"
+          fi
