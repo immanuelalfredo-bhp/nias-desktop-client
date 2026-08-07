@@ -4,7 +4,7 @@ import express from 'express';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { httpLogger, logger } from '@nias/shared/server';
-import { REQUEST_INTERVAL, REQUEST_LIMIT } from './config.js';
+import { JSON_BODY_LIMIT, REQUEST_INTERVAL, REQUEST_LIMIT } from './config.js';
 import type { NextFunction, Request, Response } from 'express';
 
 // export default app;
@@ -35,7 +35,7 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // Parse JSON bodies for all routes
-app.use(express.json());
+app.use(express.json({ limit: JSON_BODY_LIMIT }));
 
 /**
  * Registers terminal middleware handlers that should run only after all routes
@@ -50,6 +50,18 @@ export const registerErrorHandlers = (server: express.Express) => {
   });
 
   server.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
+    if (
+      typeof err === 'object' &&
+      err !== null &&
+      'type' in err &&
+      err.type === 'entity.too.large'
+    ) {
+      return res.status(413).json({
+        success: false,
+        message: 'Request payload is too large.',
+      });
+    }
+
     req.log?.error({ scope: 'app', err }, 'Unhandled request error');
     logger.error({ scope: 'app', err }, 'Unhandled application error');
 

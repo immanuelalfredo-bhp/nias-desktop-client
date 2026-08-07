@@ -10,6 +10,9 @@ export const registerSyncIpcHandlers = (
   userDb: UserDatabase,
   userId: string,
 ): void => {
+  // Keep this aligned with apps/nias-sync-server/src/config.ts SYNC_LIMIT.
+  const PUSH_PAGE_LIMIT = 100;
+
   ipcMain.handle('sync:run', async (_event): Promise<Envelope<server.PullResponse>> => {
     try {
       const accessToken = await resolveUserAccessToken(authDb, userId);
@@ -19,27 +22,50 @@ export const registerSyncIpcHandlers = (
       }
 
       const pushPayload = userDb.sync.buildPushPayload(userId);
-      const pushId = randomUUID();
-      pushPayload.id = pushId;
-      pushPayload.actorId = userId;
+      const totalPushChanges = pushPayload.changes.length;
 
-      if (pushPayload.changes.length > 0) {
-        logger.info({ scope: 'sync', changes: pushPayload.changes.length }, 'Sync push requested');
-        const pushResponse = await fetch(`${SYNC_SERVER_URL}/api/sync/push`, {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify(pushPayload),
-        });
-        const pushData = await handleResponse(pushResponse, server.PushResponseSchema, 'sync');
-        if (!isSuccess(pushData)) {
-          logger.error({ scope: 'sync' }, 'Sync failed: push failed');
-          return { success: false, message: 'Sync failed: push failed' };
-        }
+      if (totalPushChanges > 0) {
+        let pushPage = 0;
+        let pushOffset = 0;
 
-        userDb.sync.markChangesAsSynced(pushPayload);
+        do {
+          pushPage += 1;
+          const pageChanges = pushPayload.changes.slice(pushOffset, pushOffset + PUSH_PAGE_LIMIT);
+          const pagePayload: server.PushPayload = {
+            id: randomUUID(),
+            actorId: userId,
+            changes: pageChanges,
+          };
+          const hasMorePush = pushOffset + pageChanges.length < totalPushChanges;
+
+          logger.info(
+            {
+              scope: 'sync',
+              page: pushPage,
+              pageSize: pageChanges.length,
+              totalChanges: totalPushChanges,
+              hasMore: hasMorePush,
+            },
+            'Sync push requested',
+          );
+
+          const pushResponse = await fetch(`${SYNC_SERVER_URL}/api/sync/push`, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify(pagePayload),
+          });
+          const pushData = await handleResponse(pushResponse, server.PushResponseSchema, 'sync');
+          if (!isSuccess(pushData)) {
+            logger.error({ scope: 'sync', page: pushPage }, 'Sync failed: push failed');
+            return { success: false, message: 'Sync failed: push failed' };
+          }
+
+          userDb.sync.markChangesAsSynced(pagePayload);
+          pushOffset += pageChanges.length;
+        } while (pushOffset < totalPushChanges);
       }
 
       let cursor = userDb.sync.getSyncVersion();

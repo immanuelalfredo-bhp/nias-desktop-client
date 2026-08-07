@@ -47,24 +47,32 @@ export default function MainLayout() {
       <Sidebar isExpanded={isExpanded} setIsExpanded={setIsExpanded} />
       
       {/* Main wrapper positioned absolutely so its width stays static and independent of overlays */}
-      <div 
-        className={`main-wrapper ${isExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'}`} 
-        style={{ 
-          position: 'absolute', 
-          top: 0, 
-          bottom: 0, 
-          left: isExpanded ? 'var(--sidebar-width-expanded, 240px)' : 'var(--sidebar-width-collapsed, 64px)', 
-          right: 0, 
+      <div
+        className={`main-wrapper ${isExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'}`}
+        style={{
+          position: 'absolute',
+          top: 0,
+          bottom: 0,
+          left: isExpanded ? 'var(--sidebar-width-expanded, 240px)' : 'var(--sidebar-width-collapsed, 64px)',
+          right: 0,
           height: '100%',
           transition: 'left 0.2s ease-in-out',
           boxSizing: 'border-box',
-          overflow: 'hidden'
+          overflow: 'hidden',
         }}
       >
         <Header title={getPageTitle(location.pathname)} />
-        
-        <main className="content-area" style={{ position: 'relative', height: 'calc(100% - var(--header-height, 60px))', overflow: 'hidden' }}>
-          <div className="content" style={{ height: '100%', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
+
+        <main
+          className="content-area"
+          style={{
+            position: 'relative',
+            height: 'calc(100% - var(--header-height, 60px))',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+          }}
+        >
+          <div className="content" style={{ height: '100%', width: '100%', boxSizing: 'border-box' }}>
             <Outlet />
           </div>
           {notification && (
