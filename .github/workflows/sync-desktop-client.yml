@@ -44,16 +44,26 @@ jobs:
           git remote add public "$PUBLIC_REPO_URL"
           git push public main:main --force
 
-          # Extract version from package.json of the filtered commit
+          # --- FIX: Create a working tree so we can read package.json ---
+          mkdir -p /tmp/working-client
+          git --work-tree=/tmp/working-client checkout main -- .
+          cd /tmp/working-client
+
+          # Extract version from package.json
           VERSION=$(node -p "require('./package.json').version")
           TAG="v$VERSION"
           echo "Detected version: $VERSION -> Tag will be: $TAG"
 
           # Check if this tag already exists on the public repo
-          if git ls-remote --tags public | grep -q "refs/tags/$TAG"; then
+          if git ls-remote --tags "$PUBLIC_REPO_URL" | grep -q "refs/tags/$TAG"; then
             echo "Tag $TAG already exists on public repo. Skipping tag creation."
           else
             echo "Creating and pushing new tag $TAG..."
+            # Configure a temporary git repo context in the working dir to tag & push
+            git init
+            git remote add public "$PUBLIC_REPO_URL"
+            git add package.json
+            git commit -m "chore: release $TAG" || true
             git tag "$TAG"
-            git push public "$TAG"
+            git push public "$TAG" --force
           fi
