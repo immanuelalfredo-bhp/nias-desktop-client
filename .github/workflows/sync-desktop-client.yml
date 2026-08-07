@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - 'apps/nias-desktop-client/**'
-      - 'apps/nias-shared/**'
   workflow_dispatch:
 
 jobs:
@@ -19,57 +18,51 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Configure git
+      - name: Checkout public repo (write access)
+        uses: actions/checkout@v4
+        with:
+          repository: immanuelalfredo-bhp/nias-desktop-client
+          token: ${{ secrets.SYNC_PUBLIC_REPO_TOKEN }}
+          path: public
+          fetch-depth: 0
+
+      - name: Configure git for public repo
         run: |
+          cd public
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Install git-filter-repo
+      - name: Sync files from private subdir into public repo
         run: |
-          pip install git-filter-repo
+          # copy content from private repo subdir to the checked-out public repo
+          rsync -a --delete --exclude='.git' apps/nias-desktop-client/ public/
 
-      - name: Filter and push to public repo
+      - name: Commit & push changes to public repo if any
+        run: |
+          cd public
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -m "chore(sync): update nias-desktop-client from private repo"
+            git push origin main
+          else
+            echo "No changes to sync"
+          fi
+
+      - name: Create tag from package.json version (only if missing)
         env:
           PUBLIC_REPO_URL: https://x-access-token:${{ secrets.SYNC_PUBLIC_REPO_TOKEN }}@github.com/immanuelalfredo-bhp/nias-desktop-client.git
         run: |
-          mkdir -p /tmp/sync-repo-desktop
-          cd /tmp/sync-repo-desktop
-          
-          git clone --mirror https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/immanuelalfredo-bhp/nias.git nias.git
-          cd nias.git
-          
-          git filter-repo --subdirectory-filter apps/nias-desktop-client --force
-          
-          git push --mirror "$PUBLIC_REPO_URL"
+          # Read version from the private-repo package.json
+          VERSION=$(python -c "import json,sys;print(json.load(open('apps/nias-desktop-client/package.json'))['version'])")
+          TAG="v$VERSION"
+          echo "Detected version: $VERSION -> Tag will be: $TAG"
 
-  sync-shared:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout private repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Install git-filter-repo
-        run: |
-          pip install git-filter-repo
-
-      - name: Filter and push to public repo
-        env:
-          PUBLIC_REPO_URL: https://x-access-token:${{ secrets.SYNC_PUBLIC_REPO_TOKEN }}@github.com/immanuelalfredo-bhp/nias-shared.git
-        run: |
-          mkdir -p /tmp/sync-repo-shared
-          cd /tmp/sync-repo-shared
-          
-          git clone --mirror https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/immanuelalfredo-bhp/nias.git nias.git
-          cd nias.git
-          
-          git filter-repo --subdirectory-filter apps/nias-shared --force
-          
-          git push --mirror "$PUBLIC_REPO_URL"
+          # Check if the tag already exists on the public repo
+          if git ls-remote --tags "$PUBLIC_REPO_URL" | grep -q "refs/tags/$TAG"; then
+            echo "Tag $TAG already exists on public repo. Skipping tag creation."
+          else
+            echo "Creating annotated tag $TAG and pushing to public repo..."
+            cd public
+            git tag -a "$TAG" -m "release $TAG"
+            git push origin "$TAG"
+          fi
