@@ -81,6 +81,19 @@ async function getSyncDelta(
       }),
     );
 
+    const latestVersions = Object.fromEntries(
+      SYNC_TABLE_MAP.map((tableInfo, idx) => {
+        const rows = entries[idx] ?? [];
+        const latestVisibleVersion =
+          rows.length > 0
+            ? ((rows[rows.length - 1] as { syncVersion?: number })?.syncVersion ??
+              (payload[tableInfo.key] ?? 0))
+            : (registry[tableInfo.key] ?? 0);
+
+        return [tableInfo.key, latestVisibleVersion];
+      }),
+    ) as server.SyncMetadata;
+
     const changes = Object.fromEntries(
       SYNC_TABLE_MAP.map((t, idx) => [t.key, entries[idx] ?? []]),
     ) as server.PullResponse['changes'];
@@ -89,7 +102,7 @@ async function getSyncDelta(
       {
         scope: 'sync',
         hasMore: entries.some((r) => r.length === syncLimit),
-        latestVersions: registry,
+        latestVersions,
         tableCounts: Object.fromEntries(
           Object.entries(changes).map(([key, rows]) => [key, rows.length]),
         ),
@@ -103,7 +116,7 @@ async function getSyncDelta(
       data: {
         changes,
         hasMore: entries.some((r) => r.length === syncLimit),
-        latestVersions: registry,
+        latestVersions,
       },
     };
   } catch (error) {

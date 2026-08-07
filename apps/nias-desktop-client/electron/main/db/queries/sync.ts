@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3-multiple-ciphers';
 import { system, attribute, item, variant, order, server } from '@nias/shared';
+import { SYNC_TABLE_MAP } from '@nias/shared/server';
 
 type SyncTableName = server.PushPayload['changes'][number]['tableName'];
 import { logger } from '@nias/shared/server';
@@ -36,17 +37,34 @@ export class SyncQueries {
   constructor(private readonly db: Database.Database) {}
 
   getSyncVersion(): server.SyncMetadata {
+    const registry = SYNC_TABLE_MAP.reduce(
+      (acc, table) => {
+        acc[table.key] = 0;
+        return acc;
+      },
+      {} as server.SyncMetadata,
+    );
+
+    const tableNameToKey = SYNC_TABLE_MAP.reduce(
+      (acc, table) => {
+        acc[table.tableName] = table.key;
+        return acc;
+      },
+      {} as Record<string, (typeof SYNC_TABLE_MAP)[number]['key']>,
+    );
+
     const rows = this.db.prepare('SELECT table_name, sync_version FROM sync_metadata').all() as {
-      tableName: keyof server.SyncMetadata;
+      tableName: string;
       syncVersion: number;
     }[];
 
     return rows.reduce((acc, row) => {
-      if (row.tableName in acc) {
-        acc[row.tableName] = row.syncVersion;
+      const key = tableNameToKey[row.tableName];
+      if (key) {
+        acc[key] = row.syncVersion;
       }
       return acc;
-    }, {} as server.SyncMetadata);
+    }, registry);
   }
 
   buildPushPayload(actorId: string): server.PushPayload {
@@ -251,12 +269,29 @@ export class SyncQueries {
           dimensionValueMapQueries.upsert(dimensionValueMap);
         }
         // Update sync versions for each table
-        for (const [tableName, syncVersion] of Object.entries(manifest.latestVersions)) {
+        const keyToTableName = SYNC_TABLE_MAP.reduce(
+          (acc, table) => {
+            acc[table.key] = table.tableName;
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
+
+        for (const [syncKey, syncVersion] of Object.entries(manifest.latestVersions)) {
+          const tableName = keyToTableName[syncKey];
+          if (!tableName) {
+            continue;
+          }
+
           const updateStmt = this.db.prepare(
-            `UPDATE sync_metadata SET sync_version = ? WHERE table_name = ?`,
+            `
+              INSERT INTO sync_metadata (table_name, sync_version)
+              VALUES (?, ?)
+              ON CONFLICT(table_name) DO UPDATE SET sync_version = excluded.sync_version
+            `,
           );
-          updateStmt.run(syncVersion, tableName);
-          nextVersions[tableName as keyof server.SyncMetadata] = syncVersion;
+          updateStmt.run(tableName, syncVersion);
+          nextVersions[syncKey as keyof server.SyncMetadata] = syncVersion;
         }
       });
 
