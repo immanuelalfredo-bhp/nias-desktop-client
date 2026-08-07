@@ -41,35 +41,3 @@ jobs:
           git filter-repo --subdirectory-filter apps/nias-desktop-client --force
           
           git push --mirror "$PUBLIC_REPO_URL"
-
-  sync-shared:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout private repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Install git-filter-repo
-        run: |
-          pip install git-filter-repo
-
-      - name: Filter and push to public repo
-        env:
-          PUBLIC_REPO_URL: https://x-access-token:${{ secrets.SYNC_PUBLIC_REPO_TOKEN }}@github.com/immanuelalfredo-bhp/nias-shared.git
-        run: |
-          mkdir -p /tmp/sync-repo-shared
-          cd /tmp/sync-repo-shared
-          
-          git clone --mirror https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/immanuelalfredo-bhp/nias.git nias.git
-          cd nias.git
-          
-          git filter-repo --subdirectory-filter apps/nias-shared --force
-          
-          git push --mirror "$PUBLIC_REPO_URL"
